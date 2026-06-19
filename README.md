@@ -28,7 +28,16 @@ A list of tools required to build and maintain the dome
 - Soldering Iron
 - Wire Strippers
 - Knife
-- Screwdriver Set
+- Scissors
+- Electrical Screwdriver Set
+- Electric screwdriver and bits
+- Drill bits
+- Small saw for cutting poles
+- Gloves
+- Magnetic pots for small parts
+- Fire Extinguisher
+- Gaffer Tape
+- Warning Signs
 
 
 ## Shopping List
