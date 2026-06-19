@@ -18,6 +18,23 @@ Each 1000 pixel string is rated at approximately 100W, so the design uses one 12
 
 **Important: Common ground everywhere. Capacitor should go as close to the first LED as possible and ensure correct polarity.**
 
+## Networking
+We have borrowed a router from Dan to do this.
+
+Subnet: 
+Controller 1 WiFi : 
+Controller 1 Wired :
+Controller 2 WiFi :
+Controller 3 WiFi :
+Controller 4 WiFi :
+Controller 5 WiFi :
+
+WiFi setup...
+
+VPN Setup...
+
+** Important: Follow [the EMF guide regarding bringing wireless access points](https://www.emfcamp.org/about/internet#bringing-wireless-access-points).**
+
 ## Controllers
 We have decided on the [QuinLED-Dig-Uno](https://quinled.info/2018/09/15/quinled-dig-uno/) as it includes all the gubbins required to make the ESP32 work such as fuse, capacitor, logic convertor and de-bounce resistor.
 
