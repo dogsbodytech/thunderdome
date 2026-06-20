@@ -21,13 +21,19 @@ Each 1000 pixel string is rated at approximately 100W, so the design uses one 12
 ## Networking
 We have borrowed a router from Dan to do this.
 
-Subnet: 
-Controller 1 WiFi : 
-Controller 1 Wired :
-Controller 2 WiFi :
-Controller 3 WiFi :
-Controller 4 WiFi :
-Controller 5 WiFi :
+Gateway: 192.168.12.1
+Broadcast: 192.168.12.255
+Subnet Mask: 255.255.255.0
+DHCP Range: 192.168.12.200 - 192.168.12.254
+
+| Controller # | Connection | MAC               | IP Addr       |
+| :----------- | :--------: | :---------------: | ------------- |
+| Controller 1 | WiFi       | 00:70:07:7f:bd:6c | 192.168.12.10 |
+| Controller 1 | Wired      | 00:70:07:7f:bd:6f | 192.168.12.11 |
+| Controller 2 | WiFi       | 00:70:07:7f:b2:34 | 192.168.12.20 |
+| Controller 3 | WiFi       | 00:70:07:7f:b9:60 | 192.168.12.30 |
+| Controller 4 | WiFi       | 20:e7:c8:6c:4b:b8 | 192.168.12.40 |
+| Controller 5 | WiFi       | 00:70:07:7e:f5:5c | 192.168.12.50 |
 
 WiFi setup...
 
