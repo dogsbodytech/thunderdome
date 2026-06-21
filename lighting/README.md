@@ -35,7 +35,7 @@ There is a hidden ssid used with permission of the organisers.
 ## Layout
 The dome is large enough that five 30 metre strings of 1000 pixels are a good fit. The intended layout is five separate data paths from the top of the dome down to the lower structure, with each controller driving one complete string.
 
-![Disagram showing the path the LED strings will follow](Layout.drawio.svg "Dome LED Layout Path")
+![Disagram showing the path the LED strings will follow](layout/Layout.drawio.svg "Dome LED Layout Path")
 
 - Struts 1 to 12 = 14.2 meters
 - Struts 13 to 24 =  13.8 meters
