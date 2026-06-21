@@ -14,6 +14,7 @@ The dome is a 3v 5/8 Geodesic Dome, 6m in diameter and 3.5m high! It's construct
 | A     | 30    | Yellow | 950 mm      | 1037 mm                 | 
 | B     | 55    | Orange | 1114 mm     | 1201 mm                 |
 | C     | 80    | None   | 1139 mm     | 1226 mm                 |
+
 The wood length is 87mm shorter to account for the space that the hubs and ball connectors take up at the points.
 
 165 struts in total.
