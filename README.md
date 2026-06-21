@@ -44,6 +44,12 @@ A list of tools required to build and maintain the dome
 - Spare fuses
 - Lots of wire
 
+## ToDo
+- Buy wire to connect all of this!
+- How to make sound reactive?
+- How to map LEDs to location?
+- How to play games?
+
 
 ## Notes for contributors
 This repo is intended to capture both final decisions and the reasoning behind them. When adding documentation, prefer practical notes that would help someone rebuild, debug, or safely operate the system later.
