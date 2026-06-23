@@ -38,6 +38,7 @@ A list of tools required to build and maintain the dome
 - Fire Extinguisher
 - Gaffer Tape
 - Warning Signs
+- high visibility vest x no of people
 
 
 ## Shopping List
