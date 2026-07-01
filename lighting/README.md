@@ -1,6 +1,14 @@
 ## This Directory
 This directory should (hopefully) contain all the design notes, wiring plans, controller configuration, layout files, and supporting documentation for the lighting of the dome.
 
+## Contents
+- [LEDs](#leds)
+- [Networking](#networking)
+- [Layout](#layout)
+- [Power](#power)
+- [Controllers](#controllers)
+- [WLED](#wled)
+
 
 ## LEDs
 We went with WS2818 LEDS as these are 12V with a backup data line. They are RGB (not RGBW) however this should be fine for the dome as it's all about the colour.

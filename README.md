@@ -5,9 +5,15 @@ Each time we try to build something and each year we try and go bigger and bette
 
 In 2024 [we built a huge geodesic dome](https://www.dogsbody.com/blog/electromagnetic-field-2024-the-best-yet/) and in 2026 we aim to cover the entire thing in 130 meters of 5,000 individually addressable RGB LEDs for interactive lighting, patterns, games, and general tinkering! 
 
-
-## This Repo
 This repository should (hopefully) contain all the design notes, wiring plans, controller configuration, layout files, and supporting documentation for project.
+
+
+## Contents
+- [The Dome](#the-dome)
+- [The Lighting](#the-lighting)
+- [Tools](#tools)
+- [ToDo](#todo)
+- [Licence](#licence)
 
 
 ## The Dome
@@ -50,10 +56,6 @@ A list of tools required to build and maintain the dome
 - How to make sound reactive?
 - How to map LEDs to location?
 - How to play games?
-
-
-## Notes for contributors
-This repo is intended to capture both final decisions and the reasoning behind them. When adding documentation, prefer practical notes that would help someone rebuild, debug, or safely operate the system later.
 
 
 ## Licence

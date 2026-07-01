@@ -4,6 +4,15 @@ This directory should (hopefully) contain all the design notes, layout files, an
 The dome is a 3v 5/8 Geodesic Dome, 6m in diameter and 3.5m high! It's constructed with a dome kit from [Build With Hubs](https://buildwithhubs.co.uk/) using 165 broom handles of three different lengths totalling over 181 metres.
 
 
+## Contents
+- [Assembly](#assembly)
+- [Struts](#struts)
+- [Hubs](#hubs)
+- [Base](#base)
+- [Build process](#build-process)
+- [Additional notes](#additional-notes)
+
+
 ## Assembly
 ![Disagram showing how to assemble dome](Assembly.drawio.svg "Dome Assembly")
 
