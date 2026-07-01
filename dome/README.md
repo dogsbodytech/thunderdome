@@ -40,7 +40,7 @@ We could also use two ball connectors in the spare sockets to connect the dome t
 ## Build process
 The dome will be self-supporting up till 3/8s. The last layer can fold under as it's past the half way point and starts to come back in towards the centre of the dome.
 
-2 people can ulually manage to build the dome up to the last layer. It them really needs three people to add the last layer, two to lift and one to connect.
+2 people can usually manage to build the dome up to the last layer. It then really needs three people to add the last layer, two to lift and one to connect.
 
 You can build the 3/8s section to the side and lay out the base section in position. You can then lift the 3/8s section up and move it over the base. Then one person can connect in the base layer. This works quite well but reqires at least 5 people.
 

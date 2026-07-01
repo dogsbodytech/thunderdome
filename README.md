@@ -13,13 +13,14 @@ This repository should (hopefully) contain all the design notes, wiring plans, c
 ## The Dome
 The dome is a 3v 5/8 Geodesic Dome, 6m in diameter and 3.5m high! It's constructed with a dome kit from [Build With Hubs](https://buildwithhubs.co.uk/) using 165 broom handles of three different lengths totalling over 181 metres.
 
-Full information can be found in [dome/](dome/)
+See [the dome/ directory](dome/) for full information about the design choices and how we physically built the dome.
 
 
 ## The Lighting
 The dome lighting is built around 5 x 30 meter LED strings. Each string has 1000 pixels at 30 mm spacing and is controlled by its own [QuinLED](https://quinled.info/) controller running [WLED](https://kno.wled.ge/).
 
-Full information can be found in the [lighting/](lighting/)
+See [the lighting/ directory](lighting/) for full information about the design choices, power decisions, wiring and layout for the LEDs.
+
 
 
 ## Tools
@@ -44,12 +45,8 @@ A list of tools required to build and maintain the dome
 - Red button?
 - Magnet for if we drop stuff
 
-## Shopping List
-- Spare fuses
-- Lots of wire
 
 ## ToDo
-- Buy wire to connect all of this!
 - How to make sound reactive?
 - How to map LEDs to location?
 - How to play games?
