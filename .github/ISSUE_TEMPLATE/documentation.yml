@@ -1,0 +1,33 @@
+name: Documentation improvement
+description: Report unclear, incorrect or missing documentation
+title: "[Documentation] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping to make the project easier to understand.
+  - type: input
+    id: location
+    attributes:
+      label: Where is the problem?
+      description: Link to the page or identify the relevant section.
+      placeholder: "For example: Lighting.md, Power section"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is unclear or incorrect?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: If you have wording or an example in mind, add it here.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Would you like to help fix it?
+      options:
+        - label: I would be interested in opening a pull request.
