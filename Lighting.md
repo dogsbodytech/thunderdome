@@ -1,5 +1,4 @@
-## This Directory
-This directory should (hopefully) contain all the design notes, wiring plans, controller configuration, layout files, and supporting documentation for the lighting of the dome.
+This doc should contain all the design notes, wiring plans, controller configuration, layout files, and supporting documentation for the lighting of the dome.
 
 ## Contents
 - [LEDs](#leds)
@@ -11,7 +10,7 @@ This directory should (hopefully) contain all the design notes, wiring plans, co
 
 
 ## LEDs
-We went with WS2818 LEDS as these are 12V with a backup data line. They are RGB (not RGBW) however this should be fine for the dome as it's all about the colour.
+We went with WS2815 LEDS as these are 12V with a backup data line. They are RGB (not RGBW) however this should be fine for the dome as it's all about the colour.
 
 We found some lovely waterproof LEDs with black wire. A 30mm pitch means each length of 1000 LEDs is 30meters and is perfect for a controller each as well as being the right size for the dome.
 
@@ -54,7 +53,7 @@ There is a hidden ssid used with permission of the organisers.
 ## Layout
 The dome is large enough that five 30 metre strings of 1000 pixels are a good fit. The intended layout is five separate data paths from the top of the dome down to the lower structure, with each controller driving one complete string.
 
-![Diagram showing the path the LED strings will follow](layout/Layout.drawio.svg "Dome LED Layout Path")
+![Diagram showing the path the LED strings will follow](lighting/Layout.drawio.svg "Dome LED Layout Path")
 
 - Struts 1 to 12 = 14.2 meters
 - Struts 13 to 24 = 13.8 meters
@@ -64,7 +63,7 @@ In reality it's easier to start at strut 24 and work backwards allowing 2 meters
 
 We would love to come up with a layout so that one string starts where another string ends however this is unlikely to be feasible without doubling back due to the five pointed pentagons. We have left this as a project for another year :-)
 
-Installing the LEDs on the dome has yet to be worked out. I fear we may need to build the dome and then install the LEDs which means we need a ladder! The LEDs don't go on the bottom struts so we can build the dome up to the last layer, install the LEDs and then install the last layer however it WILL BE HEAVY!
+The LEDs don't go on the bottom struts so we can build the dome up to the last layer, install the LEDs and then install the last layer however it WILL BE HEAVY!
 
 - 500 x [5x200mm blue zip ties](https://www.aliexpress.com/item/1005004609102546.html?spm=a2g0o.detail.0.0.1ba2HaZXHaZXB1&mp=1&pdp_npi=6%40dis%21GBP%21GBP%203.68%21GBP%203.59%21%21GBP%203.59%21%21%21%40211b61ae17762036871267314e801f%2112000053124186326%21ct%21UK%21750918518%21%211%210%21)
 
@@ -100,7 +99,7 @@ We have decided on the [QuinLED-Dig-Uno](https://quinled.info/2018/09/15/quinled
 - 4 x [QuinLED-Dig-Uno](https://shop.allnetchina.cn/products/quinled-dig-uno-v3r7-digital-led-controller?variant=39296748585062)
 - 1 x [QuinLED-Dig-Uno with Ethernet](https://shop.allnetchina.cn/products/quinled-dig-uno-v3r7-digital-led-controller?variant=39297009713254)
 
-All controllers have been flashed with the latest version of WLED compiled by QuinLED [WLED_16.0.0_Dig-Uno-V3.bin](controller/WLED_16.0.0_Dig-Uno-V3.bin).
+All controllers have been flashed with the latest version of WLED compiled by QuinLED [WLED_16.0.0_Dig-Uno-V3.bin](lighting/WLED_16.0.0_Dig-Uno-V3.bin).
 
 **Important: Mount each Dig-Uno as close as possible to the start of its LED string, not next to the PSU. The data line is fragile, the power line is not.**
 
@@ -108,18 +107,12 @@ All controllers have been flashed with the latest version of WLED compiled by Qu
 ## WLED
 All controllers have been setup identically except controller 1 which is the main controller for the operation
 
-Controller configs have been dumped in [wled/](wled/) and should be kept up to date.
+Controller configs have been dumped in [lighting/](lighting/) and should be kept up to date.
 
 All controllers have been renamed 1-5 and had their fallback ssid changed so that we can identify them.
 
 Controllers 2-5 just control their 1000 LEDs.
 
 Controller 1 is setup to control all 5000 LEDs with the 4000 remote LEDs being virtual outputs pointing to the IP addresses of the other controllers.
-
-
-
-
-[https://kno.wled.ge/advanced/mapping/](https://kno.wled.ge/advanced/mapping/)
-
 
 

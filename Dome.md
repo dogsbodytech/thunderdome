@@ -1,5 +1,4 @@
-## This Directory
-This directory should (hopefully) contain all the design notes, layout files, and supporting documentation for the building of the dome itself.
+This doc should contain all the design notes, layout files, and supporting documentation for the building of the dome itself.
 
 The dome is a 3v 5/8 Geodesic Dome, 6m in diameter and 3.5m high! It's constructed with a dome kit from [Build With Hubs](https://buildwithhubs.co.uk/) using 165 broom handles of three different lengths totalling over 181 metres.
 
@@ -14,7 +13,7 @@ The dome is a 3v 5/8 Geodesic Dome, 6m in diameter and 3.5m high! It's construct
 
 
 ## Assembly
-![Disagram showing how to assemble dome](Assembly.drawio.svg "Dome Assembly")
+![Disagram showing how to assemble dome](dome/Assembly.drawio.svg "Dome Assembly")
 
 
 ## Struts
@@ -47,9 +46,9 @@ We could also use two ball connectors in the spare sockets to connect the dome t
 
 
 ## Build process
-The dome will be self-supporting up till 3/8s. The last layer can fold under as it's past the half way point and starts to come back in towards the centre of the dome.
+The dome will be self-supporting up till 3/8s. This is great as we can build the dome to this level and then install the lights with a simple step without having to work at height.
 
-2 people can usually manage to build the dome up to the last layer. It then really needs three people to add the last layer, two to lift and one to connect.
+Two people can usually manage to build the dome up to the last layer. The last layer can fold under as it's past the half way point and starts to come back in towards the centre of the dome. It then really needs three people to add the last layer, two to lift and one to connect.
 
 You can build the 3/8s section to the side and lay out the base section in position. You can then lift the 3/8s section up and move it over the base. Then one person can connect in the base layer. This works quite well but requires at least 5 people.
 

@@ -9,6 +9,7 @@ In 2024 [we built a huge geodesic dome](https://www.dogsbody.com/blog/electromag
 
 This repository should (hopefully) contain all the design notes, wiring plans, controller configuration, layout files, and supporting documentation for the project.
 
+
 ## Quick facts
 - 6 metre diameter geodesic dome
 - 165 wooden struts
@@ -18,10 +19,13 @@ This repository should (hopefully) contain all the design notes, wiring plans, c
 - Five 12V 100W power supplies
 - WLED and Python software
 
+
 ## Explore the project
 - [Building the dome](Dome.md)
 - [Lighting and power](Lighting.md)
 - [Software and interactive features](Software.md)
 - [Tools List](Tools.md)
-- Licensed under the [MIT License](LICENSE)
+
+
+Licensed under the [MIT License](LICENSE)
 
