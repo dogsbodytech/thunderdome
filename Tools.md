@@ -17,7 +17,8 @@ A list of tools required to build and maintain the dome:
 - Gaffer tape
 - Warning signs
 - High-visibility vest for each person
-- Ladder?
+- Ladder
+- Step up
 - Wago connectors
-- Red button?
+- Red button
 - Magnet for retrieving dropped items
