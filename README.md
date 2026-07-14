@@ -1,62 +1,27 @@
 # Addressable LED Dome for Electromagnetic Field
+![Picture of the dome with LEDs on](pictures/2026-07-05-20.24.34.jpg "Picture of the dome with LEDs on")
+
 Every two years Dogsbody Technology attends the [Electromagnetic Field festival](https://www.emfcamp.org/) which can only be described as Glastonbury for geeks; and WE LOVE IT!
 
-Each time we try to build something and each year we try and go bigger and better.
+Each time we try to build something and each event we try and go bigger and better.
 
-In 2024 [we built a huge geodesic dome](https://www.dogsbody.com/blog/electromagnetic-field-2024-the-best-yet/) and in 2026 we aim to cover the entire thing in 130 meters of 5,000 individually addressable RGB LEDs for interactive lighting, patterns, games, and general tinkering! 
+In 2024 [we built a huge geodesic dome](https://www.dogsbody.com/blog/electromagnetic-field-2024-the-best-yet/) and in 2026 we are covering the entire thing in 150 meters of 5,000 individually addressable RGB LEDs for interactive lighting, patterns, games, and general tinkering! 
 
-This repository should (hopefully) contain all the design notes, wiring plans, controller configuration, layout files, and supporting documentation for project.
+This repository should (hopefully) contain all the design notes, wiring plans, controller configuration, layout files, and supporting documentation for the project.
 
+## Quick facts
+- 6 metre diameter geodesic dome
+- 165 wooden struts
+- 5,000 WS2815 pixels
+- Five 30 metre strings
+- Five QuinLED Dig-Uno controllers
+- Five 12V 100W power supplies
+- WLED and Python software
 
-## Contents
-- [The Dome](#the-dome)
-- [The Lighting](#the-lighting)
-- [Tools](#tools)
-- [ToDo](#todo)
-- [Licence](#licence)
+## Explore the project
+- [Building the dome](Dome.md)
+- [Lighting and power](Lighting.md)
+- [Software and interactive features](Software.md)
+- [Tools List](Tools.md)
+- Licensed under the [MIT License](LICENSE)
 
-
-## The Dome
-The dome is a 3v 5/8 Geodesic Dome, 6m in diameter and 3.5m high! It's constructed with a dome kit from [Build With Hubs](https://buildwithhubs.co.uk/) using 165 broom handles of three different lengths totalling over 181 metres.
-
-See [the dome/ directory](dome/) for full information about the design choices and how we physically built the dome.
-
-
-## The Lighting
-The dome lighting is built around 5 x 30 meter LED strings. Each string has 1000 pixels at 30 mm spacing and is controlled by its own [QuinLED](https://quinled.info/) controller running [WLED](https://kno.wled.ge/).
-
-See [the lighting/ directory](lighting/) for full information about the design choices, power decisions, wiring and layout for the LEDs.
-
-
-
-## Tools
-A list of tools required to build and maintain the dome
-- 4mm hex/allen keys
-- Soldering Iron
-- Wire Strippers
-- Knife
-- Scissors
-- Electrical Screwdriver Set
-- Electric screwdriver and bits
-- Drill bits
-- Small saw for cutting poles
-- Gloves
-- Magnetic pots for small parts
-- Fire Extinguisher
-- Gaffer Tape
-- Warning Signs
-- high visibility vest x no of people
-- Ladder?
-- Wago connectors
-- Red button?
-- Magnet for if we drop stuff
-
-
-## ToDo
-- How to make sound reactive?
-- How to map LEDs to location?
-- How to play games?
-
-
-## Licence
-licensed under the [MIT License](LICENSE)
