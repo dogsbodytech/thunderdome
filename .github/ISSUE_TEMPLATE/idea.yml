@@ -1,0 +1,37 @@
+name: Project idea
+description: Suggest a lighting effect, game, build improvement or other idea
+title: "[Idea] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome, including ones that are not yet fully worked out.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the project does this relate to?
+      options:
+        - Dome structure
+        - Lighting and power
+        - Software
+        - Interactive effect or game
+        - Documentation
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What is your idea?
+    validations:
+      required: true
+  - type: textarea
+    id: benefit
+    attributes:
+      label: What would it add to the project?
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Would you like to help?
+      options:
+        - label: I would be interested in helping develop or test this idea.
