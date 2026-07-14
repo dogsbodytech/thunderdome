@@ -1,22 +1,23 @@
-## Tools
-A list of tools required to build and maintain the dome
-- 4mm hex/allen keys
-- Soldering Iron
-- Wire Strippers
+# Tools
+
+A list of tools required to build and maintain the dome:
+
+- 4 mm hex/Allen keys
+- Soldering iron
+- Wire strippers
 - Knife
 - Scissors
-- Electrical Screwdriver Set
+- Electrical screwdriver set
 - Electric screwdriver and bits
 - Drill bits
 - Small saw for cutting poles
 - Gloves
 - Magnetic pots for small parts
-- Fire Extinguisher
-- Gaffer Tape
-- Warning Signs
-- high visibility vest x no of people
+- Fire extinguisher
+- Gaffer tape
+- Warning signs
+- High-visibility vest for each person
 - Ladder?
 - Wago connectors
 - Red button?
-- Magnet for if we drop stuff
-
+- Magnet for retrieving dropped items
