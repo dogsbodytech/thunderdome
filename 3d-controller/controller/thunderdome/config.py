@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-LED_COUNT = 5_000
+CONTROLLER_LED_COUNT = 1_000
+LOGICAL_LED_COUNT = CONTROLLER_LED_COUNT * 5
 DDP_PORT = 4048
 DDP_CHUNK_LEDS = 480
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

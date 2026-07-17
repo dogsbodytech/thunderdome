@@ -1,0 +1,165 @@
+import contextlib
+import io
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from thunderdome.cli import main
+from thunderdome.animation.loop import FrameLoopStats
+from thunderdome.transport.ddp import packets_for_frame
+from thunderdome.transport.multi_ddp import SendResult
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+CONTROLLERS_EXAMPLE = PROJECT_ROOT / "config" / "controllers.example.json"
+
+
+def controller_results(*, failed_controller: int | None = None):
+    return [
+        SendResult(
+            controller_number=number,
+            host=f"controller-{number}",
+            packets=0 if number == failed_controller else 3,
+            duration_seconds=0.0,
+            error="simulated failure" if number == failed_controller else None,
+        )
+        for number in range(1, 6)
+    ]
+
+
+class FakeMultiSession:
+    def __init__(self, result_sets):
+        self.result_sets = iter(result_sets)
+        self.frames = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return None
+
+    def send_frame(self, frame, *, dry_run=False):
+        self.frames.append((frame, dry_run))
+        return next(self.result_sets)
+
+
+class CLILoopTests(unittest.TestCase):
+    def test_multi_dry_run_rejects_loop_controls(self):
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            result = main(
+                [
+                    "ddp-all",
+                    "clear",
+                    "--controllers",
+                    str(CONTROLLERS_EXAMPLE),
+                    "--dry-run",
+                    "--loops",
+                    "2",
+                ]
+            )
+
+        self.assertEqual(result, 1)
+        self.assertIn("dry-run cannot be combined", stderr.getvalue())
+
+    def test_multi_live_continues_after_a_controller_failure(self):
+        clients = [Mock() for _ in range(5)]
+        clients[2].set_live.side_effect = OSError("offline")
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with patch("thunderdome.cli.WLEDClient", side_effect=clients) as client_class:
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                result = main(
+                    [
+                        "controllers",
+                        "live",
+                        "--controllers",
+                        str(CONTROLLERS_EXAMPLE),
+                        "on",
+                    ]
+                )
+
+        self.assertEqual(result, 1)
+        self.assertEqual(client_class.call_count, 5)
+        for client in clients:
+            client.set_live.assert_called_once_with(True)
+        self.assertIn("controller 3", stderr.getvalue())
+
+    def test_single_ddp_default_builds_a_1000_led_three_packet_frame(self):
+        captured_frames = []
+
+        def fake_send(_host, frame, **_kwargs):
+            captured_frames.append(frame)
+            return len(packets_for_frame(frame))
+
+        with patch("thunderdome.cli.send_frame", side_effect=fake_send):
+            result = main(["ddp", "pixel", "--host", "example.test", "20", "--color", "FF0000", "--brightness", "255"])
+
+        self.assertEqual(result, 0)
+        self.assertEqual(len(captured_frames), 1)
+        self.assertEqual(len(captured_frames[0]), 1_000 * 3)
+        self.assertEqual(len(packets_for_frame(captured_frames[0])), 3)
+
+    def test_single_ddp_led_count_override_is_preserved(self):
+        captured_frames = []
+
+        def fake_send(_host, frame, **_kwargs):
+            captured_frames.append(frame)
+            return len(packets_for_frame(frame))
+
+        with patch("thunderdome.cli.send_frame", side_effect=fake_send):
+            result = main(["ddp", "clear", "--host", "example.test", "--led-count", "12"])
+
+        self.assertEqual(result, 0)
+        self.assertEqual(len(captured_frames[0]), 12 * 3)
+
+    def test_ddp_all_one_shot_returns_nonzero_for_any_controller_failure(self):
+        session = FakeMultiSession([controller_results(failed_controller=2)])
+        stdout = io.StringIO()
+        with patch("thunderdome.cli.MultiControllerDDPSession", return_value=session):
+            with contextlib.redirect_stdout(stdout):
+                result = main(["ddp-all", "clear", "--controllers", str(CONTROLLERS_EXAMPLE)])
+
+        self.assertEqual(result, 1)
+        self.assertEqual(session.frames[0][0].led_count, 5_000)
+        self.assertIn("controller 2 controller-2: 0 packets error=simulated failure", stdout.getvalue())
+
+    def test_ddp_all_stream_preserves_an_early_controller_failure(self):
+        session = FakeMultiSession([controller_results(failed_controller=1), controller_results()])
+
+        def run_two_frames(_producer, sender, **_kwargs):
+            sender(None)
+            sender(None)
+            return FrameLoopStats(frames_sent=2, elapsed_seconds=0.0)
+
+        stdout = io.StringIO()
+        with patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
+            "thunderdome.cli.run_frame_loop", side_effect=run_two_frames
+        ):
+            with contextlib.redirect_stdout(stdout):
+                result = main(["ddp-all", "clear", "--controllers", str(CONTROLLERS_EXAMPLE), "--loops", "2"])
+
+        self.assertEqual(result, 1)
+        self.assertEqual(len(session.frames), 2)
+        self.assertIn("controller 1 controller-1: 0 packets error=simulated failure", stdout.getvalue())
+
+    def test_ddp_all_successful_stream_returns_zero(self):
+        session = FakeMultiSession([controller_results()])
+
+        def run_one_frame(_producer, sender, **_kwargs):
+            sender(None)
+            return FrameLoopStats(frames_sent=1, elapsed_seconds=0.0, interrupted=True)
+
+        with patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
+            "thunderdome.cli.run_frame_loop", side_effect=run_one_frame
+        ):
+            result = main(["ddp-all", "clear", "--controllers", str(CONTROLLERS_EXAMPLE), "--hold"])
+
+        self.assertEqual(result, 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

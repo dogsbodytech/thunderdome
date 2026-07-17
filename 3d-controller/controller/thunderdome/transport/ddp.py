@@ -19,7 +19,7 @@ from __future__ import annotations
 import socket
 import struct
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Callable, Iterable
 
 from ..frame import FrameError, RGBFrame, validate_rgb
 
@@ -140,6 +140,47 @@ def normalize_host(host: str) -> str:
     elif host.startswith("https://"):
         host = host[len("https://") :]
     return host.split("/", 1)[0]
+
+
+class DirectDDPSession:
+    """Reusable UDP socket for a sequence of DDP frames to one controller."""
+
+    def __init__(
+        self,
+        host: str,
+        *,
+        port: int = DDP_PORT,
+        chunk_leds: int = DDP_CHUNK_LEDS,
+        socket_factory: Callable[..., socket.socket] = socket.socket,
+    ) -> None:
+        self.host = host
+        self.port = port
+        self.chunk_leds = chunk_leds
+        self._socket_factory = socket_factory
+        self._socket: socket.socket | None = None
+
+    def __enter__(self) -> "DirectDDPSession":
+        self._socket = self._socket_factory(socket.AF_INET, socket.SOCK_DGRAM)
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+    def close(self) -> None:
+        if self._socket is not None:
+            self._socket.close()
+            self._socket = None
+
+    def send(self, frame: bytes | bytearray) -> int:
+        if self._socket is None:
+            raise RuntimeError("DirectDDPSession must be entered before sending")
+        return send_frame(
+            self.host,
+            frame,
+            port=self.port,
+            chunk_leds=self.chunk_leds,
+            sock=self._socket,
+        )
 
 
 def send_frame(host: str, frame: bytes | bytearray, *, port: int = DDP_PORT, chunk_leds: int = DDP_CHUNK_LEDS, sock: socket.socket | None = None) -> int:
