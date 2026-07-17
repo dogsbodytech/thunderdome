@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
-from .config import DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_COUNT
+from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LOGICAL_LED_COUNT
 from .controllers import load_controllers
 from .frame import RGBFrame
 from .geometry import load_geometry
@@ -53,7 +53,12 @@ def _add_loop_options(parser: argparse.ArgumentParser) -> None:
 
 def _ddp_options(parser: argparse.ArgumentParser, *, colour: bool = False) -> None:
     _host(parser)
-    parser.add_argument("--led-count", type=int, default=LED_COUNT)
+    parser.add_argument(
+        "--led-count",
+        type=int,
+        default=CONTROLLER_LED_COUNT,
+        help=f"LEDs on this controller (default: {CONTROLLER_LED_COUNT})",
+    )
     parser.add_argument("--port", type=int, default=DDP_PORT)
     parser.add_argument("--chunk-leds", type=int, default=DDP_CHUNK_LEDS)
     if colour:
@@ -124,7 +129,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     _controllers_option(controllers_live)
     controllers_live.add_argument("state", choices=("on", "off"))
 
-    all_ddp = groups.add_parser("ddp-all", help="Fan one logical 5,000-pixel frame out to all controllers")
+    all_ddp = groups.add_parser(
+        "ddp-all",
+        help=f"Fan one logical {LOGICAL_LED_COUNT:,}-pixel frame out to all controllers",
+    )
     all_sub = all_ddp.add_subparsers(dest="command", required=True)
     for name in ("clear", "solid", "controller-colors"):
         item = all_sub.add_parser(name)
@@ -168,6 +176,21 @@ def _report_results(results: list[SendResult]) -> None:
         print(f"controller {result.controller_number} {result.host}: {result.packets} packets{suffix}")
 
 
+def _record_controller_failures(
+    failed_controllers: dict[int, SendResult], results: list[SendResult]
+) -> None:
+    """Keep the first failure for each controller across a DDP command."""
+    for result in results:
+        if result.error:
+            failed_controllers.setdefault(result.controller_number, result)
+
+
+def _report_persistent_failures(failed_controllers: dict[int, SendResult]) -> None:
+    if failed_controllers:
+        print("Controller failures during DDP output:")
+        _report_results(list(failed_controllers.values()))
+
+
 def _run_single_ddp(args: argparse.Namespace) -> int:
     frame = RGBFrame.allocate(args.led_count)
     if args.command == "solid":
@@ -202,7 +225,7 @@ def _run_single_ddp(args: argparse.Namespace) -> int:
 def _run_multi_ddp(args: argparse.Namespace) -> int:
     options = _loop_options(args, dry_run=args.dry_run)
     controllers = load_controllers(args.controllers)
-    frame = RGBFrame.allocate(5000)
+    frame = RGBFrame.allocate(LOGICAL_LED_COUNT)
     if args.command == "solid":
         frame.fill(_colour(args))
     elif args.command == "controller-colors":
@@ -210,7 +233,7 @@ def _run_multi_ddp(args: argparse.Namespace) -> int:
         for controller, color in zip(controllers.controllers, colors):
             frame.set_range(
                 controller.global_start,
-                1000,
+                CONTROLLER_LED_COUNT,
                 tuple(channel * args.brightness // 255 for channel in color),
             )
 
@@ -218,14 +241,16 @@ def _run_multi_ddp(args: argparse.Namespace) -> int:
         with MultiControllerDDPSession(controllers) as session:
             results = session.send_frame(frame, dry_run=args.dry_run)
         _report_results(results)
-        return 0
+        return 1 if any(result.error for result in results) else 0
 
     print(f"Starting DDP-all {args.command} ({options.fps} FPS, {options.description})")
     last_results: list[SendResult] = []
+    failed_controllers: dict[int, SendResult] = {}
 
     def send(current_frame: RGBFrame) -> None:
         nonlocal last_results
         last_results = session.send_frame(current_frame)
+        _record_controller_failures(failed_controllers, last_results)
 
     with MultiControllerDDPSession(controllers) as session:
         stats = run_frame_loop(
@@ -236,8 +261,9 @@ def _run_multi_ddp(args: argparse.Namespace) -> int:
             loops=options.loops,
         )
     _report_results(last_results)
+    _report_persistent_failures(failed_controllers)
     _report_loop(stats)
-    return 0
+    return 1 if failed_controllers else 0
 
 
 def _run_controllers_live(args: argparse.Namespace) -> int:
