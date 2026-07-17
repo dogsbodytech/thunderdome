@@ -57,3 +57,7 @@ thunderdome ddp-all controller-colors \
 A successful one-shot send or stream returns exit status `0`. `ddp-all` returns a non-zero status if any enabled controller reports a send failure. For a stream, the controller records failures for the entire session: an earlier failed frame still makes the final status non-zero even if that controller succeeds on a later frame. Successful controllers continue to receive frames where practical, and failure output identifies the controller number, host, and error.
 
 Start at low brightness and validate controller mapping before a live stream.
+
+## Spatial clock hand
+
+`thunderdome effect clock-hand` is a Pi-rendered DDP animation, not a WLED native effect. It builds one logical 5,000-pixel frame from generated XYZ data and the existing fan-out sends local 1,000-pixel slices to all enabled controllers. `--width-mm` is the full hand width; selection uses the forward XY half-ray only. World `+X` is zero degrees, viewed from above; clockwise is default and `--angle-offset-degrees` provides installation alignment. Tails are excluded by metadata unless `--include-tail` is supplied. `--rotations` maps to `rotations * rotation-seconds`; absent a run mode, one finite rotation is used.

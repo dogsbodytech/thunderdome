@@ -58,3 +58,16 @@ thunderdome ddp-all controller-colors \
 Use `--dry-run` only for one simulated `ddp-all` frame. It sends no UDP traffic and cannot be combined with `--hold`, `--duration`, or `--loops`.
 
 HTTP/native effects and favorites are optional support functions, not the animation renderer.
+
+## Prepare and run the clock hand
+
+Generate and validate nominal positions, then establish the persistent off fallback before application DDP:
+
+```bash
+thunderdome positions generate
+thunderdome positions validate
+thunderdome controllers prepare-ddp --controllers config/controllers.json
+thunderdome effect clock-hand --controllers config/controllers.json --positions geometry/generated/led_positions_3d.json --brightness 32 --color FFFFFF --background 000000 --width-mm 300 --rotation-seconds 3 --fps 30 --hold
+```
+
+`prepare-ddp` posts `{"on":false,"bri":255,"live":false}` in one JSON update to each enabled controller, so a DDP timeout falls back to off rather than a bright native effect. The hand uses XY positions, zero degrees is world `+X`, clockwise is default, width is full visible width, and tails remain background unless `--include-tail` is set. Use `--rotations 2` or `--duration SECONDS` for finite runs; Ctrl+C is clean.

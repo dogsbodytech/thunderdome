@@ -31,6 +31,25 @@ class WLEDSupportTests(unittest.TestCase):
             WLEDClient("wled.local").set_live(True)
             post.assert_called_once_with({"live": True}, return_state=False)
 
+    def test_client_persistent_controls_use_expected_state_payloads(self):
+        client = WLEDClient("wled.local")
+        with patch.object(client, "post_state", return_value={}) as post:
+            client.set_power(False)
+            post.assert_called_once_with({"on": False}, return_state=False)
+            post.reset_mock()
+            client.set_color((1, 2, 3))
+            post.assert_called_once_with({"seg": [{"col": [[1, 2, 3]]}]}, return_state=False)
+            post.reset_mock()
+            client.set_preset(4)
+            post.assert_called_once_with({"ps": 4}, return_state=False)
+            post.reset_mock()
+            client.prepare_ddp()
+            post.assert_called_once_with({"on": False, "bri": 255, "live": False}, return_state=False)
+
+    def test_client_rejects_nonpositive_preset(self):
+        with self.assertRaises(ValueError):
+            WLEDClient("wled.local").set_preset(0)
+
     def test_favorites_store_deduplicates_effects(self):
         from tempfile import TemporaryDirectory
         with TemporaryDirectory() as directory:
