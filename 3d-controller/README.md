@@ -101,6 +101,30 @@ thunderdome ddp-all controller-colors \
 
 For a single-controller diagnostic, use `thunderdome ddp clear --host WLED_HOST` or `thunderdome ddp pixel --host WLED_HOST 0 --color FF0000 --brightness 16`; these commands transmit immediately, so do not use them as a dry-run substitute.
 
+## Application-rendered spatial effects
+
+The `thunderdome effect` commands render from generated 5,000-LED XYZ positions and then reuse the existing multi-controller DDP fan-out. Implemented effects are `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, and `auto` showcase mode.
+
+Generate positions first, use dry-run before hardware, and start at safe brightness:
+
+```bash
+thunderdome positions generate
+thunderdome effect auto \
+  --controllers config/controllers.example.json \
+  --playlist fire,aurora,fireflies \
+  --loops 1 \
+  --dry-run
+
+thunderdome effect auto \
+  --controllers config/controllers.json \
+  --preset calm \
+  --brightness 24 \
+  --prepare-ddp \
+  --hold
+```
+
+`--prepare-ddp` sets the persistent WLED fallback state to off using `{"on": false, "bri": 255, "live": false}` once before Python starts DDP streaming. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
+
 ## Realtime live mode and DDP streaming
 
 A normal `ddp clear`, `solid`, `pixel`, or `range` command sends **one** DDP frame and exits. WLED may leave realtime mode when its configured realtime timeout expires, then restore its previous WLED effect. Use a held frame or animation loop when output must remain active.

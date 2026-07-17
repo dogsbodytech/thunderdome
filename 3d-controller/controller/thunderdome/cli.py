@@ -15,6 +15,8 @@ from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
 from .effects.expanding_rings import render_expanding_rings
 from .effects.height_wave import render_height_wave
+from .effects.procedural import blend, render as render_procedural
+from .effects.registry import BY_NAME, PRESETS
 from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
@@ -192,6 +194,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     _add_spatial_effect_options(wave)
     wave.add_argument("--direction", choices=("up", "down", "bounce"), default="up")
     wave.add_argument("--height-mm", type=float, default=200)
+    auto = effect_sub.add_parser("auto", help="cycle the registry playlist with crossfades")
+    _controllers_option(auto); auto.add_argument("--positions", default=str(LED_POSITIONS_PATH)); auto.add_argument("--geometry", default=str(GEOMETRY_PATH)); auto.add_argument("--effects", "--playlist", dest="effects"); auto.add_argument("--preset", choices=tuple(PRESETS)); auto.add_argument("--interval", type=float, default=30); auto.add_argument("--transition", "--crossfade", dest="transition", type=float, default=2); auto.add_argument("--shuffle", action="store_true"); auto.add_argument("--seed", type=int, default=1); mode=auto.add_mutually_exclusive_group(); mode.add_argument("--hold", action="store_true"); mode.add_argument("--duration", type=float); mode.add_argument("--loops", "--cycles", dest="cycles", type=_positive_int); auto.add_argument("--brightness", type=int, default=32); auto.add_argument("--fps", type=int, default=30); auto.add_argument("--exclude-tail", action="store_true"); auto.add_argument("--prepare-ddp", action="store_true"); auto.add_argument("--dry-run", action="store_true")
+    for name, help_text in (("fire", "render rising turbulent XYZ flames"), ("rotating-plane", "render a rotating signed-distance plane"), ("radar", "render a rotating XY radar beam"), ("aurora", "render flowing luminous XYZ bands"), ("fireflies", "render deterministic 3D glowing particles")):
+        item = effect_sub.add_parser(name, help=help_text); _add_spatial_effect_options(item)
+        item.add_argument("--speed", type=float, default=1.0); item.add_argument("--seed", type=int, default=1); item.add_argument("--scale", type=float, default=1.0)
+        item.add_argument("--spark-rate", type=float, default=0.0, help="reserved fire sparkle density control")
+        item.add_argument("--palette", default="fire" if name == "fire" else "mixed"); item.add_argument("--flame-height-m", type=float, default=2.5); item.add_argument("--turbulence", type=float, default=.65); item.add_argument("--cooling", type=float, default=.35)
+        item.add_argument("--rotation-seconds", type=float, default=10); item.add_argument("--thickness-mm", type=float, default=220); item.add_argument("--trail-degrees", type=float, default=20); item.add_argument("--beam-width-degrees", type=float, default=12); item.add_argument("--range-m", type=float, default=9999); item.add_argument("--vertical-falloff", type=float, default=0); item.add_argument("--axis", default="vertical"); item.add_argument("--direction", default="clockwise"); item.add_argument("--band-width", type=float, default=.45); item.add_argument("--intensity", type=float, default=1); item.add_argument("--count", type=_positive_int, default=25); item.add_argument("--glow-radius-mm", type=float, default=300); item.add_argument("--lifetime-seconds", type=float, default=8)
 
     all_ddp = groups.add_parser(
         "ddp-all",
@@ -468,6 +478,69 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
     return 1 if failures else 0
 
 
+def _run_procedural_effect(args: argparse.Namespace) -> int:
+    if not 1 <= args.fps <= 60: raise ValueError("fps must be in range 1..60")
+    for name in ("speed", "flame_height_m", "rotation_seconds", "thickness_mm", "count", "glow_radius_mm", "lifetime_seconds"):
+        if getattr(args, name) <= 0: raise ValueError(f"{name.replace('_', '-')} must be greater than zero")
+    if args.duration is not None and args.duration <= 0: raise ValueError("duration must be greater than zero")
+    if not 0 <= args.brightness <= 255: raise ValueError("brightness must be in range 0..255")
+    context=SpatialContext.load(args.positions,args.geometry); controllers=load_controllers(args.controllers); options=vars(args).copy(); options.pop("brightness"); options.pop("exclude_tail"); options.pop("seed")
+    if args.command == "aurora" and options.get("direction") in {"clockwise", "counterclockwise"}: options["direction"] = "1,0,0"
+    frame_for=lambda _n,e: render_procedural(args.command,context,e,brightness=args.brightness,exclude_tail=args.exclude_tail,seed=args.seed,**options)
+    if args.dry_run:
+        with MultiControllerDDPSession(controllers) as session: results=session.send_frame(frame_for(0,0),dry_run=True)
+        _report_results(results); return 1 if any(x.error for x in results) else 0
+    duration=None if args.hold else (args.duration if args.duration is not None else (args.loops or 1)*args.rotation_seconds)
+    failures={}; last=[]
+    def send(frame):
+        nonlocal last; last=session.send_frame(frame); _record_controller_failures(failures,last)
+    with MultiControllerDDPSession(controllers) as session: stats=run_frame_loop(frame_for,send,fps=args.fps,duration=duration)
+    _report_results(last); _report_loop(stats); return 1 if failures else 0
+
+
+def _run_auto(args: argparse.Namespace) -> int:
+    if not 1 <= args.fps <= 60 or not 0 <= args.brightness <= 255: raise ValueError("fps or brightness is outside its supported range")
+    if args.interval <= 0 or args.transition < 0 or args.transition >= args.interval: raise ValueError("transition must be >= 0 and less than interval")
+    if args.duration is not None and args.duration <= 0: raise ValueError("duration must be greater than zero")
+    names=args.effects.split(",") if args.effects else list(PRESETS[args.preset]) if args.preset else list(BY_NAME)
+    if not names or any(not name for name in names) or len(set(names)) != len(names): raise ValueError("effects must be a non-empty comma-separated list without duplicates")
+    if any(name not in BY_NAME for name in names): raise ValueError(f"unknown auto effect; valid choices: {', '.join(BY_NAME)}")
+    import random
+    if args.shuffle: random.Random(args.seed).shuffle(names)
+    context=SpatialContext.load(args.positions,args.geometry); controllers=load_controllers(args.controllers)
+    def frame(name, elapsed):
+        preset=BY_NAME[name].auto_options
+        if name == "clock-hand": return render_clock_hand(context.positions,angle_radians=angle_for_elapsed(elapsed,rotation_seconds=preset['rotation_seconds']),width_m=preset['width_mm']/1000,center_xy=context.apex[:2],brightness=255,exclude_tail=args.exclude_tail)
+        if name == "expanding-rings": return render_expanding_rings(context,elapsed_seconds=elapsed,speed_m_per_s=preset['speed_mps'],thickness_m=preset['thickness_mm']/1000,origin=parse_spatial_origin(preset['origin'],context),brightness=255,exclude_tail=args.exclude_tail)
+        if name == "height-wave": return render_height_wave(context,elapsed_seconds=elapsed,speed_m_per_s=preset['speed_mps'],height_m=preset['height_mm']/1000,direction=preset['direction'],brightness=255,exclude_tail=args.exclude_tail)
+        return render_procedural(name,context,elapsed,brightness=255,exclude_tail=args.exclude_tail,seed=args.seed,**preset)
+    if args.dry_run:
+        print("Dry run: exercising auto playlist " + ", ".join(names))
+        frames=[frame(name,0) for name in names]
+        if args.transition and len(frames)>1: frames[0]=blend(frames[0],frames[1],.5)
+        frames[-1].apply_brightness(args.brightness)
+        with MultiControllerDDPSession(controllers) as session: results=session.send_frame(frames[-1],dry_run=True)
+        _report_results(results); return 1 if any(x.error for x in results) else 0
+    if args.prepare_ddp:
+        prepared=run_wled_operation(controllers,lambda c:c.prepare_ddp(),client_factory=WLEDClient)
+        for result in prepared:
+            message = "failed" if result.error else "ok"
+            print(f"controller {result.controller_number} {result.host}: prepare-ddp {message}" + (f": {result.error}" if result.error else ""), file=sys.stderr if result.error else sys.stdout)
+        if any(x.error for x in prepared): return 1
+    index=0
+    def produce(_n,e):
+        nonlocal index
+        slot=int(e//args.interval); index=slot%len(names); local=e%args.interval; current=frame(names[index],local)
+        if args.transition and local>=args.interval-args.transition: current=blend(current,frame(names[(index+1)%len(names)],local-(args.interval-args.transition)),(local-(args.interval-args.transition))/args.transition)
+        current.apply_brightness(args.brightness)
+        return current
+    duration=None if args.hold else (args.duration if args.duration is not None else (args.cycles*len(names)*args.interval if args.cycles is not None else len(names)*args.interval)); failures={}; last=[]
+    def send(f):
+        nonlocal last; last=session.send_frame(f); _record_controller_failures(failures,last)
+    with MultiControllerDDPSession(controllers) as session: stats=run_frame_loop(produce,send,fps=args.fps,duration=duration)
+    _report_results(last); _report_loop(stats); return 1 if failures else 0
+
+
 def _main(args: argparse.Namespace) -> int:
     if args.area == "controller":
         client = WLEDClient(args.host)
@@ -546,7 +619,10 @@ def _main(args: argparse.Namespace) -> int:
         return _run_multi_ddp(args)
 
     if args.area == "effect":
-        return _run_clock_hand(args) if args.command == "clock-hand" else _run_spatial_effect(args)
+        if args.command == "clock-hand": return _run_clock_hand(args)
+        if args.command == "auto": return _run_auto(args)
+        if args.command in {"expanding-rings", "height-wave"}: return _run_spatial_effect(args)
+        return _run_procedural_effect(args)
 
     return _run_single_ddp(args)
 

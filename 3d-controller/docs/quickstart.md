@@ -74,10 +74,18 @@ thunderdome effect clock-hand --controllers config/controllers.json --geometry g
 
 `expanding-rings` and `height-wave` use the same generated 5,000-record XYZ context and direct multi-controller DDP output. `expanding-rings` is a true XYZ spherical shell with `--origin apex|centre|base|X,Y,Z`, `--speed-mps`, and full `--thickness-mm`. `height-wave` uses actual selected Z bounds with `--direction up|down|bounce`, `--speed-mps`, and full `--height-mm`. Tails participate by default; use `--exclude-tail` to remove them. Spatial `--loops`, `--duration`, and `--hold` are mutually exclusive; a bounce loop is a complete out-and-back. See [effects.md](effects.md) for origin definitions and all options.
 
+Additional implemented effects are `fire`, `rotating-plane`, `radar`, `aurora`, and `fireflies`. They all use the generated XYZ data rather than LED index order and share the same `--loops`, `--duration`, `--hold`, `--fps`, `--prepare-ddp`, `--dry-run`, and tail behavior. `thunderdome effect auto` cycles the registry playlist with `--interval`, `--crossfade`/`--transition`, `--playlist`/`--effects`, `--preset calm|energetic`, and linear RGB crossfade with brightness applied once after blending.
+
 ```bash
 thunderdome effect expanding-rings \
   --controllers config/controllers.json --origin apex --speed-mps 1.0 \
   --thickness-mm 250 --brightness 24 --loops 1 --dry-run
+
+thunderdome effect auto \
+  --controllers config/controllers.example.json \
+  --preset calm \
+  --loops 1 \
+  --dry-run
 
 thunderdome effect height-wave \
   --controllers config/controllers.json --direction bounce --height-mm 300 \
