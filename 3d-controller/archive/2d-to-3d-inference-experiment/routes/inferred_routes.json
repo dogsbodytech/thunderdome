@@ -1,0 +1,5911 @@
+{
+  "schema_version": 1,
+  "strings": [
+    {
+      "segments": [
+        {
+          "first_global_index": 0,
+          "first_string_index": 0,
+          "from_hub": "H033",
+          "last_global_index": 3,
+          "last_string_index": 3,
+          "location_type": "spar",
+          "spar_id": "S099",
+          "to_hub": "H048"
+        },
+        {
+          "first_global_index": 4,
+          "first_string_index": 4,
+          "last_global_index": 18,
+          "last_string_index": 18,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 19,
+          "first_string_index": 19,
+          "last_global_index": 27,
+          "last_string_index": 27,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 28,
+          "first_string_index": 28,
+          "from_hub": "H033",
+          "last_global_index": 32,
+          "last_string_index": 32,
+          "location_type": "spar",
+          "spar_id": "S098",
+          "to_hub": "H041"
+        },
+        {
+          "first_global_index": 33,
+          "first_string_index": 33,
+          "last_global_index": 36,
+          "last_string_index": 36,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 37,
+          "first_string_index": 37,
+          "last_global_index": 46,
+          "last_string_index": 46,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 47,
+          "first_string_index": 47,
+          "from_hub": "H021",
+          "last_global_index": 55,
+          "last_string_index": 55,
+          "location_type": "spar",
+          "spar_id": "S065",
+          "to_hub": "H033"
+        },
+        {
+          "first_global_index": 56,
+          "first_string_index": 56,
+          "last_global_index": 56,
+          "last_string_index": 56,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 57,
+          "first_string_index": 57,
+          "last_global_index": 57,
+          "last_string_index": 57,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 58,
+          "first_string_index": 58,
+          "from_hub": "H020",
+          "last_global_index": 66,
+          "last_string_index": 66,
+          "location_type": "spar",
+          "spar_id": "S062",
+          "to_hub": "H033"
+        },
+        {
+          "first_global_index": 67,
+          "first_string_index": 67,
+          "last_global_index": 76,
+          "last_string_index": 76,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 77,
+          "first_string_index": 77,
+          "last_global_index": 81,
+          "last_string_index": 81,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 82,
+          "first_string_index": 82,
+          "last_global_index": 86,
+          "last_string_index": 86,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 87,
+          "first_string_index": 87,
+          "from_hub": "H020",
+          "last_global_index": 92,
+          "last_string_index": 92,
+          "location_type": "spar",
+          "spar_id": "S063",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 93,
+          "first_string_index": 93,
+          "last_global_index": 96,
+          "last_string_index": 96,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 97,
+          "first_string_index": 97,
+          "last_global_index": 115,
+          "last_string_index": 115,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 116,
+          "first_string_index": 116,
+          "from_hub": "H020",
+          "last_global_index": 116,
+          "last_string_index": 116,
+          "location_type": "spar",
+          "spar_id": "S061",
+          "to_hub": "H027"
+        },
+        {
+          "first_global_index": 117,
+          "first_string_index": 117,
+          "last_global_index": 120,
+          "last_string_index": 120,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 121,
+          "first_string_index": 121,
+          "last_global_index": 123,
+          "last_string_index": 123,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 124,
+          "first_string_index": 124,
+          "from_hub": "H009",
+          "last_global_index": 129,
+          "last_string_index": 129,
+          "location_type": "spar",
+          "spar_id": "S029",
+          "to_hub": "H010"
+        },
+        {
+          "first_global_index": 130,
+          "first_string_index": 130,
+          "last_global_index": 130,
+          "last_string_index": 130,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 131,
+          "first_string_index": 131,
+          "last_global_index": 131,
+          "last_string_index": 131,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 132,
+          "first_string_index": 132,
+          "from_hub": "H027",
+          "last_global_index": 133,
+          "last_string_index": 133,
+          "location_type": "spar",
+          "spar_id": "S084",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 134,
+          "first_string_index": 134,
+          "last_global_index": 135,
+          "last_string_index": 135,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 136,
+          "first_string_index": 136,
+          "last_global_index": 136,
+          "last_string_index": 136,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 137,
+          "first_string_index": 137,
+          "last_global_index": 138,
+          "last_string_index": 138,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 139,
+          "first_string_index": 139,
+          "last_global_index": 141,
+          "last_string_index": 141,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 142,
+          "first_string_index": 142,
+          "from_hub": "H009",
+          "last_global_index": 145,
+          "last_string_index": 145,
+          "location_type": "spar",
+          "spar_id": "S031",
+          "to_hub": "H027"
+        },
+        {
+          "first_global_index": 146,
+          "first_string_index": 146,
+          "last_global_index": 155,
+          "last_string_index": 155,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 156,
+          "first_string_index": 156,
+          "from_hub": "H009",
+          "last_global_index": 157,
+          "last_string_index": 157,
+          "location_type": "spar",
+          "spar_id": "S031",
+          "to_hub": "H027"
+        },
+        {
+          "first_global_index": 158,
+          "first_string_index": 158,
+          "last_global_index": 158,
+          "last_string_index": 158,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 159,
+          "first_string_index": 159,
+          "last_global_index": 162,
+          "last_string_index": 162,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 163,
+          "first_string_index": 163,
+          "last_global_index": 163,
+          "last_string_index": 163,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 164,
+          "first_string_index": 164,
+          "from_hub": "H027",
+          "last_global_index": 169,
+          "last_string_index": 169,
+          "location_type": "spar",
+          "spar_id": "S083",
+          "to_hub": "H039"
+        },
+        {
+          "first_global_index": 170,
+          "first_string_index": 170,
+          "last_global_index": 172,
+          "last_string_index": 172,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 173,
+          "first_string_index": 173,
+          "last_global_index": 174,
+          "last_string_index": 174,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 175,
+          "first_string_index": 175,
+          "from_hub": "H039",
+          "last_global_index": 178,
+          "last_string_index": 178,
+          "location_type": "spar",
+          "spar_id": "S114",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 179,
+          "first_string_index": 179,
+          "last_global_index": 182,
+          "last_string_index": 182,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 183,
+          "first_string_index": 183,
+          "last_global_index": 188,
+          "last_string_index": 188,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 189,
+          "first_string_index": 189,
+          "from_hub": "H039",
+          "last_global_index": 193,
+          "last_string_index": 193,
+          "location_type": "spar",
+          "spar_id": "S116",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 194,
+          "first_string_index": 194,
+          "last_global_index": 199,
+          "last_string_index": 199,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 200,
+          "first_string_index": 200,
+          "last_global_index": 207,
+          "last_string_index": 207,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 208,
+          "first_string_index": 208,
+          "from_hub": "H039",
+          "last_global_index": 213,
+          "last_string_index": 213,
+          "location_type": "spar",
+          "spar_id": "S114",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 214,
+          "first_string_index": 214,
+          "last_global_index": 219,
+          "last_string_index": 219,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 220,
+          "first_string_index": 220,
+          "last_global_index": 223,
+          "last_string_index": 223,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 224,
+          "first_string_index": 224,
+          "from_hub": "H027",
+          "last_global_index": 227,
+          "last_string_index": 227,
+          "location_type": "spar",
+          "spar_id": "S084",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 228,
+          "first_string_index": 228,
+          "last_global_index": 228,
+          "last_string_index": 228,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 229,
+          "first_string_index": 229,
+          "last_global_index": 230,
+          "last_string_index": 230,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 231,
+          "first_string_index": 231,
+          "last_global_index": 232,
+          "last_string_index": 232,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 233,
+          "first_string_index": 233,
+          "from_hub": "H027",
+          "last_global_index": 238,
+          "last_string_index": 238,
+          "location_type": "spar",
+          "spar_id": "S084",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 239,
+          "first_string_index": 239,
+          "last_global_index": 240,
+          "last_string_index": 240,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 241,
+          "first_string_index": 241,
+          "last_global_index": 241,
+          "last_string_index": 241,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 242,
+          "first_string_index": 242,
+          "from_hub": "H039",
+          "last_global_index": 245,
+          "last_string_index": 245,
+          "location_type": "spar",
+          "spar_id": "S114",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 246,
+          "first_string_index": 246,
+          "last_global_index": 247,
+          "last_string_index": 247,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 248,
+          "first_string_index": 248,
+          "last_global_index": 250,
+          "last_string_index": 250,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 251,
+          "first_string_index": 251,
+          "from_hub": "H040",
+          "last_global_index": 256,
+          "last_string_index": 256,
+          "location_type": "spar",
+          "spar_id": "S118",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 257,
+          "first_string_index": 257,
+          "last_global_index": 266,
+          "last_string_index": 266,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 267,
+          "first_string_index": 267,
+          "last_global_index": 274,
+          "last_string_index": 274,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 275,
+          "first_string_index": 275,
+          "last_global_index": 284,
+          "last_string_index": 284,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 285,
+          "first_string_index": 285,
+          "from_hub": "H040",
+          "last_global_index": 288,
+          "last_string_index": 288,
+          "location_type": "spar",
+          "spar_id": "S117",
+          "to_hub": "H048"
+        },
+        {
+          "first_global_index": 289,
+          "first_string_index": 289,
+          "last_global_index": 291,
+          "last_string_index": 291,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 292,
+          "first_string_index": 292,
+          "last_global_index": 294,
+          "last_string_index": 294,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 295,
+          "first_string_index": 295,
+          "from_hub": "H033",
+          "last_global_index": 299,
+          "last_string_index": 299,
+          "location_type": "spar",
+          "spar_id": "S097",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 300,
+          "first_string_index": 300,
+          "last_global_index": 305,
+          "last_string_index": 305,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 306,
+          "first_string_index": 306,
+          "last_global_index": 306,
+          "last_string_index": 306,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 307,
+          "first_string_index": 307,
+          "last_global_index": 307,
+          "last_string_index": 307,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 308,
+          "first_string_index": 308,
+          "last_global_index": 312,
+          "last_string_index": 312,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 313,
+          "first_string_index": 313,
+          "from_hub": "H033",
+          "last_global_index": 317,
+          "last_string_index": 317,
+          "location_type": "spar",
+          "spar_id": "S097",
+          "to_hub": "H040"
+        },
+        {
+          "first_global_index": 318,
+          "first_string_index": 318,
+          "last_global_index": 327,
+          "last_string_index": 327,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 328,
+          "first_string_index": 328,
+          "last_global_index": 330,
+          "last_string_index": 330,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 331,
+          "first_string_index": 331,
+          "last_global_index": 342,
+          "last_string_index": 342,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 343,
+          "first_string_index": 343,
+          "from_hub": "H033",
+          "last_global_index": 345,
+          "last_string_index": 345,
+          "location_type": "spar",
+          "spar_id": "S099",
+          "to_hub": "H048"
+        },
+        {
+          "first_global_index": 346,
+          "first_string_index": 346,
+          "last_global_index": 346,
+          "last_string_index": 346,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 347,
+          "first_string_index": 347,
+          "from_hub": "H041",
+          "last_global_index": 350,
+          "last_string_index": 350,
+          "location_type": "spar",
+          "spar_id": "S120",
+          "to_hub": "H048"
+        },
+        {
+          "first_global_index": 351,
+          "first_string_index": 351,
+          "last_global_index": 351,
+          "last_string_index": 351,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 352,
+          "first_string_index": 352,
+          "last_global_index": 388,
+          "last_string_index": 388,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 389,
+          "first_string_index": 389,
+          "from_hub": "H048",
+          "last_global_index": 392,
+          "last_string_index": 392,
+          "location_type": "spar",
+          "spar_id": "S138",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 393,
+          "first_string_index": 393,
+          "last_global_index": 405,
+          "last_string_index": 405,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 406,
+          "first_string_index": 406,
+          "last_global_index": 419,
+          "last_string_index": 419,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 420,
+          "first_string_index": 420,
+          "from_hub": "H048",
+          "last_global_index": 457,
+          "last_string_index": 457,
+          "location_type": "spar",
+          "spar_id": "S139",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 458,
+          "first_string_index": 458,
+          "last_global_index": 458,
+          "last_string_index": 458,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 459,
+          "first_string_index": 459,
+          "last_global_index": 459,
+          "last_string_index": 459,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 460,
+          "first_string_index": 460,
+          "from_hub": "H040",
+          "last_global_index": 461,
+          "last_string_index": 461,
+          "location_type": "spar",
+          "spar_id": "S117",
+          "to_hub": "H048"
+        },
+        {
+          "first_global_index": 462,
+          "first_string_index": 462,
+          "last_global_index": 462,
+          "last_string_index": 462,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 463,
+          "first_string_index": 463,
+          "last_global_index": 464,
+          "last_string_index": 464,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 465,
+          "first_string_index": 465,
+          "from_hub": "H048",
+          "last_global_index": 466,
+          "last_string_index": 466,
+          "location_type": "spar",
+          "spar_id": "S137",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 467,
+          "first_string_index": 467,
+          "last_global_index": 501,
+          "last_string_index": 501,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 502,
+          "first_string_index": 502,
+          "last_global_index": 509,
+          "last_string_index": 509,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 510,
+          "first_string_index": 510,
+          "from_hub": "H040",
+          "last_global_index": 514,
+          "last_string_index": 514,
+          "location_type": "spar",
+          "spar_id": "S118",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 515,
+          "first_string_index": 515,
+          "last_global_index": 521,
+          "last_string_index": 521,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 522,
+          "first_string_index": 522,
+          "last_global_index": 534,
+          "last_string_index": 534,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 535,
+          "first_string_index": 535,
+          "from_hub": "H039",
+          "last_global_index": 542,
+          "last_string_index": 542,
+          "location_type": "spar",
+          "spar_id": "S116",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 543,
+          "first_string_index": 543,
+          "last_global_index": 548,
+          "last_string_index": 548,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 549,
+          "first_string_index": 549,
+          "last_global_index": 552,
+          "last_string_index": 552,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 553,
+          "first_string_index": 553,
+          "from_hub": "H047",
+          "last_global_index": 555,
+          "last_string_index": 555,
+          "location_type": "spar",
+          "spar_id": "S135",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 556,
+          "first_string_index": 556,
+          "last_global_index": 558,
+          "last_string_index": 558,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 559,
+          "first_string_index": 559,
+          "last_global_index": 563,
+          "last_string_index": 563,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 564,
+          "first_string_index": 564,
+          "from_hub": "H053",
+          "last_global_index": 569,
+          "last_string_index": 569,
+          "location_type": "spar",
+          "spar_id": "S150",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 570,
+          "first_string_index": 570,
+          "last_global_index": 588,
+          "last_string_index": 588,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 589,
+          "first_string_index": 589,
+          "last_global_index": 595,
+          "last_string_index": 595,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 596,
+          "first_string_index": 596,
+          "from_hub": "H053",
+          "last_global_index": 598,
+          "last_string_index": 598,
+          "location_type": "spar",
+          "spar_id": "S151",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 599,
+          "first_string_index": 599,
+          "last_global_index": 601,
+          "last_string_index": 601,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 602,
+          "first_string_index": 602,
+          "last_global_index": 605,
+          "last_string_index": 605,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 606,
+          "first_string_index": 606,
+          "from_hub": "H048",
+          "last_global_index": 609,
+          "last_string_index": 609,
+          "location_type": "spar",
+          "spar_id": "S137",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 610,
+          "first_string_index": 610,
+          "last_global_index": 623,
+          "last_string_index": 623,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 624,
+          "first_string_index": 624,
+          "from_hub": "H048",
+          "last_global_index": 627,
+          "last_string_index": 627,
+          "location_type": "spar",
+          "spar_id": "S137",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 628,
+          "first_string_index": 628,
+          "last_global_index": 640,
+          "last_string_index": 640,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 641,
+          "first_string_index": 641,
+          "last_global_index": 654,
+          "last_string_index": 654,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 655,
+          "first_string_index": 655,
+          "from_hub": "H048",
+          "last_global_index": 658,
+          "last_string_index": 658,
+          "location_type": "spar",
+          "spar_id": "S139",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 659,
+          "first_string_index": 659,
+          "last_global_index": 662,
+          "last_string_index": 662,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 663,
+          "first_string_index": 663,
+          "last_global_index": 667,
+          "last_string_index": 667,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 668,
+          "first_string_index": 668,
+          "from_hub": "H053",
+          "last_global_index": 672,
+          "last_string_index": 672,
+          "location_type": "spar",
+          "spar_id": "S151",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 673,
+          "first_string_index": 673,
+          "last_global_index": 689,
+          "last_string_index": 689,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 690,
+          "first_string_index": 690,
+          "last_global_index": 700,
+          "last_string_index": 700,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 701,
+          "first_string_index": 701,
+          "last_global_index": 711,
+          "last_string_index": 711,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 712,
+          "first_string_index": 712,
+          "from_hub": "H057",
+          "last_global_index": 715,
+          "last_string_index": 715,
+          "location_type": "spar",
+          "spar_id": "S159",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 716,
+          "first_string_index": 716,
+          "last_global_index": 724,
+          "last_string_index": 724,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 725,
+          "first_string_index": 725,
+          "last_global_index": 732,
+          "last_string_index": 732,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 733,
+          "first_string_index": 733,
+          "from_hub": "H058",
+          "last_global_index": 762,
+          "last_string_index": 762,
+          "location_type": "spar",
+          "spar_id": "S162",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 763,
+          "first_string_index": 763,
+          "last_global_index": 763,
+          "last_string_index": 763,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 764,
+          "first_string_index": 764,
+          "from_hub": "H048",
+          "last_global_index": 776,
+          "last_string_index": 776,
+          "location_type": "spar",
+          "spar_id": "S139",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 777,
+          "first_string_index": 777,
+          "last_global_index": 780,
+          "last_string_index": 780,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 781,
+          "first_string_index": 781,
+          "last_global_index": 785,
+          "last_string_index": 785,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 786,
+          "first_string_index": 786,
+          "from_hub": "H054",
+          "last_global_index": 790,
+          "last_string_index": 790,
+          "location_type": "spar",
+          "spar_id": "S152",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 791,
+          "first_string_index": 791,
+          "last_global_index": 807,
+          "last_string_index": 807,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 808,
+          "first_string_index": 808,
+          "last_global_index": 818,
+          "last_string_index": 818,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 819,
+          "first_string_index": 819,
+          "last_global_index": 830,
+          "last_string_index": 830,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 831,
+          "first_string_index": 831,
+          "from_hub": "H058",
+          "last_global_index": 834,
+          "last_string_index": 834,
+          "location_type": "spar",
+          "spar_id": "S161",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 835,
+          "first_string_index": 835,
+          "last_global_index": 842,
+          "last_string_index": 842,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 843,
+          "first_string_index": 843,
+          "last_global_index": 851,
+          "last_string_index": 851,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 852,
+          "first_string_index": 852,
+          "from_hub": "H058",
+          "last_global_index": 854,
+          "last_string_index": 854,
+          "location_type": "spar",
+          "spar_id": "S162",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 855,
+          "first_string_index": 855,
+          "last_global_index": 866,
+          "last_string_index": 866,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 867,
+          "first_string_index": 867,
+          "last_global_index": 886,
+          "last_string_index": 886,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 887,
+          "first_string_index": 887,
+          "from_hub": "H059",
+          "last_global_index": 931,
+          "last_string_index": 931,
+          "location_type": "spar",
+          "spar_id": "S164",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 932,
+          "first_string_index": 932,
+          "last_global_index": 932,
+          "last_string_index": 932,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 933,
+          "first_string_index": 933,
+          "last_global_index": 999,
+          "last_string_index": 999,
+          "location_type": "tail",
+          "tail_model": "unresolved"
+        }
+      ],
+      "string_id": 0
+    },
+    {
+      "segments": [
+        {
+          "first_global_index": 1000,
+          "first_string_index": 0,
+          "from_hub": "H032",
+          "last_global_index": 1003,
+          "last_string_index": 3,
+          "location_type": "spar",
+          "spar_id": "S096",
+          "to_hub": "H047"
+        },
+        {
+          "first_global_index": 1004,
+          "first_string_index": 4,
+          "last_global_index": 1018,
+          "last_string_index": 18,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1019,
+          "first_string_index": 19,
+          "last_global_index": 1027,
+          "last_string_index": 27,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1028,
+          "first_string_index": 28,
+          "from_hub": "H032",
+          "last_global_index": 1032,
+          "last_string_index": 32,
+          "location_type": "spar",
+          "spar_id": "S095",
+          "to_hub": "H039"
+        },
+        {
+          "first_global_index": 1033,
+          "first_string_index": 33,
+          "last_global_index": 1036,
+          "last_string_index": 36,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1037,
+          "first_string_index": 37,
+          "last_global_index": 1046,
+          "last_string_index": 46,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1047,
+          "first_string_index": 47,
+          "from_hub": "H019",
+          "last_global_index": 1055,
+          "last_string_index": 55,
+          "location_type": "spar",
+          "spar_id": "S058",
+          "to_hub": "H032"
+        },
+        {
+          "first_global_index": 1056,
+          "first_string_index": 56,
+          "last_global_index": 1056,
+          "last_string_index": 56,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1057,
+          "first_string_index": 57,
+          "last_global_index": 1057,
+          "last_string_index": 57,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1058,
+          "first_string_index": 58,
+          "from_hub": "H018",
+          "last_global_index": 1066,
+          "last_string_index": 66,
+          "location_type": "spar",
+          "spar_id": "S055",
+          "to_hub": "H032"
+        },
+        {
+          "first_global_index": 1067,
+          "first_string_index": 67,
+          "last_global_index": 1076,
+          "last_string_index": 76,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1077,
+          "first_string_index": 77,
+          "last_global_index": 1081,
+          "last_string_index": 81,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1082,
+          "first_string_index": 82,
+          "last_global_index": 1086,
+          "last_string_index": 86,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1087,
+          "first_string_index": 87,
+          "from_hub": "H018",
+          "last_global_index": 1092,
+          "last_string_index": 92,
+          "location_type": "spar",
+          "spar_id": "S056",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1093,
+          "first_string_index": 93,
+          "last_global_index": 1096,
+          "last_string_index": 96,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1097,
+          "first_string_index": 97,
+          "last_global_index": 1115,
+          "last_string_index": 115,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1116,
+          "first_string_index": 116,
+          "from_hub": "H018",
+          "last_global_index": 1116,
+          "last_string_index": 116,
+          "location_type": "spar",
+          "spar_id": "S054",
+          "to_hub": "H026"
+        },
+        {
+          "first_global_index": 1117,
+          "first_string_index": 117,
+          "last_global_index": 1120,
+          "last_string_index": 120,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1121,
+          "first_string_index": 121,
+          "last_global_index": 1123,
+          "last_string_index": 123,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1124,
+          "first_string_index": 124,
+          "from_hub": "H007",
+          "last_global_index": 1129,
+          "last_string_index": 129,
+          "location_type": "spar",
+          "spar_id": "S024",
+          "to_hub": "H008"
+        },
+        {
+          "first_global_index": 1130,
+          "first_string_index": 130,
+          "last_global_index": 1130,
+          "last_string_index": 130,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1131,
+          "first_string_index": 131,
+          "last_global_index": 1131,
+          "last_string_index": 131,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1132,
+          "first_string_index": 132,
+          "from_hub": "H026",
+          "last_global_index": 1133,
+          "last_string_index": 133,
+          "location_type": "spar",
+          "spar_id": "S082",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1134,
+          "first_string_index": 134,
+          "last_global_index": 1135,
+          "last_string_index": 135,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1136,
+          "first_string_index": 136,
+          "last_global_index": 1136,
+          "last_string_index": 136,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1137,
+          "first_string_index": 137,
+          "last_global_index": 1138,
+          "last_string_index": 138,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1139,
+          "first_string_index": 139,
+          "last_global_index": 1141,
+          "last_string_index": 141,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1142,
+          "first_string_index": 142,
+          "from_hub": "H007",
+          "last_global_index": 1145,
+          "last_string_index": 145,
+          "location_type": "spar",
+          "spar_id": "S026",
+          "to_hub": "H026"
+        },
+        {
+          "first_global_index": 1146,
+          "first_string_index": 146,
+          "last_global_index": 1155,
+          "last_string_index": 155,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1156,
+          "first_string_index": 156,
+          "from_hub": "H007",
+          "last_global_index": 1157,
+          "last_string_index": 157,
+          "location_type": "spar",
+          "spar_id": "S026",
+          "to_hub": "H026"
+        },
+        {
+          "first_global_index": 1158,
+          "first_string_index": 158,
+          "last_global_index": 1158,
+          "last_string_index": 158,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1159,
+          "first_string_index": 159,
+          "last_global_index": 1162,
+          "last_string_index": 162,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1163,
+          "first_string_index": 163,
+          "last_global_index": 1163,
+          "last_string_index": 163,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1164,
+          "first_string_index": 164,
+          "from_hub": "H026",
+          "last_global_index": 1169,
+          "last_string_index": 169,
+          "location_type": "spar",
+          "spar_id": "S081",
+          "to_hub": "H037"
+        },
+        {
+          "first_global_index": 1170,
+          "first_string_index": 170,
+          "last_global_index": 1172,
+          "last_string_index": 172,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1173,
+          "first_string_index": 173,
+          "last_global_index": 1174,
+          "last_string_index": 174,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1175,
+          "first_string_index": 175,
+          "from_hub": "H037",
+          "last_global_index": 1178,
+          "last_string_index": 178,
+          "location_type": "spar",
+          "spar_id": "S109",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1179,
+          "first_string_index": 179,
+          "last_global_index": 1182,
+          "last_string_index": 182,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1183,
+          "first_string_index": 183,
+          "last_global_index": 1188,
+          "last_string_index": 188,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1189,
+          "first_string_index": 189,
+          "from_hub": "H037",
+          "last_global_index": 1193,
+          "last_string_index": 193,
+          "location_type": "spar",
+          "spar_id": "S111",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 1194,
+          "first_string_index": 194,
+          "last_global_index": 1199,
+          "last_string_index": 199,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1200,
+          "first_string_index": 200,
+          "last_global_index": 1207,
+          "last_string_index": 207,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1208,
+          "first_string_index": 208,
+          "from_hub": "H037",
+          "last_global_index": 1213,
+          "last_string_index": 213,
+          "location_type": "spar",
+          "spar_id": "S109",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1214,
+          "first_string_index": 214,
+          "last_global_index": 1219,
+          "last_string_index": 219,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1220,
+          "first_string_index": 220,
+          "last_global_index": 1223,
+          "last_string_index": 223,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1224,
+          "first_string_index": 224,
+          "from_hub": "H026",
+          "last_global_index": 1227,
+          "last_string_index": 227,
+          "location_type": "spar",
+          "spar_id": "S082",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1228,
+          "first_string_index": 228,
+          "last_global_index": 1228,
+          "last_string_index": 228,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1229,
+          "first_string_index": 229,
+          "last_global_index": 1230,
+          "last_string_index": 230,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1231,
+          "first_string_index": 231,
+          "last_global_index": 1232,
+          "last_string_index": 232,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1233,
+          "first_string_index": 233,
+          "from_hub": "H026",
+          "last_global_index": 1238,
+          "last_string_index": 238,
+          "location_type": "spar",
+          "spar_id": "S082",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1239,
+          "first_string_index": 239,
+          "last_global_index": 1240,
+          "last_string_index": 240,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1241,
+          "first_string_index": 241,
+          "last_global_index": 1241,
+          "last_string_index": 241,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1242,
+          "first_string_index": 242,
+          "from_hub": "H037",
+          "last_global_index": 1245,
+          "last_string_index": 245,
+          "location_type": "spar",
+          "spar_id": "S109",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1246,
+          "first_string_index": 246,
+          "last_global_index": 1247,
+          "last_string_index": 247,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1248,
+          "first_string_index": 248,
+          "last_global_index": 1250,
+          "last_string_index": 250,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1251,
+          "first_string_index": 251,
+          "from_hub": "H038",
+          "last_global_index": 1256,
+          "last_string_index": 256,
+          "location_type": "spar",
+          "spar_id": "S113",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 1257,
+          "first_string_index": 257,
+          "last_global_index": 1266,
+          "last_string_index": 266,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1267,
+          "first_string_index": 267,
+          "last_global_index": 1274,
+          "last_string_index": 274,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1275,
+          "first_string_index": 275,
+          "last_global_index": 1284,
+          "last_string_index": 284,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1285,
+          "first_string_index": 285,
+          "from_hub": "H038",
+          "last_global_index": 1288,
+          "last_string_index": 288,
+          "location_type": "spar",
+          "spar_id": "S112",
+          "to_hub": "H047"
+        },
+        {
+          "first_global_index": 1289,
+          "first_string_index": 289,
+          "last_global_index": 1291,
+          "last_string_index": 291,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1292,
+          "first_string_index": 292,
+          "last_global_index": 1294,
+          "last_string_index": 294,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1295,
+          "first_string_index": 295,
+          "from_hub": "H032",
+          "last_global_index": 1299,
+          "last_string_index": 299,
+          "location_type": "spar",
+          "spar_id": "S094",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1300,
+          "first_string_index": 300,
+          "last_global_index": 1305,
+          "last_string_index": 305,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1306,
+          "first_string_index": 306,
+          "last_global_index": 1306,
+          "last_string_index": 306,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1307,
+          "first_string_index": 307,
+          "last_global_index": 1307,
+          "last_string_index": 307,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1308,
+          "first_string_index": 308,
+          "last_global_index": 1312,
+          "last_string_index": 312,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1313,
+          "first_string_index": 313,
+          "from_hub": "H032",
+          "last_global_index": 1317,
+          "last_string_index": 317,
+          "location_type": "spar",
+          "spar_id": "S094",
+          "to_hub": "H038"
+        },
+        {
+          "first_global_index": 1318,
+          "first_string_index": 318,
+          "last_global_index": 1327,
+          "last_string_index": 327,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1328,
+          "first_string_index": 328,
+          "last_global_index": 1330,
+          "last_string_index": 330,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1331,
+          "first_string_index": 331,
+          "last_global_index": 1342,
+          "last_string_index": 342,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1343,
+          "first_string_index": 343,
+          "from_hub": "H032",
+          "last_global_index": 1345,
+          "last_string_index": 345,
+          "location_type": "spar",
+          "spar_id": "S096",
+          "to_hub": "H047"
+        },
+        {
+          "first_global_index": 1346,
+          "first_string_index": 346,
+          "last_global_index": 1346,
+          "last_string_index": 346,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1347,
+          "first_string_index": 347,
+          "from_hub": "H039",
+          "last_global_index": 1350,
+          "last_string_index": 350,
+          "location_type": "spar",
+          "spar_id": "S115",
+          "to_hub": "H047"
+        },
+        {
+          "first_global_index": 1351,
+          "first_string_index": 351,
+          "last_global_index": 1351,
+          "last_string_index": 351,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1352,
+          "first_string_index": 352,
+          "last_global_index": 1388,
+          "last_string_index": 388,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1389,
+          "first_string_index": 389,
+          "from_hub": "H047",
+          "last_global_index": 1392,
+          "last_string_index": 392,
+          "location_type": "spar",
+          "spar_id": "S135",
+          "to_hub": "H053"
+        },
+        {
+          "first_global_index": 1393,
+          "first_string_index": 393,
+          "last_global_index": 1405,
+          "last_string_index": 405,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1406,
+          "first_string_index": 406,
+          "last_global_index": 1419,
+          "last_string_index": 419,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1420,
+          "first_string_index": 420,
+          "from_hub": "H047",
+          "last_global_index": 1457,
+          "last_string_index": 457,
+          "location_type": "spar",
+          "spar_id": "S136",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 1458,
+          "first_string_index": 458,
+          "last_global_index": 1458,
+          "last_string_index": 458,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1459,
+          "first_string_index": 459,
+          "last_global_index": 1459,
+          "last_string_index": 459,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1460,
+          "first_string_index": 460,
+          "from_hub": "H038",
+          "last_global_index": 1461,
+          "last_string_index": 461,
+          "location_type": "spar",
+          "spar_id": "S112",
+          "to_hub": "H047"
+        },
+        {
+          "first_global_index": 1462,
+          "first_string_index": 462,
+          "last_global_index": 1462,
+          "last_string_index": 462,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1463,
+          "first_string_index": 463,
+          "last_global_index": 1464,
+          "last_string_index": 464,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1465,
+          "first_string_index": 465,
+          "from_hub": "H047",
+          "last_global_index": 1466,
+          "last_string_index": 466,
+          "location_type": "spar",
+          "spar_id": "S134",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 1467,
+          "first_string_index": 467,
+          "last_global_index": 1501,
+          "last_string_index": 501,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1502,
+          "first_string_index": 502,
+          "last_global_index": 1509,
+          "last_string_index": 509,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1510,
+          "first_string_index": 510,
+          "from_hub": "H038",
+          "last_global_index": 1514,
+          "last_string_index": 514,
+          "location_type": "spar",
+          "spar_id": "S113",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 1515,
+          "first_string_index": 515,
+          "last_global_index": 1521,
+          "last_string_index": 521,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1522,
+          "first_string_index": 522,
+          "last_global_index": 1534,
+          "last_string_index": 534,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1535,
+          "first_string_index": 535,
+          "from_hub": "H037",
+          "last_global_index": 1542,
+          "last_string_index": 542,
+          "location_type": "spar",
+          "spar_id": "S111",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 1543,
+          "first_string_index": 543,
+          "last_global_index": 1548,
+          "last_string_index": 548,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1549,
+          "first_string_index": 549,
+          "last_global_index": 1552,
+          "last_string_index": 552,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1553,
+          "first_string_index": 553,
+          "from_hub": "H046",
+          "last_global_index": 1555,
+          "last_string_index": 555,
+          "location_type": "spar",
+          "spar_id": "S132",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 1556,
+          "first_string_index": 556,
+          "last_global_index": 1558,
+          "last_string_index": 558,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1559,
+          "first_string_index": 559,
+          "last_global_index": 1563,
+          "last_string_index": 563,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1564,
+          "first_string_index": 564,
+          "from_hub": "H052",
+          "last_global_index": 1569,
+          "last_string_index": 569,
+          "location_type": "spar",
+          "spar_id": "S148",
+          "to_hub": "H056"
+        },
+        {
+          "first_global_index": 1570,
+          "first_string_index": 570,
+          "last_global_index": 1588,
+          "last_string_index": 588,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1589,
+          "first_string_index": 589,
+          "last_global_index": 1595,
+          "last_string_index": 595,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1596,
+          "first_string_index": 596,
+          "from_hub": "H052",
+          "last_global_index": 1598,
+          "last_string_index": 598,
+          "location_type": "spar",
+          "spar_id": "S149",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 1599,
+          "first_string_index": 599,
+          "last_global_index": 1601,
+          "last_string_index": 601,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1602,
+          "first_string_index": 602,
+          "last_global_index": 1605,
+          "last_string_index": 605,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1606,
+          "first_string_index": 606,
+          "from_hub": "H047",
+          "last_global_index": 1609,
+          "last_string_index": 609,
+          "location_type": "spar",
+          "spar_id": "S134",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 1610,
+          "first_string_index": 610,
+          "last_global_index": 1623,
+          "last_string_index": 623,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1624,
+          "first_string_index": 624,
+          "from_hub": "H047",
+          "last_global_index": 1627,
+          "last_string_index": 627,
+          "location_type": "spar",
+          "spar_id": "S134",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 1628,
+          "first_string_index": 628,
+          "last_global_index": 1640,
+          "last_string_index": 640,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1641,
+          "first_string_index": 641,
+          "last_global_index": 1654,
+          "last_string_index": 654,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1655,
+          "first_string_index": 655,
+          "from_hub": "H047",
+          "last_global_index": 1658,
+          "last_string_index": 658,
+          "location_type": "spar",
+          "spar_id": "S136",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 1659,
+          "first_string_index": 659,
+          "last_global_index": 1662,
+          "last_string_index": 662,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1663,
+          "first_string_index": 663,
+          "last_global_index": 1667,
+          "last_string_index": 667,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1668,
+          "first_string_index": 668,
+          "from_hub": "H052",
+          "last_global_index": 1672,
+          "last_string_index": 672,
+          "location_type": "spar",
+          "spar_id": "S149",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 1673,
+          "first_string_index": 673,
+          "last_global_index": 1689,
+          "last_string_index": 689,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1690,
+          "first_string_index": 690,
+          "last_global_index": 1700,
+          "last_string_index": 700,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1701,
+          "first_string_index": 701,
+          "last_global_index": 1711,
+          "last_string_index": 711,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1712,
+          "first_string_index": 712,
+          "from_hub": "H056",
+          "last_global_index": 1715,
+          "last_string_index": 715,
+          "location_type": "spar",
+          "spar_id": "S156",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 1716,
+          "first_string_index": 716,
+          "last_global_index": 1724,
+          "last_string_index": 724,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1725,
+          "first_string_index": 725,
+          "last_global_index": 1732,
+          "last_string_index": 732,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1733,
+          "first_string_index": 733,
+          "from_hub": "H057",
+          "last_global_index": 1762,
+          "last_string_index": 762,
+          "location_type": "spar",
+          "spar_id": "S160",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 1763,
+          "first_string_index": 763,
+          "last_global_index": 1763,
+          "last_string_index": 763,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1764,
+          "first_string_index": 764,
+          "from_hub": "H047",
+          "last_global_index": 1776,
+          "last_string_index": 776,
+          "location_type": "spar",
+          "spar_id": "S136",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 1777,
+          "first_string_index": 777,
+          "last_global_index": 1780,
+          "last_string_index": 780,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1781,
+          "first_string_index": 781,
+          "last_global_index": 1785,
+          "last_string_index": 785,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1786,
+          "first_string_index": 786,
+          "from_hub": "H053",
+          "last_global_index": 1790,
+          "last_string_index": 790,
+          "location_type": "spar",
+          "spar_id": "S150",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 1791,
+          "first_string_index": 791,
+          "last_global_index": 1807,
+          "last_string_index": 807,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1808,
+          "first_string_index": 808,
+          "last_global_index": 1818,
+          "last_string_index": 818,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1819,
+          "first_string_index": 819,
+          "last_global_index": 1830,
+          "last_string_index": 830,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1831,
+          "first_string_index": 831,
+          "from_hub": "H057",
+          "last_global_index": 1834,
+          "last_string_index": 834,
+          "location_type": "spar",
+          "spar_id": "S159",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 1835,
+          "first_string_index": 835,
+          "last_global_index": 1842,
+          "last_string_index": 842,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1843,
+          "first_string_index": 843,
+          "last_global_index": 1851,
+          "last_string_index": 851,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1852,
+          "first_string_index": 852,
+          "from_hub": "H057",
+          "last_global_index": 1854,
+          "last_string_index": 854,
+          "location_type": "spar",
+          "spar_id": "S160",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 1855,
+          "first_string_index": 855,
+          "last_global_index": 1866,
+          "last_string_index": 866,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1867,
+          "first_string_index": 867,
+          "last_global_index": 1886,
+          "last_string_index": 886,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 1887,
+          "first_string_index": 887,
+          "from_hub": "H058",
+          "last_global_index": 1931,
+          "last_string_index": 931,
+          "location_type": "spar",
+          "spar_id": "S162",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 1932,
+          "first_string_index": 932,
+          "last_global_index": 1932,
+          "last_string_index": 932,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 1933,
+          "first_string_index": 933,
+          "last_global_index": 1999,
+          "last_string_index": 999,
+          "location_type": "tail",
+          "tail_model": "unresolved"
+        }
+      ],
+      "string_id": 1
+    },
+    {
+      "segments": [
+        {
+          "first_global_index": 2000,
+          "first_string_index": 0,
+          "from_hub": "H031",
+          "last_global_index": 2003,
+          "last_string_index": 3,
+          "location_type": "spar",
+          "spar_id": "S093",
+          "to_hub": "H046"
+        },
+        {
+          "first_global_index": 2004,
+          "first_string_index": 4,
+          "last_global_index": 2018,
+          "last_string_index": 18,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2019,
+          "first_string_index": 19,
+          "last_global_index": 2027,
+          "last_string_index": 27,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2028,
+          "first_string_index": 28,
+          "from_hub": "H031",
+          "last_global_index": 2032,
+          "last_string_index": 32,
+          "location_type": "spar",
+          "spar_id": "S092",
+          "to_hub": "H037"
+        },
+        {
+          "first_global_index": 2033,
+          "first_string_index": 33,
+          "last_global_index": 2036,
+          "last_string_index": 36,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2037,
+          "first_string_index": 37,
+          "last_global_index": 2046,
+          "last_string_index": 46,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2047,
+          "first_string_index": 47,
+          "from_hub": "H017",
+          "last_global_index": 2055,
+          "last_string_index": 55,
+          "location_type": "spar",
+          "spar_id": "S051",
+          "to_hub": "H031"
+        },
+        {
+          "first_global_index": 2056,
+          "first_string_index": 56,
+          "last_global_index": 2056,
+          "last_string_index": 56,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2057,
+          "first_string_index": 57,
+          "last_global_index": 2057,
+          "last_string_index": 57,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2058,
+          "first_string_index": 58,
+          "from_hub": "H016",
+          "last_global_index": 2066,
+          "last_string_index": 66,
+          "location_type": "spar",
+          "spar_id": "S048",
+          "to_hub": "H031"
+        },
+        {
+          "first_global_index": 2067,
+          "first_string_index": 67,
+          "last_global_index": 2076,
+          "last_string_index": 76,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2077,
+          "first_string_index": 77,
+          "last_global_index": 2081,
+          "last_string_index": 81,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2082,
+          "first_string_index": 82,
+          "last_global_index": 2086,
+          "last_string_index": 86,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2087,
+          "first_string_index": 87,
+          "from_hub": "H016",
+          "last_global_index": 2092,
+          "last_string_index": 92,
+          "location_type": "spar",
+          "spar_id": "S049",
+          "to_hub": "H036"
+        },
+        {
+          "first_global_index": 2093,
+          "first_string_index": 93,
+          "last_global_index": 2096,
+          "last_string_index": 96,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2097,
+          "first_string_index": 97,
+          "last_global_index": 2115,
+          "last_string_index": 115,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2116,
+          "first_string_index": 116,
+          "from_hub": "H016",
+          "last_global_index": 2116,
+          "last_string_index": 116,
+          "location_type": "spar",
+          "spar_id": "S047",
+          "to_hub": "H030"
+        },
+        {
+          "first_global_index": 2117,
+          "first_string_index": 117,
+          "last_global_index": 2120,
+          "last_string_index": 120,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2121,
+          "first_string_index": 121,
+          "last_global_index": 2123,
+          "last_string_index": 123,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2124,
+          "first_string_index": 124,
+          "from_hub": "H006",
+          "last_global_index": 2129,
+          "last_string_index": 129,
+          "location_type": "spar",
+          "spar_id": "S021",
+          "to_hub": "H015"
+        },
+        {
+          "first_global_index": 2130,
+          "first_string_index": 130,
+          "last_global_index": 2130,
+          "last_string_index": 130,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2131,
+          "first_string_index": 131,
+          "last_global_index": 2131,
+          "last_string_index": 131,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2132,
+          "first_string_index": 132,
+          "from_hub": "H030",
+          "last_global_index": 2133,
+          "last_string_index": 133,
+          "location_type": "spar",
+          "spar_id": "S089",
+          "to_hub": "H036"
+        },
+        {
+          "first_global_index": 2134,
+          "first_string_index": 134,
+          "last_global_index": 2135,
+          "last_string_index": 135,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2136,
+          "first_string_index": 136,
+          "last_global_index": 2136,
+          "last_string_index": 136,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2137,
+          "first_string_index": 137,
+          "last_global_index": 2138,
+          "last_string_index": 138,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2139,
+          "first_string_index": 139,
+          "last_global_index": 2141,
+          "last_string_index": 141,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2142,
+          "first_string_index": 142,
+          "from_hub": "H015",
+          "last_global_index": 2145,
+          "last_string_index": 145,
+          "location_type": "spar",
+          "spar_id": "S045",
+          "to_hub": "H030"
+        },
+        {
+          "first_global_index": 2146,
+          "first_string_index": 146,
+          "last_global_index": 2155,
+          "last_string_index": 155,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2156,
+          "first_string_index": 156,
+          "from_hub": "H015",
+          "last_global_index": 2157,
+          "last_string_index": 157,
+          "location_type": "spar",
+          "spar_id": "S045",
+          "to_hub": "H030"
+        },
+        {
+          "first_global_index": 2158,
+          "first_string_index": 158,
+          "last_global_index": 2158,
+          "last_string_index": 158,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2159,
+          "first_string_index": 159,
+          "last_global_index": 2162,
+          "last_string_index": 162,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2163,
+          "first_string_index": 163,
+          "last_global_index": 2163,
+          "last_string_index": 163,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2164,
+          "first_string_index": 164,
+          "from_hub": "H030",
+          "last_global_index": 2169,
+          "last_string_index": 169,
+          "location_type": "spar",
+          "spar_id": "S090",
+          "to_hub": "H045"
+        },
+        {
+          "first_global_index": 2170,
+          "first_string_index": 170,
+          "last_global_index": 2172,
+          "last_string_index": 172,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2173,
+          "first_string_index": 173,
+          "last_global_index": 2174,
+          "last_string_index": 174,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2175,
+          "first_string_index": 175,
+          "from_hub": "H036",
+          "last_global_index": 2178,
+          "last_string_index": 178,
+          "location_type": "spar",
+          "spar_id": "S106",
+          "to_hub": "H045"
+        },
+        {
+          "first_global_index": 2179,
+          "first_string_index": 179,
+          "last_global_index": 2182,
+          "last_string_index": 182,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2183,
+          "first_string_index": 183,
+          "last_global_index": 2188,
+          "last_string_index": 188,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2189,
+          "first_string_index": 189,
+          "from_hub": "H045",
+          "last_global_index": 2193,
+          "last_string_index": 193,
+          "location_type": "spar",
+          "spar_id": "S130",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 2194,
+          "first_string_index": 194,
+          "last_global_index": 2199,
+          "last_string_index": 199,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2200,
+          "first_string_index": 200,
+          "last_global_index": 2207,
+          "last_string_index": 207,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2208,
+          "first_string_index": 208,
+          "from_hub": "H036",
+          "last_global_index": 2213,
+          "last_string_index": 213,
+          "location_type": "spar",
+          "spar_id": "S106",
+          "to_hub": "H045"
+        },
+        {
+          "first_global_index": 2214,
+          "first_string_index": 214,
+          "last_global_index": 2219,
+          "last_string_index": 219,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2220,
+          "first_string_index": 220,
+          "last_global_index": 2223,
+          "last_string_index": 223,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2224,
+          "first_string_index": 224,
+          "from_hub": "H030",
+          "last_global_index": 2227,
+          "last_string_index": 227,
+          "location_type": "spar",
+          "spar_id": "S089",
+          "to_hub": "H036"
+        },
+        {
+          "first_global_index": 2228,
+          "first_string_index": 228,
+          "last_global_index": 2228,
+          "last_string_index": 228,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2229,
+          "first_string_index": 229,
+          "last_global_index": 2230,
+          "last_string_index": 230,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2231,
+          "first_string_index": 231,
+          "last_global_index": 2232,
+          "last_string_index": 232,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2233,
+          "first_string_index": 233,
+          "from_hub": "H030",
+          "last_global_index": 2238,
+          "last_string_index": 238,
+          "location_type": "spar",
+          "spar_id": "S089",
+          "to_hub": "H036"
+        },
+        {
+          "first_global_index": 2239,
+          "first_string_index": 239,
+          "last_global_index": 2240,
+          "last_string_index": 240,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2241,
+          "first_string_index": 241,
+          "last_global_index": 2241,
+          "last_string_index": 241,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2242,
+          "first_string_index": 242,
+          "from_hub": "H036",
+          "last_global_index": 2245,
+          "last_string_index": 245,
+          "location_type": "spar",
+          "spar_id": "S106",
+          "to_hub": "H045"
+        },
+        {
+          "first_global_index": 2246,
+          "first_string_index": 246,
+          "last_global_index": 2247,
+          "last_string_index": 247,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2248,
+          "first_string_index": 248,
+          "last_global_index": 2250,
+          "last_string_index": 250,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2251,
+          "first_string_index": 251,
+          "from_hub": "H036",
+          "last_global_index": 2256,
+          "last_string_index": 256,
+          "location_type": "spar",
+          "spar_id": "S108",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 2257,
+          "first_string_index": 257,
+          "last_global_index": 2266,
+          "last_string_index": 266,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2267,
+          "first_string_index": 267,
+          "last_global_index": 2274,
+          "last_string_index": 274,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2275,
+          "first_string_index": 275,
+          "last_global_index": 2284,
+          "last_string_index": 284,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2285,
+          "first_string_index": 285,
+          "from_hub": "H036",
+          "last_global_index": 2288,
+          "last_string_index": 288,
+          "location_type": "spar",
+          "spar_id": "S107",
+          "to_hub": "H046"
+        },
+        {
+          "first_global_index": 2289,
+          "first_string_index": 289,
+          "last_global_index": 2291,
+          "last_string_index": 291,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2292,
+          "first_string_index": 292,
+          "last_global_index": 2294,
+          "last_string_index": 294,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2295,
+          "first_string_index": 295,
+          "from_hub": "H031",
+          "last_global_index": 2299,
+          "last_string_index": 299,
+          "location_type": "spar",
+          "spar_id": "S091",
+          "to_hub": "H036"
+        },
+        {
+          "first_global_index": 2300,
+          "first_string_index": 300,
+          "last_global_index": 2305,
+          "last_string_index": 305,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2306,
+          "first_string_index": 306,
+          "last_global_index": 2306,
+          "last_string_index": 306,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2307,
+          "first_string_index": 307,
+          "last_global_index": 2307,
+          "last_string_index": 307,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2308,
+          "first_string_index": 308,
+          "last_global_index": 2312,
+          "last_string_index": 312,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2313,
+          "first_string_index": 313,
+          "from_hub": "H031",
+          "last_global_index": 2317,
+          "last_string_index": 317,
+          "location_type": "spar",
+          "spar_id": "S091",
+          "to_hub": "H036"
+        },
+        {
+          "first_global_index": 2318,
+          "first_string_index": 318,
+          "last_global_index": 2327,
+          "last_string_index": 327,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2328,
+          "first_string_index": 328,
+          "last_global_index": 2330,
+          "last_string_index": 330,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2331,
+          "first_string_index": 331,
+          "last_global_index": 2342,
+          "last_string_index": 342,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2343,
+          "first_string_index": 343,
+          "from_hub": "H031",
+          "last_global_index": 2345,
+          "last_string_index": 345,
+          "location_type": "spar",
+          "spar_id": "S093",
+          "to_hub": "H046"
+        },
+        {
+          "first_global_index": 2346,
+          "first_string_index": 346,
+          "last_global_index": 2346,
+          "last_string_index": 346,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2347,
+          "first_string_index": 347,
+          "from_hub": "H037",
+          "last_global_index": 2350,
+          "last_string_index": 350,
+          "location_type": "spar",
+          "spar_id": "S110",
+          "to_hub": "H046"
+        },
+        {
+          "first_global_index": 2351,
+          "first_string_index": 351,
+          "last_global_index": 2351,
+          "last_string_index": 351,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2352,
+          "first_string_index": 352,
+          "last_global_index": 2388,
+          "last_string_index": 388,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2389,
+          "first_string_index": 389,
+          "from_hub": "H046",
+          "last_global_index": 2392,
+          "last_string_index": 392,
+          "location_type": "spar",
+          "spar_id": "S132",
+          "to_hub": "H052"
+        },
+        {
+          "first_global_index": 2393,
+          "first_string_index": 393,
+          "last_global_index": 2405,
+          "last_string_index": 405,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2406,
+          "first_string_index": 406,
+          "last_global_index": 2419,
+          "last_string_index": 419,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2420,
+          "first_string_index": 420,
+          "from_hub": "H046",
+          "last_global_index": 2457,
+          "last_string_index": 457,
+          "location_type": "spar",
+          "spar_id": "S133",
+          "to_hub": "H056"
+        },
+        {
+          "first_global_index": 2458,
+          "first_string_index": 458,
+          "last_global_index": 2458,
+          "last_string_index": 458,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2459,
+          "first_string_index": 459,
+          "last_global_index": 2459,
+          "last_string_index": 459,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2460,
+          "first_string_index": 460,
+          "from_hub": "H036",
+          "last_global_index": 2461,
+          "last_string_index": 461,
+          "location_type": "spar",
+          "spar_id": "S107",
+          "to_hub": "H046"
+        },
+        {
+          "first_global_index": 2462,
+          "first_string_index": 462,
+          "last_global_index": 2462,
+          "last_string_index": 462,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2463,
+          "first_string_index": 463,
+          "last_global_index": 2464,
+          "last_string_index": 464,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2465,
+          "first_string_index": 465,
+          "from_hub": "H046",
+          "last_global_index": 2466,
+          "last_string_index": 466,
+          "location_type": "spar",
+          "spar_id": "S131",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 2467,
+          "first_string_index": 467,
+          "last_global_index": 2501,
+          "last_string_index": 501,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2502,
+          "first_string_index": 502,
+          "last_global_index": 2509,
+          "last_string_index": 509,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2510,
+          "first_string_index": 510,
+          "from_hub": "H036",
+          "last_global_index": 2514,
+          "last_string_index": 514,
+          "location_type": "spar",
+          "spar_id": "S108",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 2515,
+          "first_string_index": 515,
+          "last_global_index": 2521,
+          "last_string_index": 521,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2522,
+          "first_string_index": 522,
+          "last_global_index": 2534,
+          "last_string_index": 534,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2535,
+          "first_string_index": 535,
+          "from_hub": "H045",
+          "last_global_index": 2542,
+          "last_string_index": 542,
+          "location_type": "spar",
+          "spar_id": "S130",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 2543,
+          "first_string_index": 543,
+          "last_global_index": 2548,
+          "last_string_index": 548,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2549,
+          "first_string_index": 549,
+          "last_global_index": 2552,
+          "last_string_index": 552,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2553,
+          "first_string_index": 553,
+          "from_hub": "H050",
+          "last_global_index": 2555,
+          "last_string_index": 555,
+          "location_type": "spar",
+          "spar_id": "S143",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 2556,
+          "first_string_index": 556,
+          "last_global_index": 2558,
+          "last_string_index": 558,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2559,
+          "first_string_index": 559,
+          "last_global_index": 2563,
+          "last_string_index": 563,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2564,
+          "first_string_index": 564,
+          "from_hub": "H051",
+          "last_global_index": 2569,
+          "last_string_index": 569,
+          "location_type": "spar",
+          "spar_id": "S147",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 2570,
+          "first_string_index": 570,
+          "last_global_index": 2588,
+          "last_string_index": 588,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2589,
+          "first_string_index": 589,
+          "last_global_index": 2595,
+          "last_string_index": 595,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2596,
+          "first_string_index": 596,
+          "from_hub": "H051",
+          "last_global_index": 2598,
+          "last_string_index": 598,
+          "location_type": "spar",
+          "spar_id": "S146",
+          "to_hub": "H056"
+        },
+        {
+          "first_global_index": 2599,
+          "first_string_index": 599,
+          "last_global_index": 2601,
+          "last_string_index": 601,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2602,
+          "first_string_index": 602,
+          "last_global_index": 2605,
+          "last_string_index": 605,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2606,
+          "first_string_index": 606,
+          "from_hub": "H046",
+          "last_global_index": 2609,
+          "last_string_index": 609,
+          "location_type": "spar",
+          "spar_id": "S131",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 2610,
+          "first_string_index": 610,
+          "last_global_index": 2623,
+          "last_string_index": 623,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2624,
+          "first_string_index": 624,
+          "from_hub": "H046",
+          "last_global_index": 2627,
+          "last_string_index": 627,
+          "location_type": "spar",
+          "spar_id": "S131",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 2628,
+          "first_string_index": 628,
+          "last_global_index": 2640,
+          "last_string_index": 640,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2641,
+          "first_string_index": 641,
+          "last_global_index": 2654,
+          "last_string_index": 654,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2655,
+          "first_string_index": 655,
+          "from_hub": "H046",
+          "last_global_index": 2658,
+          "last_string_index": 658,
+          "location_type": "spar",
+          "spar_id": "S133",
+          "to_hub": "H056"
+        },
+        {
+          "first_global_index": 2659,
+          "first_string_index": 659,
+          "last_global_index": 2662,
+          "last_string_index": 662,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2663,
+          "first_string_index": 663,
+          "last_global_index": 2667,
+          "last_string_index": 667,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2668,
+          "first_string_index": 668,
+          "from_hub": "H051",
+          "last_global_index": 2672,
+          "last_string_index": 672,
+          "location_type": "spar",
+          "spar_id": "S146",
+          "to_hub": "H056"
+        },
+        {
+          "first_global_index": 2673,
+          "first_string_index": 673,
+          "last_global_index": 2689,
+          "last_string_index": 689,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2690,
+          "first_string_index": 690,
+          "last_global_index": 2700,
+          "last_string_index": 700,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2701,
+          "first_string_index": 701,
+          "last_global_index": 2711,
+          "last_string_index": 711,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2712,
+          "first_string_index": 712,
+          "from_hub": "H056",
+          "last_global_index": 2715,
+          "last_string_index": 715,
+          "location_type": "spar",
+          "spar_id": "S157",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 2716,
+          "first_string_index": 716,
+          "last_global_index": 2724,
+          "last_string_index": 724,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2725,
+          "first_string_index": 725,
+          "last_global_index": 2732,
+          "last_string_index": 732,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2733,
+          "first_string_index": 733,
+          "from_hub": "H056",
+          "last_global_index": 2762,
+          "last_string_index": 762,
+          "location_type": "spar",
+          "spar_id": "S158",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 2763,
+          "first_string_index": 763,
+          "last_global_index": 2763,
+          "last_string_index": 763,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2764,
+          "first_string_index": 764,
+          "from_hub": "H046",
+          "last_global_index": 2776,
+          "last_string_index": 776,
+          "location_type": "spar",
+          "spar_id": "S133",
+          "to_hub": "H056"
+        },
+        {
+          "first_global_index": 2777,
+          "first_string_index": 777,
+          "last_global_index": 2780,
+          "last_string_index": 780,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2781,
+          "first_string_index": 781,
+          "last_global_index": 2785,
+          "last_string_index": 785,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2786,
+          "first_string_index": 786,
+          "from_hub": "H052",
+          "last_global_index": 2790,
+          "last_string_index": 790,
+          "location_type": "spar",
+          "spar_id": "S148",
+          "to_hub": "H056"
+        },
+        {
+          "first_global_index": 2791,
+          "first_string_index": 791,
+          "last_global_index": 2807,
+          "last_string_index": 807,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2808,
+          "first_string_index": 808,
+          "last_global_index": 2818,
+          "last_string_index": 818,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2819,
+          "first_string_index": 819,
+          "last_global_index": 2830,
+          "last_string_index": 830,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2831,
+          "first_string_index": 831,
+          "from_hub": "H056",
+          "last_global_index": 2834,
+          "last_string_index": 834,
+          "location_type": "spar",
+          "spar_id": "S156",
+          "to_hub": "H057"
+        },
+        {
+          "first_global_index": 2835,
+          "first_string_index": 835,
+          "last_global_index": 2842,
+          "last_string_index": 842,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2843,
+          "first_string_index": 843,
+          "last_global_index": 2851,
+          "last_string_index": 851,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2852,
+          "first_string_index": 852,
+          "from_hub": "H056",
+          "last_global_index": 2854,
+          "last_string_index": 854,
+          "location_type": "spar",
+          "spar_id": "S158",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 2855,
+          "first_string_index": 855,
+          "last_global_index": 2866,
+          "last_string_index": 866,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2867,
+          "first_string_index": 867,
+          "last_global_index": 2886,
+          "last_string_index": 886,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 2887,
+          "first_string_index": 887,
+          "from_hub": "H057",
+          "last_global_index": 2931,
+          "last_string_index": 931,
+          "location_type": "spar",
+          "spar_id": "S160",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 2932,
+          "first_string_index": 932,
+          "last_global_index": 2932,
+          "last_string_index": 932,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 2933,
+          "first_string_index": 933,
+          "last_global_index": 2999,
+          "last_string_index": 999,
+          "location_type": "tail",
+          "tail_model": "unresolved"
+        }
+      ],
+      "string_id": 2
+    },
+    {
+      "segments": [
+        {
+          "first_global_index": 3000,
+          "first_string_index": 0,
+          "from_hub": "H035",
+          "last_global_index": 3003,
+          "last_string_index": 3,
+          "location_type": "spar",
+          "spar_id": "S105",
+          "to_hub": "H050"
+        },
+        {
+          "first_global_index": 3004,
+          "first_string_index": 4,
+          "last_global_index": 3018,
+          "last_string_index": 18,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3019,
+          "first_string_index": 19,
+          "last_global_index": 3027,
+          "last_string_index": 27,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3028,
+          "first_string_index": 28,
+          "from_hub": "H035",
+          "last_global_index": 3032,
+          "last_string_index": 32,
+          "location_type": "spar",
+          "spar_id": "S104",
+          "to_hub": "H045"
+        },
+        {
+          "first_global_index": 3033,
+          "first_string_index": 33,
+          "last_global_index": 3036,
+          "last_string_index": 36,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3037,
+          "first_string_index": 37,
+          "last_global_index": 3046,
+          "last_string_index": 46,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3047,
+          "first_string_index": 47,
+          "from_hub": "H025",
+          "last_global_index": 3055,
+          "last_string_index": 55,
+          "location_type": "spar",
+          "spar_id": "S079",
+          "to_hub": "H035"
+        },
+        {
+          "first_global_index": 3056,
+          "first_string_index": 56,
+          "last_global_index": 3056,
+          "last_string_index": 56,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3057,
+          "first_string_index": 57,
+          "last_global_index": 3057,
+          "last_string_index": 57,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3058,
+          "first_string_index": 58,
+          "from_hub": "H024",
+          "last_global_index": 3066,
+          "last_string_index": 66,
+          "location_type": "spar",
+          "spar_id": "S076",
+          "to_hub": "H035"
+        },
+        {
+          "first_global_index": 3067,
+          "first_string_index": 67,
+          "last_global_index": 3076,
+          "last_string_index": 76,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3077,
+          "first_string_index": 77,
+          "last_global_index": 3081,
+          "last_string_index": 81,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3082,
+          "first_string_index": 82,
+          "last_global_index": 3086,
+          "last_string_index": 86,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3087,
+          "first_string_index": 87,
+          "from_hub": "H024",
+          "last_global_index": 3092,
+          "last_string_index": 92,
+          "location_type": "spar",
+          "spar_id": "S077",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3093,
+          "first_string_index": 93,
+          "last_global_index": 3096,
+          "last_string_index": 96,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3097,
+          "first_string_index": 97,
+          "last_global_index": 3115,
+          "last_string_index": 115,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3116,
+          "first_string_index": 116,
+          "from_hub": "H024",
+          "last_global_index": 3116,
+          "last_string_index": 116,
+          "location_type": "spar",
+          "spar_id": "S075",
+          "to_hub": "H029"
+        },
+        {
+          "first_global_index": 3117,
+          "first_string_index": 117,
+          "last_global_index": 3120,
+          "last_string_index": 120,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3121,
+          "first_string_index": 121,
+          "last_global_index": 3123,
+          "last_string_index": 123,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3124,
+          "first_string_index": 124,
+          "from_hub": "H013",
+          "last_global_index": 3129,
+          "last_string_index": 129,
+          "location_type": "spar",
+          "spar_id": "S039",
+          "to_hub": "H014"
+        },
+        {
+          "first_global_index": 3130,
+          "first_string_index": 130,
+          "last_global_index": 3130,
+          "last_string_index": 130,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3131,
+          "first_string_index": 131,
+          "last_global_index": 3131,
+          "last_string_index": 131,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3132,
+          "first_string_index": 132,
+          "from_hub": "H029",
+          "last_global_index": 3133,
+          "last_string_index": 133,
+          "location_type": "spar",
+          "spar_id": "S088",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3134,
+          "first_string_index": 134,
+          "last_global_index": 3135,
+          "last_string_index": 135,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3136,
+          "first_string_index": 136,
+          "last_global_index": 3136,
+          "last_string_index": 136,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3137,
+          "first_string_index": 137,
+          "last_global_index": 3138,
+          "last_string_index": 138,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3139,
+          "first_string_index": 139,
+          "last_global_index": 3141,
+          "last_string_index": 141,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3142,
+          "first_string_index": 142,
+          "from_hub": "H013",
+          "last_global_index": 3145,
+          "last_string_index": 145,
+          "location_type": "spar",
+          "spar_id": "S041",
+          "to_hub": "H029"
+        },
+        {
+          "first_global_index": 3146,
+          "first_string_index": 146,
+          "last_global_index": 3155,
+          "last_string_index": 155,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3156,
+          "first_string_index": 156,
+          "from_hub": "H013",
+          "last_global_index": 3157,
+          "last_string_index": 157,
+          "location_type": "spar",
+          "spar_id": "S041",
+          "to_hub": "H029"
+        },
+        {
+          "first_global_index": 3158,
+          "first_string_index": 158,
+          "last_global_index": 3158,
+          "last_string_index": 158,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3159,
+          "first_string_index": 159,
+          "last_global_index": 3162,
+          "last_string_index": 162,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3163,
+          "first_string_index": 163,
+          "last_global_index": 3163,
+          "last_string_index": 163,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3164,
+          "first_string_index": 164,
+          "from_hub": "H029",
+          "last_global_index": 3169,
+          "last_string_index": 169,
+          "location_type": "spar",
+          "spar_id": "S087",
+          "to_hub": "H043"
+        },
+        {
+          "first_global_index": 3170,
+          "first_string_index": 170,
+          "last_global_index": 3172,
+          "last_string_index": 172,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3173,
+          "first_string_index": 173,
+          "last_global_index": 3174,
+          "last_string_index": 174,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3175,
+          "first_string_index": 175,
+          "from_hub": "H043",
+          "last_global_index": 3178,
+          "last_string_index": 178,
+          "location_type": "spar",
+          "spar_id": "S124",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3179,
+          "first_string_index": 179,
+          "last_global_index": 3182,
+          "last_string_index": 182,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3183,
+          "first_string_index": 183,
+          "last_global_index": 3188,
+          "last_string_index": 188,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3189,
+          "first_string_index": 189,
+          "from_hub": "H043",
+          "last_global_index": 3193,
+          "last_string_index": 193,
+          "location_type": "spar",
+          "spar_id": "S126",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 3194,
+          "first_string_index": 194,
+          "last_global_index": 3199,
+          "last_string_index": 199,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3200,
+          "first_string_index": 200,
+          "last_global_index": 3207,
+          "last_string_index": 207,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3208,
+          "first_string_index": 208,
+          "from_hub": "H043",
+          "last_global_index": 3213,
+          "last_string_index": 213,
+          "location_type": "spar",
+          "spar_id": "S124",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3214,
+          "first_string_index": 214,
+          "last_global_index": 3219,
+          "last_string_index": 219,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3220,
+          "first_string_index": 220,
+          "last_global_index": 3223,
+          "last_string_index": 223,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3224,
+          "first_string_index": 224,
+          "from_hub": "H029",
+          "last_global_index": 3227,
+          "last_string_index": 227,
+          "location_type": "spar",
+          "spar_id": "S088",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3228,
+          "first_string_index": 228,
+          "last_global_index": 3228,
+          "last_string_index": 228,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3229,
+          "first_string_index": 229,
+          "last_global_index": 3230,
+          "last_string_index": 230,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3231,
+          "first_string_index": 231,
+          "last_global_index": 3232,
+          "last_string_index": 232,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3233,
+          "first_string_index": 233,
+          "from_hub": "H029",
+          "last_global_index": 3238,
+          "last_string_index": 238,
+          "location_type": "spar",
+          "spar_id": "S088",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3239,
+          "first_string_index": 239,
+          "last_global_index": 3240,
+          "last_string_index": 240,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3241,
+          "first_string_index": 241,
+          "last_global_index": 3241,
+          "last_string_index": 241,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3242,
+          "first_string_index": 242,
+          "from_hub": "H043",
+          "last_global_index": 3245,
+          "last_string_index": 245,
+          "location_type": "spar",
+          "spar_id": "S124",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3246,
+          "first_string_index": 246,
+          "last_global_index": 3247,
+          "last_string_index": 247,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3248,
+          "first_string_index": 248,
+          "last_global_index": 3250,
+          "last_string_index": 250,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3251,
+          "first_string_index": 251,
+          "from_hub": "H044",
+          "last_global_index": 3256,
+          "last_string_index": 256,
+          "location_type": "spar",
+          "spar_id": "S128",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 3257,
+          "first_string_index": 257,
+          "last_global_index": 3266,
+          "last_string_index": 266,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3267,
+          "first_string_index": 267,
+          "last_global_index": 3274,
+          "last_string_index": 274,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3275,
+          "first_string_index": 275,
+          "last_global_index": 3284,
+          "last_string_index": 284,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3285,
+          "first_string_index": 285,
+          "from_hub": "H044",
+          "last_global_index": 3288,
+          "last_string_index": 288,
+          "location_type": "spar",
+          "spar_id": "S127",
+          "to_hub": "H050"
+        },
+        {
+          "first_global_index": 3289,
+          "first_string_index": 289,
+          "last_global_index": 3291,
+          "last_string_index": 291,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3292,
+          "first_string_index": 292,
+          "last_global_index": 3294,
+          "last_string_index": 294,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3295,
+          "first_string_index": 295,
+          "from_hub": "H035",
+          "last_global_index": 3299,
+          "last_string_index": 299,
+          "location_type": "spar",
+          "spar_id": "S103",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3300,
+          "first_string_index": 300,
+          "last_global_index": 3305,
+          "last_string_index": 305,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3306,
+          "first_string_index": 306,
+          "last_global_index": 3306,
+          "last_string_index": 306,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3307,
+          "first_string_index": 307,
+          "last_global_index": 3307,
+          "last_string_index": 307,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3308,
+          "first_string_index": 308,
+          "last_global_index": 3312,
+          "last_string_index": 312,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3313,
+          "first_string_index": 313,
+          "from_hub": "H035",
+          "last_global_index": 3317,
+          "last_string_index": 317,
+          "location_type": "spar",
+          "spar_id": "S103",
+          "to_hub": "H044"
+        },
+        {
+          "first_global_index": 3318,
+          "first_string_index": 318,
+          "last_global_index": 3327,
+          "last_string_index": 327,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3328,
+          "first_string_index": 328,
+          "last_global_index": 3330,
+          "last_string_index": 330,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3331,
+          "first_string_index": 331,
+          "last_global_index": 3342,
+          "last_string_index": 342,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3343,
+          "first_string_index": 343,
+          "from_hub": "H035",
+          "last_global_index": 3345,
+          "last_string_index": 345,
+          "location_type": "spar",
+          "spar_id": "S105",
+          "to_hub": "H050"
+        },
+        {
+          "first_global_index": 3346,
+          "first_string_index": 346,
+          "last_global_index": 3346,
+          "last_string_index": 346,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3347,
+          "first_string_index": 347,
+          "from_hub": "H045",
+          "last_global_index": 3350,
+          "last_string_index": 350,
+          "location_type": "spar",
+          "spar_id": "S129",
+          "to_hub": "H050"
+        },
+        {
+          "first_global_index": 3351,
+          "first_string_index": 351,
+          "last_global_index": 3351,
+          "last_string_index": 351,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3352,
+          "first_string_index": 352,
+          "last_global_index": 3388,
+          "last_string_index": 388,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3389,
+          "first_string_index": 389,
+          "from_hub": "H050",
+          "last_global_index": 3392,
+          "last_string_index": 392,
+          "location_type": "spar",
+          "spar_id": "S143",
+          "to_hub": "H051"
+        },
+        {
+          "first_global_index": 3393,
+          "first_string_index": 393,
+          "last_global_index": 3405,
+          "last_string_index": 405,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3406,
+          "first_string_index": 406,
+          "last_global_index": 3419,
+          "last_string_index": 419,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3420,
+          "first_string_index": 420,
+          "from_hub": "H050",
+          "last_global_index": 3457,
+          "last_string_index": 457,
+          "location_type": "spar",
+          "spar_id": "S145",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 3458,
+          "first_string_index": 458,
+          "last_global_index": 3458,
+          "last_string_index": 458,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3459,
+          "first_string_index": 459,
+          "last_global_index": 3459,
+          "last_string_index": 459,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3460,
+          "first_string_index": 460,
+          "from_hub": "H044",
+          "last_global_index": 3461,
+          "last_string_index": 461,
+          "location_type": "spar",
+          "spar_id": "S127",
+          "to_hub": "H050"
+        },
+        {
+          "first_global_index": 3462,
+          "first_string_index": 462,
+          "last_global_index": 3462,
+          "last_string_index": 462,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3463,
+          "first_string_index": 463,
+          "last_global_index": 3464,
+          "last_string_index": 464,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3465,
+          "first_string_index": 465,
+          "from_hub": "H050",
+          "last_global_index": 3466,
+          "last_string_index": 466,
+          "location_type": "spar",
+          "spar_id": "S144",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 3467,
+          "first_string_index": 467,
+          "last_global_index": 3501,
+          "last_string_index": 501,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3502,
+          "first_string_index": 502,
+          "last_global_index": 3509,
+          "last_string_index": 509,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3510,
+          "first_string_index": 510,
+          "from_hub": "H044",
+          "last_global_index": 3514,
+          "last_string_index": 514,
+          "location_type": "spar",
+          "spar_id": "S128",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 3515,
+          "first_string_index": 515,
+          "last_global_index": 3521,
+          "last_string_index": 521,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3522,
+          "first_string_index": 522,
+          "last_global_index": 3534,
+          "last_string_index": 534,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3535,
+          "first_string_index": 535,
+          "from_hub": "H043",
+          "last_global_index": 3542,
+          "last_string_index": 542,
+          "location_type": "spar",
+          "spar_id": "S126",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 3543,
+          "first_string_index": 543,
+          "last_global_index": 3548,
+          "last_string_index": 548,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3549,
+          "first_string_index": 549,
+          "last_global_index": 3552,
+          "last_string_index": 552,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3553,
+          "first_string_index": 553,
+          "from_hub": "H049",
+          "last_global_index": 3555,
+          "last_string_index": 555,
+          "location_type": "spar",
+          "spar_id": "S141",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 3556,
+          "first_string_index": 556,
+          "last_global_index": 3558,
+          "last_string_index": 558,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3559,
+          "first_string_index": 559,
+          "last_global_index": 3563,
+          "last_string_index": 563,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3564,
+          "first_string_index": 564,
+          "from_hub": "H055",
+          "last_global_index": 3569,
+          "last_string_index": 569,
+          "location_type": "spar",
+          "spar_id": "S154",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 3570,
+          "first_string_index": 570,
+          "last_global_index": 3588,
+          "last_string_index": 588,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3589,
+          "first_string_index": 589,
+          "last_global_index": 3595,
+          "last_string_index": 595,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3596,
+          "first_string_index": 596,
+          "from_hub": "H055",
+          "last_global_index": 3598,
+          "last_string_index": 598,
+          "location_type": "spar",
+          "spar_id": "S155",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 3599,
+          "first_string_index": 599,
+          "last_global_index": 3601,
+          "last_string_index": 601,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3602,
+          "first_string_index": 602,
+          "last_global_index": 3605,
+          "last_string_index": 605,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3606,
+          "first_string_index": 606,
+          "from_hub": "H050",
+          "last_global_index": 3609,
+          "last_string_index": 609,
+          "location_type": "spar",
+          "spar_id": "S144",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 3610,
+          "first_string_index": 610,
+          "last_global_index": 3623,
+          "last_string_index": 623,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3624,
+          "first_string_index": 624,
+          "from_hub": "H050",
+          "last_global_index": 3627,
+          "last_string_index": 627,
+          "location_type": "spar",
+          "spar_id": "S144",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 3628,
+          "first_string_index": 628,
+          "last_global_index": 3640,
+          "last_string_index": 640,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3641,
+          "first_string_index": 641,
+          "last_global_index": 3654,
+          "last_string_index": 654,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3655,
+          "first_string_index": 655,
+          "from_hub": "H050",
+          "last_global_index": 3658,
+          "last_string_index": 658,
+          "location_type": "spar",
+          "spar_id": "S145",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 3659,
+          "first_string_index": 659,
+          "last_global_index": 3662,
+          "last_string_index": 662,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3663,
+          "first_string_index": 663,
+          "last_global_index": 3667,
+          "last_string_index": 667,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3668,
+          "first_string_index": 668,
+          "from_hub": "H055",
+          "last_global_index": 3672,
+          "last_string_index": 672,
+          "location_type": "spar",
+          "spar_id": "S155",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 3673,
+          "first_string_index": 673,
+          "last_global_index": 3689,
+          "last_string_index": 689,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3690,
+          "first_string_index": 690,
+          "last_global_index": 3700,
+          "last_string_index": 700,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3701,
+          "first_string_index": 701,
+          "last_global_index": 3711,
+          "last_string_index": 711,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3712,
+          "first_string_index": 712,
+          "from_hub": "H059",
+          "last_global_index": 3715,
+          "last_string_index": 715,
+          "location_type": "spar",
+          "spar_id": "S163",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 3716,
+          "first_string_index": 716,
+          "last_global_index": 3724,
+          "last_string_index": 724,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3725,
+          "first_string_index": 725,
+          "last_global_index": 3732,
+          "last_string_index": 732,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3733,
+          "first_string_index": 733,
+          "from_hub": "H060",
+          "last_global_index": 3762,
+          "last_string_index": 762,
+          "location_type": "spar",
+          "spar_id": "S165",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 3763,
+          "first_string_index": 763,
+          "last_global_index": 3763,
+          "last_string_index": 763,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3764,
+          "first_string_index": 764,
+          "from_hub": "H050",
+          "last_global_index": 3776,
+          "last_string_index": 776,
+          "location_type": "spar",
+          "spar_id": "S145",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 3777,
+          "first_string_index": 777,
+          "last_global_index": 3780,
+          "last_string_index": 780,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3781,
+          "first_string_index": 781,
+          "last_global_index": 3785,
+          "last_string_index": 785,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3786,
+          "first_string_index": 786,
+          "from_hub": "H051",
+          "last_global_index": 3790,
+          "last_string_index": 790,
+          "location_type": "spar",
+          "spar_id": "S147",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 3791,
+          "first_string_index": 791,
+          "last_global_index": 3807,
+          "last_string_index": 807,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3808,
+          "first_string_index": 808,
+          "last_global_index": 3818,
+          "last_string_index": 818,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3819,
+          "first_string_index": 819,
+          "last_global_index": 3830,
+          "last_string_index": 830,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3831,
+          "first_string_index": 831,
+          "from_hub": "H056",
+          "last_global_index": 3834,
+          "last_string_index": 834,
+          "location_type": "spar",
+          "spar_id": "S157",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 3835,
+          "first_string_index": 835,
+          "last_global_index": 3842,
+          "last_string_index": 842,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3843,
+          "first_string_index": 843,
+          "last_global_index": 3851,
+          "last_string_index": 851,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3852,
+          "first_string_index": 852,
+          "from_hub": "H060",
+          "last_global_index": 3854,
+          "last_string_index": 854,
+          "location_type": "spar",
+          "spar_id": "S165",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 3855,
+          "first_string_index": 855,
+          "last_global_index": 3866,
+          "last_string_index": 866,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3867,
+          "first_string_index": 867,
+          "last_global_index": 3886,
+          "last_string_index": 886,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 3887,
+          "first_string_index": 887,
+          "from_hub": "H056",
+          "last_global_index": 3931,
+          "last_string_index": 931,
+          "location_type": "spar",
+          "spar_id": "S158",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 3932,
+          "first_string_index": 932,
+          "last_global_index": 3932,
+          "last_string_index": 932,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 3933,
+          "first_string_index": 933,
+          "last_global_index": 3999,
+          "last_string_index": 999,
+          "location_type": "tail",
+          "tail_model": "unresolved"
+        }
+      ],
+      "string_id": 3
+    },
+    {
+      "segments": [
+        {
+          "first_global_index": 4000,
+          "first_string_index": 0,
+          "from_hub": "H034",
+          "last_global_index": 4003,
+          "last_string_index": 3,
+          "location_type": "spar",
+          "spar_id": "S102",
+          "to_hub": "H049"
+        },
+        {
+          "first_global_index": 4004,
+          "first_string_index": 4,
+          "last_global_index": 4018,
+          "last_string_index": 18,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4019,
+          "first_string_index": 19,
+          "last_global_index": 4027,
+          "last_string_index": 27,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4028,
+          "first_string_index": 28,
+          "from_hub": "H034",
+          "last_global_index": 4032,
+          "last_string_index": 32,
+          "location_type": "spar",
+          "spar_id": "S101",
+          "to_hub": "H043"
+        },
+        {
+          "first_global_index": 4033,
+          "first_string_index": 33,
+          "last_global_index": 4036,
+          "last_string_index": 36,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4037,
+          "first_string_index": 37,
+          "last_global_index": 4046,
+          "last_string_index": 46,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4047,
+          "first_string_index": 47,
+          "from_hub": "H023",
+          "last_global_index": 4055,
+          "last_string_index": 55,
+          "location_type": "spar",
+          "spar_id": "S072",
+          "to_hub": "H034"
+        },
+        {
+          "first_global_index": 4056,
+          "first_string_index": 56,
+          "last_global_index": 4056,
+          "last_string_index": 56,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4057,
+          "first_string_index": 57,
+          "last_global_index": 4057,
+          "last_string_index": 57,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4058,
+          "first_string_index": 58,
+          "from_hub": "H022",
+          "last_global_index": 4066,
+          "last_string_index": 66,
+          "location_type": "spar",
+          "spar_id": "S069",
+          "to_hub": "H034"
+        },
+        {
+          "first_global_index": 4067,
+          "first_string_index": 67,
+          "last_global_index": 4076,
+          "last_string_index": 76,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4077,
+          "first_string_index": 77,
+          "last_global_index": 4081,
+          "last_string_index": 81,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4082,
+          "first_string_index": 82,
+          "last_global_index": 4086,
+          "last_string_index": 86,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4087,
+          "first_string_index": 87,
+          "from_hub": "H022",
+          "last_global_index": 4092,
+          "last_string_index": 92,
+          "location_type": "spar",
+          "spar_id": "S070",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4093,
+          "first_string_index": 93,
+          "last_global_index": 4096,
+          "last_string_index": 96,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4097,
+          "first_string_index": 97,
+          "last_global_index": 4115,
+          "last_string_index": 115,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4116,
+          "first_string_index": 116,
+          "from_hub": "H022",
+          "last_global_index": 4116,
+          "last_string_index": 116,
+          "location_type": "spar",
+          "spar_id": "S068",
+          "to_hub": "H028"
+        },
+        {
+          "first_global_index": 4117,
+          "first_string_index": 117,
+          "last_global_index": 4120,
+          "last_string_index": 120,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4121,
+          "first_string_index": 121,
+          "last_global_index": 4123,
+          "last_string_index": 123,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4124,
+          "first_string_index": 124,
+          "from_hub": "H011",
+          "last_global_index": 4129,
+          "last_string_index": 129,
+          "location_type": "spar",
+          "spar_id": "S034",
+          "to_hub": "H012"
+        },
+        {
+          "first_global_index": 4130,
+          "first_string_index": 130,
+          "last_global_index": 4130,
+          "last_string_index": 130,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4131,
+          "first_string_index": 131,
+          "last_global_index": 4131,
+          "last_string_index": 131,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4132,
+          "first_string_index": 132,
+          "from_hub": "H028",
+          "last_global_index": 4133,
+          "last_string_index": 133,
+          "location_type": "spar",
+          "spar_id": "S086",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4134,
+          "first_string_index": 134,
+          "last_global_index": 4135,
+          "last_string_index": 135,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4136,
+          "first_string_index": 136,
+          "last_global_index": 4136,
+          "last_string_index": 136,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4137,
+          "first_string_index": 137,
+          "last_global_index": 4138,
+          "last_string_index": 138,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4139,
+          "first_string_index": 139,
+          "last_global_index": 4141,
+          "last_string_index": 141,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4142,
+          "first_string_index": 142,
+          "from_hub": "H011",
+          "last_global_index": 4145,
+          "last_string_index": 145,
+          "location_type": "spar",
+          "spar_id": "S036",
+          "to_hub": "H028"
+        },
+        {
+          "first_global_index": 4146,
+          "first_string_index": 146,
+          "last_global_index": 4155,
+          "last_string_index": 155,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4156,
+          "first_string_index": 156,
+          "from_hub": "H011",
+          "last_global_index": 4157,
+          "last_string_index": 157,
+          "location_type": "spar",
+          "spar_id": "S036",
+          "to_hub": "H028"
+        },
+        {
+          "first_global_index": 4158,
+          "first_string_index": 158,
+          "last_global_index": 4158,
+          "last_string_index": 158,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4159,
+          "first_string_index": 159,
+          "last_global_index": 4162,
+          "last_string_index": 162,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4163,
+          "first_string_index": 163,
+          "last_global_index": 4163,
+          "last_string_index": 163,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4164,
+          "first_string_index": 164,
+          "from_hub": "H028",
+          "last_global_index": 4169,
+          "last_string_index": 169,
+          "location_type": "spar",
+          "spar_id": "S085",
+          "to_hub": "H041"
+        },
+        {
+          "first_global_index": 4170,
+          "first_string_index": 170,
+          "last_global_index": 4172,
+          "last_string_index": 172,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4173,
+          "first_string_index": 173,
+          "last_global_index": 4174,
+          "last_string_index": 174,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4175,
+          "first_string_index": 175,
+          "from_hub": "H041",
+          "last_global_index": 4178,
+          "last_string_index": 178,
+          "location_type": "spar",
+          "spar_id": "S119",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4179,
+          "first_string_index": 179,
+          "last_global_index": 4182,
+          "last_string_index": 182,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4183,
+          "first_string_index": 183,
+          "last_global_index": 4188,
+          "last_string_index": 188,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4189,
+          "first_string_index": 189,
+          "from_hub": "H041",
+          "last_global_index": 4193,
+          "last_string_index": 193,
+          "location_type": "spar",
+          "spar_id": "S121",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 4194,
+          "first_string_index": 194,
+          "last_global_index": 4199,
+          "last_string_index": 199,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4200,
+          "first_string_index": 200,
+          "last_global_index": 4207,
+          "last_string_index": 207,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4208,
+          "first_string_index": 208,
+          "from_hub": "H041",
+          "last_global_index": 4213,
+          "last_string_index": 213,
+          "location_type": "spar",
+          "spar_id": "S119",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4214,
+          "first_string_index": 214,
+          "last_global_index": 4219,
+          "last_string_index": 219,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4220,
+          "first_string_index": 220,
+          "last_global_index": 4223,
+          "last_string_index": 223,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4224,
+          "first_string_index": 224,
+          "from_hub": "H028",
+          "last_global_index": 4227,
+          "last_string_index": 227,
+          "location_type": "spar",
+          "spar_id": "S086",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4228,
+          "first_string_index": 228,
+          "last_global_index": 4228,
+          "last_string_index": 228,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4229,
+          "first_string_index": 229,
+          "last_global_index": 4230,
+          "last_string_index": 230,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4231,
+          "first_string_index": 231,
+          "last_global_index": 4232,
+          "last_string_index": 232,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4233,
+          "first_string_index": 233,
+          "from_hub": "H028",
+          "last_global_index": 4238,
+          "last_string_index": 238,
+          "location_type": "spar",
+          "spar_id": "S086",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4239,
+          "first_string_index": 239,
+          "last_global_index": 4240,
+          "last_string_index": 240,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4241,
+          "first_string_index": 241,
+          "last_global_index": 4241,
+          "last_string_index": 241,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4242,
+          "first_string_index": 242,
+          "from_hub": "H041",
+          "last_global_index": 4245,
+          "last_string_index": 245,
+          "location_type": "spar",
+          "spar_id": "S119",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4246,
+          "first_string_index": 246,
+          "last_global_index": 4247,
+          "last_string_index": 247,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4248,
+          "first_string_index": 248,
+          "last_global_index": 4250,
+          "last_string_index": 250,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4251,
+          "first_string_index": 251,
+          "from_hub": "H042",
+          "last_global_index": 4256,
+          "last_string_index": 256,
+          "location_type": "spar",
+          "spar_id": "S123",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 4257,
+          "first_string_index": 257,
+          "last_global_index": 4266,
+          "last_string_index": 266,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4267,
+          "first_string_index": 267,
+          "last_global_index": 4274,
+          "last_string_index": 274,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4275,
+          "first_string_index": 275,
+          "last_global_index": 4284,
+          "last_string_index": 284,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4285,
+          "first_string_index": 285,
+          "from_hub": "H042",
+          "last_global_index": 4288,
+          "last_string_index": 288,
+          "location_type": "spar",
+          "spar_id": "S122",
+          "to_hub": "H049"
+        },
+        {
+          "first_global_index": 4289,
+          "first_string_index": 289,
+          "last_global_index": 4291,
+          "last_string_index": 291,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4292,
+          "first_string_index": 292,
+          "last_global_index": 4294,
+          "last_string_index": 294,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4295,
+          "first_string_index": 295,
+          "from_hub": "H034",
+          "last_global_index": 4299,
+          "last_string_index": 299,
+          "location_type": "spar",
+          "spar_id": "S100",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4300,
+          "first_string_index": 300,
+          "last_global_index": 4305,
+          "last_string_index": 305,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4306,
+          "first_string_index": 306,
+          "last_global_index": 4306,
+          "last_string_index": 306,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4307,
+          "first_string_index": 307,
+          "last_global_index": 4307,
+          "last_string_index": 307,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4308,
+          "first_string_index": 308,
+          "last_global_index": 4312,
+          "last_string_index": 312,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4313,
+          "first_string_index": 313,
+          "from_hub": "H034",
+          "last_global_index": 4317,
+          "last_string_index": 317,
+          "location_type": "spar",
+          "spar_id": "S100",
+          "to_hub": "H042"
+        },
+        {
+          "first_global_index": 4318,
+          "first_string_index": 318,
+          "last_global_index": 4327,
+          "last_string_index": 327,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4328,
+          "first_string_index": 328,
+          "last_global_index": 4330,
+          "last_string_index": 330,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4331,
+          "first_string_index": 331,
+          "last_global_index": 4342,
+          "last_string_index": 342,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4343,
+          "first_string_index": 343,
+          "from_hub": "H034",
+          "last_global_index": 4345,
+          "last_string_index": 345,
+          "location_type": "spar",
+          "spar_id": "S102",
+          "to_hub": "H049"
+        },
+        {
+          "first_global_index": 4346,
+          "first_string_index": 346,
+          "last_global_index": 4346,
+          "last_string_index": 346,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4347,
+          "first_string_index": 347,
+          "from_hub": "H043",
+          "last_global_index": 4350,
+          "last_string_index": 350,
+          "location_type": "spar",
+          "spar_id": "S125",
+          "to_hub": "H049"
+        },
+        {
+          "first_global_index": 4351,
+          "first_string_index": 351,
+          "last_global_index": 4351,
+          "last_string_index": 351,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4352,
+          "first_string_index": 352,
+          "last_global_index": 4388,
+          "last_string_index": 388,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4389,
+          "first_string_index": 389,
+          "from_hub": "H049",
+          "last_global_index": 4392,
+          "last_string_index": 392,
+          "location_type": "spar",
+          "spar_id": "S141",
+          "to_hub": "H055"
+        },
+        {
+          "first_global_index": 4393,
+          "first_string_index": 393,
+          "last_global_index": 4405,
+          "last_string_index": 405,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4406,
+          "first_string_index": 406,
+          "last_global_index": 4419,
+          "last_string_index": 419,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4420,
+          "first_string_index": 420,
+          "from_hub": "H049",
+          "last_global_index": 4457,
+          "last_string_index": 457,
+          "location_type": "spar",
+          "spar_id": "S142",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 4458,
+          "first_string_index": 458,
+          "last_global_index": 4458,
+          "last_string_index": 458,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4459,
+          "first_string_index": 459,
+          "last_global_index": 4459,
+          "last_string_index": 459,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4460,
+          "first_string_index": 460,
+          "from_hub": "H042",
+          "last_global_index": 4461,
+          "last_string_index": 461,
+          "location_type": "spar",
+          "spar_id": "S122",
+          "to_hub": "H049"
+        },
+        {
+          "first_global_index": 4462,
+          "first_string_index": 462,
+          "last_global_index": 4462,
+          "last_string_index": 462,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4463,
+          "first_string_index": 463,
+          "last_global_index": 4464,
+          "last_string_index": 464,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4465,
+          "first_string_index": 465,
+          "from_hub": "H049",
+          "last_global_index": 4466,
+          "last_string_index": 466,
+          "location_type": "spar",
+          "spar_id": "S140",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 4467,
+          "first_string_index": 467,
+          "last_global_index": 4501,
+          "last_string_index": 501,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4502,
+          "first_string_index": 502,
+          "last_global_index": 4509,
+          "last_string_index": 509,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4510,
+          "first_string_index": 510,
+          "from_hub": "H042",
+          "last_global_index": 4514,
+          "last_string_index": 514,
+          "location_type": "spar",
+          "spar_id": "S123",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 4515,
+          "first_string_index": 515,
+          "last_global_index": 4521,
+          "last_string_index": 521,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4522,
+          "first_string_index": 522,
+          "last_global_index": 4534,
+          "last_string_index": 534,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4535,
+          "first_string_index": 535,
+          "from_hub": "H041",
+          "last_global_index": 4542,
+          "last_string_index": 542,
+          "location_type": "spar",
+          "spar_id": "S121",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 4543,
+          "first_string_index": 543,
+          "last_global_index": 4548,
+          "last_string_index": 548,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4549,
+          "first_string_index": 549,
+          "last_global_index": 4552,
+          "last_string_index": 552,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4553,
+          "first_string_index": 553,
+          "from_hub": "H048",
+          "last_global_index": 4555,
+          "last_string_index": 555,
+          "location_type": "spar",
+          "spar_id": "S138",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 4556,
+          "first_string_index": 556,
+          "last_global_index": 4558,
+          "last_string_index": 558,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4559,
+          "first_string_index": 559,
+          "last_global_index": 4563,
+          "last_string_index": 563,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4564,
+          "first_string_index": 564,
+          "from_hub": "H054",
+          "last_global_index": 4569,
+          "last_string_index": 569,
+          "location_type": "spar",
+          "spar_id": "S152",
+          "to_hub": "H058"
+        },
+        {
+          "first_global_index": 4570,
+          "first_string_index": 570,
+          "last_global_index": 4588,
+          "last_string_index": 588,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4589,
+          "first_string_index": 589,
+          "last_global_index": 4595,
+          "last_string_index": 595,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4596,
+          "first_string_index": 596,
+          "from_hub": "H054",
+          "last_global_index": 4598,
+          "last_string_index": 598,
+          "location_type": "spar",
+          "spar_id": "S153",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 4599,
+          "first_string_index": 599,
+          "last_global_index": 4601,
+          "last_string_index": 601,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4602,
+          "first_string_index": 602,
+          "last_global_index": 4605,
+          "last_string_index": 605,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4606,
+          "first_string_index": 606,
+          "from_hub": "H049",
+          "last_global_index": 4609,
+          "last_string_index": 609,
+          "location_type": "spar",
+          "spar_id": "S140",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 4610,
+          "first_string_index": 610,
+          "last_global_index": 4623,
+          "last_string_index": 623,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4624,
+          "first_string_index": 624,
+          "from_hub": "H049",
+          "last_global_index": 4627,
+          "last_string_index": 627,
+          "location_type": "spar",
+          "spar_id": "S140",
+          "to_hub": "H054"
+        },
+        {
+          "first_global_index": 4628,
+          "first_string_index": 628,
+          "last_global_index": 4640,
+          "last_string_index": 640,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4641,
+          "first_string_index": 641,
+          "last_global_index": 4654,
+          "last_string_index": 654,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4655,
+          "first_string_index": 655,
+          "from_hub": "H049",
+          "last_global_index": 4658,
+          "last_string_index": 658,
+          "location_type": "spar",
+          "spar_id": "S142",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 4659,
+          "first_string_index": 659,
+          "last_global_index": 4662,
+          "last_string_index": 662,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4663,
+          "first_string_index": 663,
+          "last_global_index": 4667,
+          "last_string_index": 667,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4668,
+          "first_string_index": 668,
+          "from_hub": "H054",
+          "last_global_index": 4672,
+          "last_string_index": 672,
+          "location_type": "spar",
+          "spar_id": "S153",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 4673,
+          "first_string_index": 673,
+          "last_global_index": 4689,
+          "last_string_index": 689,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4690,
+          "first_string_index": 690,
+          "last_global_index": 4700,
+          "last_string_index": 700,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4701,
+          "first_string_index": 701,
+          "last_global_index": 4711,
+          "last_string_index": 711,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4712,
+          "first_string_index": 712,
+          "from_hub": "H058",
+          "last_global_index": 4715,
+          "last_string_index": 715,
+          "location_type": "spar",
+          "spar_id": "S161",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 4716,
+          "first_string_index": 716,
+          "last_global_index": 4724,
+          "last_string_index": 724,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4725,
+          "first_string_index": 725,
+          "last_global_index": 4732,
+          "last_string_index": 732,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4733,
+          "first_string_index": 733,
+          "from_hub": "H059",
+          "last_global_index": 4762,
+          "last_string_index": 762,
+          "location_type": "spar",
+          "spar_id": "S164",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 4763,
+          "first_string_index": 763,
+          "last_global_index": 4763,
+          "last_string_index": 763,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4764,
+          "first_string_index": 764,
+          "from_hub": "H049",
+          "last_global_index": 4776,
+          "last_string_index": 776,
+          "location_type": "spar",
+          "spar_id": "S142",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 4777,
+          "first_string_index": 777,
+          "last_global_index": 4780,
+          "last_string_index": 780,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4781,
+          "first_string_index": 781,
+          "last_global_index": 4785,
+          "last_string_index": 785,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4786,
+          "first_string_index": 786,
+          "from_hub": "H055",
+          "last_global_index": 4790,
+          "last_string_index": 790,
+          "location_type": "spar",
+          "spar_id": "S154",
+          "to_hub": "H059"
+        },
+        {
+          "first_global_index": 4791,
+          "first_string_index": 791,
+          "last_global_index": 4807,
+          "last_string_index": 807,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4808,
+          "first_string_index": 808,
+          "last_global_index": 4818,
+          "last_string_index": 818,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4819,
+          "first_string_index": 819,
+          "last_global_index": 4830,
+          "last_string_index": 830,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4831,
+          "first_string_index": 831,
+          "from_hub": "H059",
+          "last_global_index": 4834,
+          "last_string_index": 834,
+          "location_type": "spar",
+          "spar_id": "S163",
+          "to_hub": "H060"
+        },
+        {
+          "first_global_index": 4835,
+          "first_string_index": 835,
+          "last_global_index": 4842,
+          "last_string_index": 842,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4843,
+          "first_string_index": 843,
+          "last_global_index": 4851,
+          "last_string_index": 851,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4852,
+          "first_string_index": 852,
+          "from_hub": "H059",
+          "last_global_index": 4854,
+          "last_string_index": 854,
+          "location_type": "spar",
+          "spar_id": "S164",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 4855,
+          "first_string_index": 855,
+          "last_global_index": 4866,
+          "last_string_index": 866,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4867,
+          "first_string_index": 867,
+          "last_global_index": 4886,
+          "last_string_index": 886,
+          "location_type": "unresolved",
+          "reason": "too_far_from_projected_spar"
+        },
+        {
+          "first_global_index": 4887,
+          "first_string_index": 887,
+          "from_hub": "H060",
+          "last_global_index": 4931,
+          "last_string_index": 931,
+          "location_type": "spar",
+          "spar_id": "S165",
+          "to_hub": "H061"
+        },
+        {
+          "first_global_index": 4932,
+          "first_string_index": 932,
+          "last_global_index": 4932,
+          "last_string_index": 932,
+          "location_type": "unresolved",
+          "reason": "multiple_nearby_projected_spars"
+        },
+        {
+          "first_global_index": 4933,
+          "first_string_index": 933,
+          "last_global_index": 4999,
+          "last_string_index": 999,
+          "location_type": "tail",
+          "tail_model": "unresolved"
+        }
+      ],
+      "string_id": 4
+    }
+  ],
+  "transform": {
+    "method": "declared common centre and unit conversion; rotation/reflection held at model convention because source has no fiducials",
+    "orientation_status": "unresolved_not_fitted",
+    "reflect_y": false,
+    "rotation_degrees": 0.0,
+    "scale": 1000.0,
+    "source_units": "metres",
+    "target_units": "millimetres",
+    "tx": 0.0,
+    "ty": 0.0
+  }
+}

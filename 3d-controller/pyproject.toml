@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "thunderdome"
+version = "0.1.0"
+description = "Python 3D LED rendering foundation for Thunderdome"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+thunderdome = "thunderdome.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "controller"}
+
+[tool.setuptools.packages.find]
+where = ["controller"]

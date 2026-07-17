@@ -1,0 +1,1055 @@
+{
+  "assumptions": {
+    "first_led_offset_m": 0.0,
+    "hub_transition_model": "none",
+    "led_pitch_m": 0.03,
+    "tail_direction": "negative_z",
+    "tail_start_hub": "H061"
+  },
+  "routes": [
+    {
+      "controller_number": 1,
+      "end_hub": "H061",
+      "global_index_end": 999,
+      "global_index_start": 0,
+      "ordered_hubs": [
+        "H032",
+        "H019",
+        "H018",
+        "H026",
+        "H017",
+        "H037",
+        "H026",
+        "H038",
+        "H018",
+        "H032",
+        "H039",
+        "H047",
+        "H032",
+        "H038",
+        "H037",
+        "H052",
+        "H038",
+        "H047",
+        "H052",
+        "H057",
+        "H047",
+        "H053",
+        "H057",
+        "H058",
+        "H061"
+      ],
+      "segments": [
+        {
+          "from_hub": "H032",
+          "length_m": 1.036839,
+          "spar_id": "S058",
+          "spar_type": "A",
+          "to_hub": "H019"
+        },
+        {
+          "from_hub": "H019",
+          "length_m": 1.200218,
+          "spar_id": "S053",
+          "spar_type": "B",
+          "to_hub": "H018"
+        },
+        {
+          "from_hub": "H018",
+          "length_m": 1.226578,
+          "spar_id": "S054",
+          "spar_type": "C",
+          "to_hub": "H026"
+        },
+        {
+          "from_hub": "H026",
+          "length_m": 1.226578,
+          "spar_id": "S050",
+          "spar_type": "C",
+          "to_hub": "H017"
+        },
+        {
+          "from_hub": "H017",
+          "length_m": 1.200217,
+          "spar_id": "S052",
+          "spar_type": "B",
+          "to_hub": "H037"
+        },
+        {
+          "from_hub": "H037",
+          "length_m": 1.226578,
+          "spar_id": "S081",
+          "spar_type": "C",
+          "to_hub": "H026"
+        },
+        {
+          "from_hub": "H026",
+          "length_m": 1.226578,
+          "spar_id": "S082",
+          "spar_type": "C",
+          "to_hub": "H038"
+        },
+        {
+          "from_hub": "H038",
+          "length_m": 1.200217,
+          "spar_id": "S056",
+          "spar_type": "B",
+          "to_hub": "H018"
+        },
+        {
+          "from_hub": "H018",
+          "length_m": 1.036839,
+          "spar_id": "S055",
+          "spar_type": "A",
+          "to_hub": "H032"
+        },
+        {
+          "from_hub": "H032",
+          "length_m": 1.036839,
+          "spar_id": "S095",
+          "spar_type": "A",
+          "to_hub": "H039"
+        },
+        {
+          "from_hub": "H039",
+          "length_m": 1.200217,
+          "spar_id": "S115",
+          "spar_type": "B",
+          "to_hub": "H047"
+        },
+        {
+          "from_hub": "H047",
+          "length_m": 1.036839,
+          "spar_id": "S096",
+          "spar_type": "A",
+          "to_hub": "H032"
+        },
+        {
+          "from_hub": "H032",
+          "length_m": 1.036839,
+          "spar_id": "S094",
+          "spar_type": "A",
+          "to_hub": "H038"
+        },
+        {
+          "from_hub": "H038",
+          "length_m": 1.200217,
+          "spar_id": "S109",
+          "spar_type": "B",
+          "to_hub": "H037"
+        },
+        {
+          "from_hub": "H037",
+          "length_m": 1.226578,
+          "spar_id": "S111",
+          "spar_type": "C",
+          "to_hub": "H052"
+        },
+        {
+          "from_hub": "H052",
+          "length_m": 1.226578,
+          "spar_id": "S113",
+          "spar_type": "C",
+          "to_hub": "H038"
+        },
+        {
+          "from_hub": "H038",
+          "length_m": 1.200217,
+          "spar_id": "S112",
+          "spar_type": "B",
+          "to_hub": "H047"
+        },
+        {
+          "from_hub": "H047",
+          "length_m": 1.226578,
+          "spar_id": "S134",
+          "spar_type": "C",
+          "to_hub": "H052"
+        },
+        {
+          "from_hub": "H052",
+          "length_m": 1.226578,
+          "spar_id": "S149",
+          "spar_type": "C",
+          "to_hub": "H057"
+        },
+        {
+          "from_hub": "H057",
+          "length_m": 1.200217,
+          "spar_id": "S136",
+          "spar_type": "B",
+          "to_hub": "H047"
+        },
+        {
+          "from_hub": "H047",
+          "length_m": 1.226578,
+          "spar_id": "S135",
+          "spar_type": "C",
+          "to_hub": "H053"
+        },
+        {
+          "from_hub": "H053",
+          "length_m": 1.226578,
+          "spar_id": "S150",
+          "spar_type": "C",
+          "to_hub": "H057"
+        },
+        {
+          "from_hub": "H057",
+          "length_m": 1.200217,
+          "spar_id": "S159",
+          "spar_type": "B",
+          "to_hub": "H058"
+        },
+        {
+          "from_hub": "H058",
+          "length_m": 1.036839,
+          "spar_id": "S162",
+          "spar_type": "A",
+          "to_hub": "H061"
+        }
+      ],
+      "start_hub": "H032",
+      "string_id": 0,
+      "total_route_length_m": 28.088551,
+      "unique_spar_count": 24
+    },
+    {
+      "controller_number": 2,
+      "end_hub": "H061",
+      "global_index_end": 1999,
+      "global_index_start": 1000,
+      "ordered_hubs": [
+        "H033",
+        "H021",
+        "H020",
+        "H027",
+        "H019",
+        "H039",
+        "H027",
+        "H040",
+        "H020",
+        "H033",
+        "H041",
+        "H048",
+        "H033",
+        "H040",
+        "H039",
+        "H053",
+        "H040",
+        "H048",
+        "H053",
+        "H058",
+        "H048",
+        "H054",
+        "H058",
+        "H059",
+        "H061"
+      ],
+      "segments": [
+        {
+          "from_hub": "H033",
+          "length_m": 1.036839,
+          "spar_id": "S065",
+          "spar_type": "A",
+          "to_hub": "H021"
+        },
+        {
+          "from_hub": "H021",
+          "length_m": 1.200217,
+          "spar_id": "S060",
+          "spar_type": "B",
+          "to_hub": "H020"
+        },
+        {
+          "from_hub": "H020",
+          "length_m": 1.226578,
+          "spar_id": "S061",
+          "spar_type": "C",
+          "to_hub": "H027"
+        },
+        {
+          "from_hub": "H027",
+          "length_m": 1.226578,
+          "spar_id": "S057",
+          "spar_type": "C",
+          "to_hub": "H019"
+        },
+        {
+          "from_hub": "H019",
+          "length_m": 1.200217,
+          "spar_id": "S059",
+          "spar_type": "B",
+          "to_hub": "H039"
+        },
+        {
+          "from_hub": "H039",
+          "length_m": 1.226578,
+          "spar_id": "S083",
+          "spar_type": "C",
+          "to_hub": "H027"
+        },
+        {
+          "from_hub": "H027",
+          "length_m": 1.226578,
+          "spar_id": "S084",
+          "spar_type": "C",
+          "to_hub": "H040"
+        },
+        {
+          "from_hub": "H040",
+          "length_m": 1.200217,
+          "spar_id": "S063",
+          "spar_type": "B",
+          "to_hub": "H020"
+        },
+        {
+          "from_hub": "H020",
+          "length_m": 1.036839,
+          "spar_id": "S062",
+          "spar_type": "A",
+          "to_hub": "H033"
+        },
+        {
+          "from_hub": "H033",
+          "length_m": 1.036838,
+          "spar_id": "S098",
+          "spar_type": "A",
+          "to_hub": "H041"
+        },
+        {
+          "from_hub": "H041",
+          "length_m": 1.200217,
+          "spar_id": "S120",
+          "spar_type": "B",
+          "to_hub": "H048"
+        },
+        {
+          "from_hub": "H048",
+          "length_m": 1.036838,
+          "spar_id": "S099",
+          "spar_type": "A",
+          "to_hub": "H033"
+        },
+        {
+          "from_hub": "H033",
+          "length_m": 1.036838,
+          "spar_id": "S097",
+          "spar_type": "A",
+          "to_hub": "H040"
+        },
+        {
+          "from_hub": "H040",
+          "length_m": 1.200217,
+          "spar_id": "S114",
+          "spar_type": "B",
+          "to_hub": "H039"
+        },
+        {
+          "from_hub": "H039",
+          "length_m": 1.226578,
+          "spar_id": "S116",
+          "spar_type": "C",
+          "to_hub": "H053"
+        },
+        {
+          "from_hub": "H053",
+          "length_m": 1.226578,
+          "spar_id": "S118",
+          "spar_type": "C",
+          "to_hub": "H040"
+        },
+        {
+          "from_hub": "H040",
+          "length_m": 1.200217,
+          "spar_id": "S117",
+          "spar_type": "B",
+          "to_hub": "H048"
+        },
+        {
+          "from_hub": "H048",
+          "length_m": 1.226578,
+          "spar_id": "S137",
+          "spar_type": "C",
+          "to_hub": "H053"
+        },
+        {
+          "from_hub": "H053",
+          "length_m": 1.226578,
+          "spar_id": "S151",
+          "spar_type": "C",
+          "to_hub": "H058"
+        },
+        {
+          "from_hub": "H058",
+          "length_m": 1.200217,
+          "spar_id": "S139",
+          "spar_type": "B",
+          "to_hub": "H048"
+        },
+        {
+          "from_hub": "H048",
+          "length_m": 1.226578,
+          "spar_id": "S138",
+          "spar_type": "C",
+          "to_hub": "H054"
+        },
+        {
+          "from_hub": "H054",
+          "length_m": 1.226578,
+          "spar_id": "S152",
+          "spar_type": "C",
+          "to_hub": "H058"
+        },
+        {
+          "from_hub": "H058",
+          "length_m": 1.200217,
+          "spar_id": "S161",
+          "spar_type": "B",
+          "to_hub": "H059"
+        },
+        {
+          "from_hub": "H059",
+          "length_m": 1.036838,
+          "spar_id": "S164",
+          "spar_type": "A",
+          "to_hub": "H061"
+        }
+      ],
+      "start_hub": "H033",
+      "string_id": 1,
+      "total_route_length_m": 28.088545999999994,
+      "unique_spar_count": 24
+    },
+    {
+      "controller_number": 3,
+      "end_hub": "H061",
+      "global_index_end": 2999,
+      "global_index_start": 2000,
+      "ordered_hubs": [
+        "H034",
+        "H023",
+        "H022",
+        "H028",
+        "H021",
+        "H041",
+        "H028",
+        "H042",
+        "H022",
+        "H034",
+        "H043",
+        "H049",
+        "H034",
+        "H042",
+        "H041",
+        "H054",
+        "H042",
+        "H049",
+        "H054",
+        "H059",
+        "H049",
+        "H055",
+        "H059",
+        "H060",
+        "H061"
+      ],
+      "segments": [
+        {
+          "from_hub": "H034",
+          "length_m": 1.036839,
+          "spar_id": "S072",
+          "spar_type": "A",
+          "to_hub": "H023"
+        },
+        {
+          "from_hub": "H023",
+          "length_m": 1.200218,
+          "spar_id": "S067",
+          "spar_type": "B",
+          "to_hub": "H022"
+        },
+        {
+          "from_hub": "H022",
+          "length_m": 1.226578,
+          "spar_id": "S068",
+          "spar_type": "C",
+          "to_hub": "H028"
+        },
+        {
+          "from_hub": "H028",
+          "length_m": 1.226578,
+          "spar_id": "S064",
+          "spar_type": "C",
+          "to_hub": "H021"
+        },
+        {
+          "from_hub": "H021",
+          "length_m": 1.200217,
+          "spar_id": "S066",
+          "spar_type": "B",
+          "to_hub": "H041"
+        },
+        {
+          "from_hub": "H041",
+          "length_m": 1.226578,
+          "spar_id": "S085",
+          "spar_type": "C",
+          "to_hub": "H028"
+        },
+        {
+          "from_hub": "H028",
+          "length_m": 1.226578,
+          "spar_id": "S086",
+          "spar_type": "C",
+          "to_hub": "H042"
+        },
+        {
+          "from_hub": "H042",
+          "length_m": 1.200217,
+          "spar_id": "S070",
+          "spar_type": "B",
+          "to_hub": "H022"
+        },
+        {
+          "from_hub": "H022",
+          "length_m": 1.036839,
+          "spar_id": "S069",
+          "spar_type": "A",
+          "to_hub": "H034"
+        },
+        {
+          "from_hub": "H034",
+          "length_m": 1.036838,
+          "spar_id": "S101",
+          "spar_type": "A",
+          "to_hub": "H043"
+        },
+        {
+          "from_hub": "H043",
+          "length_m": 1.200217,
+          "spar_id": "S125",
+          "spar_type": "B",
+          "to_hub": "H049"
+        },
+        {
+          "from_hub": "H049",
+          "length_m": 1.036839,
+          "spar_id": "S102",
+          "spar_type": "A",
+          "to_hub": "H034"
+        },
+        {
+          "from_hub": "H034",
+          "length_m": 1.036839,
+          "spar_id": "S100",
+          "spar_type": "A",
+          "to_hub": "H042"
+        },
+        {
+          "from_hub": "H042",
+          "length_m": 1.200217,
+          "spar_id": "S119",
+          "spar_type": "B",
+          "to_hub": "H041"
+        },
+        {
+          "from_hub": "H041",
+          "length_m": 1.226578,
+          "spar_id": "S121",
+          "spar_type": "C",
+          "to_hub": "H054"
+        },
+        {
+          "from_hub": "H054",
+          "length_m": 1.226578,
+          "spar_id": "S123",
+          "spar_type": "C",
+          "to_hub": "H042"
+        },
+        {
+          "from_hub": "H042",
+          "length_m": 1.200217,
+          "spar_id": "S122",
+          "spar_type": "B",
+          "to_hub": "H049"
+        },
+        {
+          "from_hub": "H049",
+          "length_m": 1.226578,
+          "spar_id": "S140",
+          "spar_type": "C",
+          "to_hub": "H054"
+        },
+        {
+          "from_hub": "H054",
+          "length_m": 1.226578,
+          "spar_id": "S153",
+          "spar_type": "C",
+          "to_hub": "H059"
+        },
+        {
+          "from_hub": "H059",
+          "length_m": 1.200217,
+          "spar_id": "S142",
+          "spar_type": "B",
+          "to_hub": "H049"
+        },
+        {
+          "from_hub": "H049",
+          "length_m": 1.226578,
+          "spar_id": "S141",
+          "spar_type": "C",
+          "to_hub": "H055"
+        },
+        {
+          "from_hub": "H055",
+          "length_m": 1.226578,
+          "spar_id": "S154",
+          "spar_type": "C",
+          "to_hub": "H059"
+        },
+        {
+          "from_hub": "H059",
+          "length_m": 1.200217,
+          "spar_id": "S163",
+          "spar_type": "B",
+          "to_hub": "H060"
+        },
+        {
+          "from_hub": "H060",
+          "length_m": 1.036839,
+          "spar_id": "S165",
+          "spar_type": "A",
+          "to_hub": "H061"
+        }
+      ],
+      "start_hub": "H034",
+      "string_id": 2,
+      "total_route_length_m": 28.088549999999998,
+      "unique_spar_count": 24
+    },
+    {
+      "controller_number": 4,
+      "end_hub": "H061",
+      "global_index_end": 3999,
+      "global_index_start": 3000,
+      "ordered_hubs": [
+        "H035",
+        "H025",
+        "H024",
+        "H029",
+        "H023",
+        "H043",
+        "H029",
+        "H044",
+        "H024",
+        "H035",
+        "H045",
+        "H050",
+        "H035",
+        "H044",
+        "H043",
+        "H055",
+        "H044",
+        "H050",
+        "H055",
+        "H060",
+        "H050",
+        "H051",
+        "H060",
+        "H056",
+        "H061"
+      ],
+      "segments": [
+        {
+          "from_hub": "H035",
+          "length_m": 1.036839,
+          "spar_id": "S079",
+          "spar_type": "A",
+          "to_hub": "H025"
+        },
+        {
+          "from_hub": "H025",
+          "length_m": 1.200217,
+          "spar_id": "S074",
+          "spar_type": "B",
+          "to_hub": "H024"
+        },
+        {
+          "from_hub": "H024",
+          "length_m": 1.226578,
+          "spar_id": "S075",
+          "spar_type": "C",
+          "to_hub": "H029"
+        },
+        {
+          "from_hub": "H029",
+          "length_m": 1.226578,
+          "spar_id": "S071",
+          "spar_type": "C",
+          "to_hub": "H023"
+        },
+        {
+          "from_hub": "H023",
+          "length_m": 1.200217,
+          "spar_id": "S073",
+          "spar_type": "B",
+          "to_hub": "H043"
+        },
+        {
+          "from_hub": "H043",
+          "length_m": 1.226578,
+          "spar_id": "S087",
+          "spar_type": "C",
+          "to_hub": "H029"
+        },
+        {
+          "from_hub": "H029",
+          "length_m": 1.226578,
+          "spar_id": "S088",
+          "spar_type": "C",
+          "to_hub": "H044"
+        },
+        {
+          "from_hub": "H044",
+          "length_m": 1.200217,
+          "spar_id": "S077",
+          "spar_type": "B",
+          "to_hub": "H024"
+        },
+        {
+          "from_hub": "H024",
+          "length_m": 1.036838,
+          "spar_id": "S076",
+          "spar_type": "A",
+          "to_hub": "H035"
+        },
+        {
+          "from_hub": "H035",
+          "length_m": 1.036839,
+          "spar_id": "S104",
+          "spar_type": "A",
+          "to_hub": "H045"
+        },
+        {
+          "from_hub": "H045",
+          "length_m": 1.200217,
+          "spar_id": "S129",
+          "spar_type": "B",
+          "to_hub": "H050"
+        },
+        {
+          "from_hub": "H050",
+          "length_m": 1.036838,
+          "spar_id": "S105",
+          "spar_type": "A",
+          "to_hub": "H035"
+        },
+        {
+          "from_hub": "H035",
+          "length_m": 1.036838,
+          "spar_id": "S103",
+          "spar_type": "A",
+          "to_hub": "H044"
+        },
+        {
+          "from_hub": "H044",
+          "length_m": 1.200217,
+          "spar_id": "S124",
+          "spar_type": "B",
+          "to_hub": "H043"
+        },
+        {
+          "from_hub": "H043",
+          "length_m": 1.226578,
+          "spar_id": "S126",
+          "spar_type": "C",
+          "to_hub": "H055"
+        },
+        {
+          "from_hub": "H055",
+          "length_m": 1.226578,
+          "spar_id": "S128",
+          "spar_type": "C",
+          "to_hub": "H044"
+        },
+        {
+          "from_hub": "H044",
+          "length_m": 1.200217,
+          "spar_id": "S127",
+          "spar_type": "B",
+          "to_hub": "H050"
+        },
+        {
+          "from_hub": "H050",
+          "length_m": 1.226578,
+          "spar_id": "S144",
+          "spar_type": "C",
+          "to_hub": "H055"
+        },
+        {
+          "from_hub": "H055",
+          "length_m": 1.226578,
+          "spar_id": "S155",
+          "spar_type": "C",
+          "to_hub": "H060"
+        },
+        {
+          "from_hub": "H060",
+          "length_m": 1.200217,
+          "spar_id": "S145",
+          "spar_type": "B",
+          "to_hub": "H050"
+        },
+        {
+          "from_hub": "H050",
+          "length_m": 1.226578,
+          "spar_id": "S143",
+          "spar_type": "C",
+          "to_hub": "H051"
+        },
+        {
+          "from_hub": "H051",
+          "length_m": 1.226578,
+          "spar_id": "S147",
+          "spar_type": "C",
+          "to_hub": "H060"
+        },
+        {
+          "from_hub": "H060",
+          "length_m": 1.200217,
+          "spar_id": "S157",
+          "spar_type": "B",
+          "to_hub": "H056"
+        },
+        {
+          "from_hub": "H056",
+          "length_m": 1.036839,
+          "spar_id": "S158",
+          "spar_type": "A",
+          "to_hub": "H061"
+        }
+      ],
+      "start_hub": "H035",
+      "string_id": 3,
+      "total_route_length_m": 28.088546999999995,
+      "unique_spar_count": 24
+    },
+    {
+      "controller_number": 5,
+      "end_hub": "H061",
+      "global_index_end": 4999,
+      "global_index_start": 4000,
+      "ordered_hubs": [
+        "H031",
+        "H017",
+        "H016",
+        "H030",
+        "H025",
+        "H045",
+        "H030",
+        "H036",
+        "H016",
+        "H031",
+        "H037",
+        "H046",
+        "H031",
+        "H036",
+        "H045",
+        "H051",
+        "H036",
+        "H046",
+        "H051",
+        "H056",
+        "H046",
+        "H052",
+        "H056",
+        "H057",
+        "H061"
+      ],
+      "segments": [
+        {
+          "from_hub": "H031",
+          "length_m": 1.036838,
+          "spar_id": "S051",
+          "spar_type": "A",
+          "to_hub": "H017"
+        },
+        {
+          "from_hub": "H017",
+          "length_m": 1.200217,
+          "spar_id": "S046",
+          "spar_type": "B",
+          "to_hub": "H016"
+        },
+        {
+          "from_hub": "H016",
+          "length_m": 1.226578,
+          "spar_id": "S047",
+          "spar_type": "C",
+          "to_hub": "H030"
+        },
+        {
+          "from_hub": "H030",
+          "length_m": 1.226578,
+          "spar_id": "S078",
+          "spar_type": "C",
+          "to_hub": "H025"
+        },
+        {
+          "from_hub": "H025",
+          "length_m": 1.200217,
+          "spar_id": "S080",
+          "spar_type": "B",
+          "to_hub": "H045"
+        },
+        {
+          "from_hub": "H045",
+          "length_m": 1.226578,
+          "spar_id": "S090",
+          "spar_type": "C",
+          "to_hub": "H030"
+        },
+        {
+          "from_hub": "H030",
+          "length_m": 1.226578,
+          "spar_id": "S089",
+          "spar_type": "C",
+          "to_hub": "H036"
+        },
+        {
+          "from_hub": "H036",
+          "length_m": 1.200217,
+          "spar_id": "S049",
+          "spar_type": "B",
+          "to_hub": "H016"
+        },
+        {
+          "from_hub": "H016",
+          "length_m": 1.036839,
+          "spar_id": "S048",
+          "spar_type": "A",
+          "to_hub": "H031"
+        },
+        {
+          "from_hub": "H031",
+          "length_m": 1.036838,
+          "spar_id": "S092",
+          "spar_type": "A",
+          "to_hub": "H037"
+        },
+        {
+          "from_hub": "H037",
+          "length_m": 1.200217,
+          "spar_id": "S110",
+          "spar_type": "B",
+          "to_hub": "H046"
+        },
+        {
+          "from_hub": "H046",
+          "length_m": 1.036838,
+          "spar_id": "S093",
+          "spar_type": "A",
+          "to_hub": "H031"
+        },
+        {
+          "from_hub": "H031",
+          "length_m": 1.036839,
+          "spar_id": "S091",
+          "spar_type": "A",
+          "to_hub": "H036"
+        },
+        {
+          "from_hub": "H036",
+          "length_m": 1.200217,
+          "spar_id": "S106",
+          "spar_type": "B",
+          "to_hub": "H045"
+        },
+        {
+          "from_hub": "H045",
+          "length_m": 1.226578,
+          "spar_id": "S130",
+          "spar_type": "C",
+          "to_hub": "H051"
+        },
+        {
+          "from_hub": "H051",
+          "length_m": 1.226578,
+          "spar_id": "S108",
+          "spar_type": "C",
+          "to_hub": "H036"
+        },
+        {
+          "from_hub": "H036",
+          "length_m": 1.200217,
+          "spar_id": "S107",
+          "spar_type": "B",
+          "to_hub": "H046"
+        },
+        {
+          "from_hub": "H046",
+          "length_m": 1.226578,
+          "spar_id": "S131",
+          "spar_type": "C",
+          "to_hub": "H051"
+        },
+        {
+          "from_hub": "H051",
+          "length_m": 1.226578,
+          "spar_id": "S146",
+          "spar_type": "C",
+          "to_hub": "H056"
+        },
+        {
+          "from_hub": "H056",
+          "length_m": 1.200217,
+          "spar_id": "S133",
+          "spar_type": "B",
+          "to_hub": "H046"
+        },
+        {
+          "from_hub": "H046",
+          "length_m": 1.226578,
+          "spar_id": "S132",
+          "spar_type": "C",
+          "to_hub": "H052"
+        },
+        {
+          "from_hub": "H052",
+          "length_m": 1.226578,
+          "spar_id": "S148",
+          "spar_type": "C",
+          "to_hub": "H056"
+        },
+        {
+          "from_hub": "H056",
+          "length_m": 1.200217,
+          "spar_id": "S156",
+          "spar_type": "B",
+          "to_hub": "H057"
+        },
+        {
+          "from_hub": "H057",
+          "length_m": 1.036838,
+          "spar_id": "S160",
+          "spar_type": "A",
+          "to_hub": "H061"
+        }
+      ],
+      "start_hub": "H031",
+      "string_id": 4,
+      "total_route_length_m": 28.088545999999994,
+      "unique_spar_count": 24
+    }
+  ],
+  "schema_version": 1,
+  "source_geometry_filename": "thunderdome_geometry.json",
+  "source_route_filename": "reference_string_route.md",
+  "validation_summary": {
+    "route_count": 5,
+    "shared_spars": 0,
+    "total_segments": 120,
+    "unique_spars": 120
+  }
+}

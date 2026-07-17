@@ -1,0 +1,39 @@
+{
+  "name": "thunderdome_clock_face_second_hand_test",
+  "description": "Radial second-hand test pattern for validating the 300x300 top-down WLED LED map.",
+  "grid": {
+    "width": 300,
+    "height": 300,
+    "centre_grid": [150, 150],
+    "dome_diameter_mm": 6000,
+    "cell_size_mm": 20
+  },
+  "led_source": "led_positions_2d.json",
+  "default_led_filter": {
+    "on_dome_path": true,
+    "include_tail": false
+  },
+  "angle_convention": {
+    "0_degrees": "positive X / right / east",
+    "90_degrees": "positive Y / up / north",
+    "180_degrees": "negative X / left / west",
+    "270_degrees": "negative Y / down / south"
+  },
+  "default_runtime": {
+    "duration_seconds": 60,
+    "fps": 5,
+    "hand_width_degrees": 3,
+    "radius_min_mm": 0,
+    "radius_max_mm": 3000,
+    "hand_color": "FF0000",
+    "background_color": "000000",
+    "brightness": 64
+  },
+  "wled_api_notes": {
+    "state_endpoint": "/json/state",
+    "individual_led_property": "seg.i",
+    "prefer_hex_colours": true,
+    "send_requests_sequentially": true,
+    "chunk_large_updates": true
+  }
+}
