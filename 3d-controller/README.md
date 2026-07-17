@@ -169,3 +169,21 @@ thunderdome ddp-all controller-colors \
 The reusable `thunderdome.animation.run_frame_loop` accepts either a static-frame callback, a callback that receives `(frame_number, elapsed_seconds)`, or a frame generator. This lets an effect render a different 5,000-pixel `RGBFrame` for each iteration while retaining the same scheduler and direct-DDP transports. A future clock-face or clock-hand sweep can therefore generate a frame from its current angle on each tick, then use the normal single- or multi-controller sender.
 
 See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
+
+## Persistent WLED control and clock-hand effect
+
+WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. `controllers prepare-ddp` posts one state update per controller: `{"on":false,"bri":255,"live":false}`. This establishes an off fallback after realtime DDP expires while Python `--brightness` controls rendered-frame intensity.
+
+```bash
+thunderdome positions generate
+thunderdome positions validate
+thunderdome controllers prepare-ddp --controllers config/controllers.json
+thunderdome effect clock-hand --controllers config/controllers.json \
+  --positions geometry/generated/led_positions_3d.json --brightness 32 \
+  --color FFFFFF --background 000000 --width-mm 300 \
+  --rotation-seconds 3 --fps 30 --hold
+```
+
+`clock-hand` renders all 5,000 LED records from generated XYZ data and fans them out over DDP. Its centre is authoritative geometry hub H061's XY coordinate, never an LED-derived bound or average. Width is the full visible width in millimetres; zero degrees points along world `+X`; clockwise is viewed from above; and `--angle-offset-degrees` aligns the installation. Tails are included by default; use `--exclude-tail` to omit them. Because tails descend from H061 and share its XY location, they normally form a continuously lit centre at every angle.
+
+To restore native fallback output, address every controller (for example `controllers power ... on`, `controllers brightness ... 64`, then `controllers effect ... EFFECT_ID`). Native WLED effects run independently and are not guaranteed spatially or phase synchronized; use Pi-rendered DDP for one coherent dome effect.

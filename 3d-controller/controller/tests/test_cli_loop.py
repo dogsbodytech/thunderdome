@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from thunderdome.cli import main
+from thunderdome.cli import main, parse_args
 from thunderdome.animation.loop import FrameLoopStats
 from thunderdome.transport.ddp import packets_for_frame
 from thunderdome.transport.multi_ddp import SendResult
@@ -47,6 +47,29 @@ class FakeMultiSession:
 
 
 class CLILoopTests(unittest.TestCase):
+    def test_single_controller_dispatches_each_persistent_operation(self):
+        cases = [
+            (["power", "on"], "set_power", (True,)),
+            (["live", "off"], "set_live", (False,)),
+            (["color", "#010203"], "set_color", ((1, 2, 3),)),
+            (["effect", "2"], "set_effect", (2,)),
+            (["palette", "3"], "set_palette", (3,)),
+            (["preset", "4"], "set_preset", (4,)),
+            (["prepare-ddp"], "prepare_ddp", ()),
+        ]
+        for arguments, method, expected in cases:
+            with self.subTest(method=method):
+                client = Mock()
+                with patch("thunderdome.cli.WLEDClient", return_value=client):
+                    self.assertEqual(main(["controller", *arguments[:1], "--host", "example.test", *arguments[1:]]), 0)
+                getattr(client, method).assert_called_once_with(*expected)
+                if method == "set_power": client.set_live.assert_not_called()
+
+    def test_clock_hand_parser_uses_exclude_tail_and_rejects_include_tail(self):
+        args = parse_args(["effect", "clock-hand", "--exclude-tail"])
+        self.assertTrue(args.exclude_tail)
+        with self.assertRaises(SystemExit):
+            parse_args(["effect", "clock-hand", "--include-tail"])
     def test_multi_dry_run_rejects_loop_controls(self):
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
