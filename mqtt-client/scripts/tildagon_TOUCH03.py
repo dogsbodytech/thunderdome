@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-"""Handler for open/dogsbody/dome/TOUCH03. argv[1] = MQTT payload."""
+"""Handler for open/dogsbody/dome/TOUCH03. argv[1] = MQTT payload.
+
+Brightness only, step 3/12 on a log curve:
+round(4 * (255/4)^((n-1)/11)) = 9.
+"""
 import os
 import subprocess
-import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
-payload = sys.argv[1] if len(sys.argv) > 1 else ""  # wire in per button as needed
 
+# Set dome brightness to 9/255 (step 3/12, dim to full).
 subprocess.run([
-    "thunderdome", "ddp", "range",
-    "--host", os.environ["WLED_HOST"], "0", "4999",
-    "--color", "00FF00",
-    "--brightness", "32",
+    "thunderdome", "controller", "brightness",
+    "--host", os.environ["WLED_HOST"],
+    "9",
 ])
