@@ -59,7 +59,7 @@ Use `--dry-run` only for one simulated `ddp-all` frame. It sends no UDP traffic 
 
 HTTP/native effects and favorites are optional support functions, not the animation renderer.
 
-## Prepare and run the clock hand
+## Prepare and run spatial effects
 
 Generate and validate nominal positions, then establish the persistent off fallback before application DDP:
 
@@ -71,3 +71,15 @@ thunderdome effect clock-hand --controllers config/controllers.json --geometry g
 ```
 
 `prepare-ddp` posts `{"on":false,"bri":255,"live":false}` in one JSON update to each enabled controller, so a DDP timeout falls back to off rather than a bright native effect. The hand centre is H061's authoritative XY coordinate; zero degrees is world `+X` and clockwise is viewed from above. All 5,000 generated XYZ records, including tails, participate by default. Tails share H061 XY and normally light the centre continuously; use `--exclude-tail` when that is not desired.
+
+`expanding-rings` and `height-wave` use the same generated 5,000-record XYZ context and direct multi-controller DDP output. The former sends concentric bands outward from H061 in the XY plane; the latter sends horizontal bands toward increasing Z. Their spacing and width are millimetres, and `--speed-mm-per-second` must be positive. Every spatial effect supports `--dry-run` before hardware output.
+
+```bash
+thunderdome effect expanding-rings --controllers config/controllers.json \
+  --ring-spacing-mm 1000 --ring-width-mm 200 --speed-mm-per-second 500 \
+  --brightness 32 --dry-run
+
+thunderdome effect height-wave --controllers config/controllers.json \
+  --wave-spacing-mm 1000 --wave-width-mm 200 --speed-mm-per-second 500 \
+  --brightness 32 --hold --fps 30
+```
