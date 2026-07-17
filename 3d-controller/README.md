@@ -1,0 +1,104 @@
+# Thunderdome 3D Controller
+
+Thunderdome is a 3V 5/8 geodesic LED dome: **61 hubs**, **165 spars** (30 A, 55 B, 80 C), and five physical strings of 1,000 LEDs. LEDs follow spars; H061 is the apex.
+
+## Active architecture
+
+```text
+validated geometry
+-> confirmed physical string routes
+-> generated XYZ LED positions
+-> Python effects
+-> one logical 5,000-pixel RGB frame
+-> five 1,000-pixel controller frames
+-> DDP over UDP
+-> five WLED controllers
+```
+
+Python owns spatial rendering and converts effects into the one logical 5,000-pixel RGB frame. The controller splits that frame into five local 1,000-pixel frames, then sends each frame directly to its WLED controller using DDP over UDP (default port 4048). WLED is the network LED output/controller; it does not own the XYZ mapping, and its native 2D ledmap is not an active mapping authority.
+
+- Geometry: `geometry/thunderdome_geometry.json`
+- Editable Blender source: `assets/blender/thunderdome_3v_5_8_scaled.blend`
+- Confirmed reference route: `geometry/reference_string_route.md`
+- Generated positions: `geometry/generated/led_positions_3d.json`
+- Active Python package: `controller/thunderdome/`
+- Tests: `controller/tests/`
+- Historical experiments: `archive/`
+
+All five manually captured routes are authoritative. Their generated XYZ positions are nominal mathematical coordinates through exact hub centres, with no hub correction or symmetry inference. The first tail LED is the next 30 mm nominal position after the route endpoint, so it is offset below H061 by the residual pitch distance. Future calibration may adjust pitch, first offset, and tail geometry.
+
+## Clone and install
+
+From a new machine, clone the repository and install the controller in an isolated virtual environment:
+
+```bash
+git clone https://github.com/dogsbodytech/thunderdome.git
+cd thunderdome/3d-controller
+
+sudo apt update
+sudo apt install python3-venv
+
+python3 -m venv .venv
+source .venv/bin/activate
+
+python3 -m pip install --upgrade pip
+python3 -m pip install -e .
+
+thunderdome --help
+```
+
+The package requires Python 3.11 or later. Reactivate the environment with `source .venv/bin/activate` in each new shell before using `thunderdome`.
+
+## Configure the five controllers
+
+Create a local configuration file before using the multi-controller commands:
+
+```bash
+cp config/controllers.example.json config/controllers.json
+```
+
+`config/controllers.json` is intentionally ignored by Git so each installation can keep its local controller addresses. Update its five `host` values to match the deployed controller addresses below, then validate the file:
+
+```bash
+thunderdome controllers validate --controllers config/controllers.json
+thunderdome controllers summary --controllers config/controllers.json
+```
+
+| Controller | Address | String | Start hub | Global LEDs | Local LEDs |
+| --- | --- | ---: | --- | --- | --- |
+| 1 | `192.168.12.10` | 0 | H032 | 0..999 | 0..999 |
+| 2 | `192.168.12.20` | 1 | H033 | 1000..1999 | 0..999 |
+| 3 | `192.168.12.30` | 2 | H034 | 2000..2999 | 0..999 |
+| 4 | `192.168.12.40` | 3 | H035 | 3000..3999 | 0..999 |
+| 5 | `192.168.12.50` | 4 | H031 | 4000..4999 | 0..999 |
+
+The global ranges form the one logical frame. Each controller receives only its corresponding 1,000-pixel slice as local LEDs `0..999`; frames are sent directly to all enabled controllers, never relayed through controller 1.
+
+## Test the controller
+
+Run the automated tests and validate the data pipeline before connecting to hardware:
+
+```bash
+python3 -m unittest discover -s controller/tests -v
+thunderdome geometry validate
+thunderdome route validate
+thunderdome positions generate
+thunderdome positions validate
+```
+
+## Safe DDP dry run
+
+Perform a dry run first. It validates the local controller configuration, creates a logical 5,000-pixel frame, splits it into five 1,000-pixel frames, and reports the DDP packet counts. `--dry-run` does **not** open network sockets or send UDP packets.
+
+```bash
+thunderdome ddp-all controller-colors \
+  --controllers config/controllers.json \
+  --brightness 16 \
+  --dry-run
+```
+
+`controller-colors` gives each controller's local frame a distinct colour in the generated frame. After confirming the dry-run output and only when the hardware/network is ready, remove `--dry-run` to transmit it. Start at low brightness. Other multi-controller commands are `ddp-all clear` and `ddp-all solid --color FF0000 --brightness 16`.
+
+For a single-controller diagnostic, use `thunderdome ddp clear --host WLED_HOST` or `thunderdome ddp pixel --host WLED_HOST 0 --color FF0000 --brightness 16`; these commands transmit immediately, so do not use them as a dry-run substitute.
+
+See `docs/architecture.md` and `docs/ddp.md` for supporting detail.

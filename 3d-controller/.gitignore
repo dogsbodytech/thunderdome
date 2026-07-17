@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.blend1
+*.zip
+.venv/
+build/
+dist/
+*.egg-info/
+geometry/generated/led_positions_3d.json
+
+# Local controller addresses
+config/controllers.json
