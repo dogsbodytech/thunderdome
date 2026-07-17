@@ -61,27 +61,36 @@ HTTP/native effects and favorites are optional support functions, not the animat
 
 ## Prepare and run spatial effects
 
-Generate and validate nominal positions, then establish the persistent off fallback before application DDP:
+Generate and validate nominal positions, then manually power controllers and set WLED master brightness before application DDP:
 
 ```bash
 thunderdome positions generate
 thunderdome positions validate
-thunderdome controllers prepare-ddp --controllers config/controllers.json
+thunderdome controllers power on --controllers config/controllers.json
+thunderdome controllers brightness 255 --controllers config/controllers.json
 thunderdome effect clock-hand --controllers config/controllers.json --geometry geometry/thunderdome_geometry.json --positions geometry/generated/led_positions_3d.json --brightness 32 --color FFFFFF --background 000000 --width-mm 300 --rotation-seconds 3 --fps 30 --hold
 ```
 
-`prepare-ddp` posts `{"on":false,"bri":255,"live":false}` in one JSON update to each enabled controller, so a DDP timeout falls back to off rather than a bright native effect. The hand centre is H061's authoritative XY coordinate; zero degrees is world `+X` and clockwise is viewed from above. All 5,000 generated XYZ records, including tails, participate by default. Tails share H061 XY and normally light the centre continuously; use `--exclude-tail` when that is not desired.
+Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness. The earlier `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear. The hand centre is H061's authoritative XY coordinate; zero degrees is world `+X` and clockwise is viewed from above. All 5,000 generated XYZ records, including tails, participate by default. Tails share H061 XY and normally light the centre continuously; use `--exclude-tail` when that is not desired.
 
 `expanding-rings` and `height-wave` use the same generated 5,000-record XYZ context and direct multi-controller DDP output. `expanding-rings` is a true XYZ spherical shell with `--origin apex|centre|base|X,Y,Z`, `--speed-mps`, and full `--thickness-mm`. `height-wave` uses actual selected Z bounds with `--direction up|down|bounce`, `--speed-mps`, and full `--height-mm`. Tails participate by default; use `--exclude-tail` to remove them. Spatial `--loops`, `--duration`, and `--hold` are mutually exclusive; a bounce loop is a complete out-and-back. See [effects.md](effects.md) for origin definitions and all options.
+
+Additional implemented effects are `fire`, `rotating-plane`, `radar`, `aurora`, and `fireflies`. They all use the generated XYZ data rather than LED index order. Fire, aurora, and fireflies use `--duration`/`--hold`; rotating-plane and radar also expose meaningful `--loops`. `rotating-plane --axis` is a real 3D rotation axis (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`). Its plane/trail samples are precomputed once per frame, `--trail-degrees 0` disables the directional fading trail, and the accepted trail range is `0..180` with values above 180 rejected. `thunderdome effect auto` cycles continuously by default and supports `--interval`, `--crossfade`/`--transition`, `--playlist`/`--effects`, `--preset calm|energetic`, finite `--cycles` or `--duration`, and linear RGB crossfade with brightness applied once after blending while preserving incoming effect time across transition boundaries.
 
 ```bash
 thunderdome effect expanding-rings \
   --controllers config/controllers.json --origin apex --speed-mps 1.0 \
   --thickness-mm 250 --brightness 24 --loops 1 --dry-run
 
+thunderdome effect auto \
+  --controllers config/controllers.example.json \
+  --preset calm \
+  --loops 1 \
+  --dry-run
+
 thunderdome effect height-wave \
   --controllers config/controllers.json --direction bounce --height-mm 300 \
-  --brightness 24 --prepare-ddp --hold
+  --brightness 24 --hold
 ```
 
-`--prepare-ddp` sends the persistent WLED fallback `{"on":false,"bri":255,"live":false}` once per enabled controller before Python streams DDP; it aborts before DDP on a preparation failure. With `--dry-run`, preparation is only reported and no HTTP or UDP traffic is made. Start at low brightness; Ctrl+C cleanly ends a held stream.
+Run `thunderdome controllers power on --controllers config/controllers.json` and `thunderdome controllers brightness 255 --controllers config/controllers.json` when manual readiness is needed. Effects no longer prepare WLED automatically; `--dry-run` exercises rendering/scheduling without HTTP or UDP traffic. Start at low brightness; Ctrl+C cleanly ends a held or continuous stream.

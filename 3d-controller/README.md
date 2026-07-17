@@ -101,6 +101,28 @@ thunderdome ddp-all controller-colors \
 
 For a single-controller diagnostic, use `thunderdome ddp clear --host WLED_HOST` or `thunderdome ddp pixel --host WLED_HOST 0 --color FF0000 --brightness 16`; these commands transmit immediately, so do not use them as a dry-run substitute.
 
+## Application-rendered spatial effects
+
+The `thunderdome effect` commands render from generated 5,000-LED XYZ positions and then reuse the existing multi-controller DDP fan-out. Implemented effects are `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, and `auto` showcase mode.
+
+Generate positions first, use dry-run before hardware, and start at safe brightness:
+
+```bash
+thunderdome positions generate
+thunderdome effect auto \
+  --controllers config/controllers.example.json \
+  --playlist fire,aurora,fireflies \
+  --loops 1 \
+  --dry-run
+
+thunderdome effect auto \
+  --controllers config/controllers.json \
+  --preset calm \
+  --brightness 24
+```
+
+Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness. The earlier `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear. `rotating-plane` uses true 3D axis rotation (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and precomputes its plane/trail samples once per frame; LEDs then only do signed-distance work against the bounded samples. `--trail-degrees` accepts `0..180`, where zero disables the trail and values above 180 are rejected. Auto crossfades preserve incoming effect time across interval boundaries. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
+
 ## Realtime live mode and DDP streaming
 
 A normal `ddp clear`, `solid`, `pixel`, or `range` command sends **one** DDP frame and exits. WLED may leave realtime mode when its configured realtime timeout expires, then restore its previous WLED effect. Use a held frame or animation loop when output must remain active.
@@ -172,12 +194,13 @@ See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
 
 ## Persistent WLED control and spatial effects
 
-WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. `controllers prepare-ddp` posts one state update per controller: `{"on":false,"bri":255,"live":false}`. This establishes an off fallback after realtime DDP expires while Python `--brightness` controls rendered-frame intensity.
+WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. Effect commands do not invoke those persistent-state operations automatically; power on controllers and set suitable WLED master brightness manually before streaming.
 
 ```bash
 thunderdome positions generate
 thunderdome positions validate
-thunderdome controllers prepare-ddp --controllers config/controllers.json
+thunderdome controllers power on --controllers config/controllers.json
+thunderdome controllers brightness 255 --controllers config/controllers.json
 thunderdome effect clock-hand --controllers config/controllers.json \
   --positions geometry/generated/led_positions_3d.json --brightness 32 \
   --color FFFFFF --background 000000 --width-mm 300 \
@@ -186,7 +209,7 @@ thunderdome effect clock-hand --controllers config/controllers.json \
 
 `clock-hand` renders all 5,000 LED records from generated XYZ data and fans them out over DDP. Its centre is authoritative geometry hub H061's XY coordinate, never an LED-derived bound or average. Width is the full visible width in millimetres; zero degrees points along world `+X`; clockwise is viewed from above; and `--angle-offset-degrees` aligns the installation. Tails are included by default; use `--exclude-tail` to omit them. Because tails descend from H061 and share its XY location, they normally form a continuously lit centre at every angle.
 
-The implemented spatial effects are `clock-hand`, `expanding-rings`, and `height-wave`; see [`docs/effects.md`](docs/effects.md) for the complete command table and operational guidance. `expanding-rings` is a true XYZ spherical shell rather than a flat XY ring. Its `--origin` accepts `apex` (H061 XYZ), `centre` (H061 X/Y plus the midpoint of dome-only Z bounds), `base` (H061 X/Y plus dome-only minimum Z), or explicit `X,Y,Z` metres. Tails use real XYZ positions by default; `--exclude-tail` explicitly removes them.
+The implemented spatial effects are `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, and `auto`; see [`docs/effects.md`](docs/effects.md) for the complete command table and operational guidance. `expanding-rings` is a true XYZ spherical shell rather than a flat XY ring. Its `--origin` accepts `apex` (H061 XYZ), `centre` (H061 X/Y plus the midpoint of dome-only Z bounds), `base` (H061 X/Y plus dome-only minimum Z), or explicit `X,Y,Z` metres. Tails use real XYZ positions by default; `--exclude-tail` explicitly removes them.
 
 ```bash
 # True XYZ spherical shell expands from H061.
@@ -201,6 +224,6 @@ thunderdome effect height-wave \
   --direction bounce --height-mm 300 --brightness 24 --hold
 ```
 
-For spatial effects `--loops`, `--duration`, and `--hold` are mutually exclusive. A loop is one full shell expansion, one up/down traversal-and-wrap, or one bounce out-and-back. Use `--dry-run` first to validate local configuration and frame generation without UDP; `--dry-run --prepare-ddp` reports preparation but makes no HTTP request. `--prepare-ddp` posts `{"on":false,"bri":255,"live":false}` once to each enabled controller before streaming, aborting before DDP if any controller fails. Start at low brightness and Ctrl+C cleanly stops held output.
+For effects that expose `--loops`, loop controls are mutually exclusive with `--duration` and `--hold`. Fire, aurora, and fireflies use `--duration` or `--hold` instead of loops. Use `--dry-run` first to validate local configuration and real scheduler frame generation without UDP or HTTP. Start at low brightness and Ctrl+C cleanly stops held or auto output.
 
 To restore native fallback output, address every controller (for example `controllers power ... on`, `controllers brightness ... 64`, then `controllers effect ... EFFECT_ID`). Native WLED effects run independently and are not guaranteed spatially or phase synchronized; use Pi-rendered DDP for one coherent dome effect.

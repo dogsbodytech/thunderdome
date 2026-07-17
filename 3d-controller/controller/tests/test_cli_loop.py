@@ -83,7 +83,7 @@ class CLILoopTests(unittest.TestCase):
         self.assertEqual((wave.height_mm, wave.speed_mps, wave.direction), (100, 0.25, "bounce"))
 
     def test_expanding_rings_dry_run_renders_and_does_not_open_network_sockets(self):
-        session = FakeMultiSession([controller_results()])
+        session = FakeMultiSession([controller_results(), controller_results(), controller_results()])
         rendered = RGBFrame.allocate(5_000, (1, 2, 3))
         stdout = io.StringIO()
         with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()) as load_context, patch(
@@ -92,12 +92,12 @@ class CLILoopTests(unittest.TestCase):
             "thunderdome.cli.render_expanding_rings", return_value=rendered
         ) as render, patch("thunderdome.cli.MultiControllerDDPSession", return_value=session):
             with contextlib.redirect_stdout(stdout):
-                result = main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS_EXAMPLE), "--dry-run"])
+                result = main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS_EXAMPLE), "--dry-run", "--duration", "0.4", "--fps", "5"])
 
         self.assertEqual(result, 0)
         load_context.assert_called_once()
-        render.assert_called_once()
-        self.assertEqual(session.frames, [(rendered, True)])
+        self.assertGreaterEqual(render.call_count, 2)
+        self.assertTrue(all(frame == (rendered, True) for frame in session.frames))
         self.assertIn("controller 1", stdout.getvalue())
     def test_multi_dry_run_rejects_loop_controls(self):
         stderr = io.StringIO()
