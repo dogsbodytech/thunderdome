@@ -61,3 +61,9 @@ Start at low brightness and validate controller mapping before a live stream.
 ## Spatial clock hand
 
 `thunderdome effect clock-hand` is a Pi-rendered DDP animation, not a WLED native effect. It builds one logical 5,000-pixel frame from generated XYZ data and the existing fan-out sends local 1,000-pixel slices to all enabled controllers. Its centre is hub H061's authoritative XY coordinate, not an LED-derived midpoint. `--width-mm` is the full hand width; selection uses the forward XY half-ray only. World `+X` is zero degrees and clockwise is viewed from above. All 5,000 positions, including tails, are used by default; use `--exclude-tail` to remove tail records. Tails share the apex XY and normally illuminate the centre continuously.
+
+## Spatial shells and height waves
+
+`expanding-rings` emits a true XYZ spherical shell, using Euclidean distance from `--origin`; it is not an XY-plane ring. `apex` is authoritative H061 XYZ, while `centre` and `base` use dome-only (never tail) Z bounds and H061 X/Y. Explicit `X,Y,Z` origin values are metres. `height-wave` moves a horizontal, full `--height-mm` band over actual selected Z bounds in `up`, `down`, or `bounce` direction. Tails are included in both effects by default and `--exclude-tail` removes them.
+
+Spatial `--loops` means full effect cycles: one shell expansion, one up/down traversal and wrap, or one bounce out-and-back. It is mutually exclusive with `--duration` and `--hold`; Ctrl+C cleanly stops a held stream. `--fps` is 1..60 and spatial effects default to 30 FPS. Use `--dry-run` to render one no-network frame. `--prepare-ddp` makes the existing single JSON WLED preparation (`{"on":false,"bri":255,"live":false}`) once per enabled controller before DDP. It reports every controller failure and aborts before DDP if any preparation fails; dry-run reports it without making HTTP. See [effects.md](effects.md).

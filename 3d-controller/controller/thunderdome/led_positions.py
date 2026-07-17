@@ -45,6 +45,7 @@ def validate_positions(document,geometry:DomeGeometry,routes:list[RouteDefinitio
   for r in spars:
    if r['spar_id'] not in geometry.spars or not 0<=r['fraction_along_spar']<=1: raise LedPositionsError('invalid spar record')
  return rows
-def write_positions(path,doc): Path(path).write_text(json.dumps(doc,indent=2,sort_keys=True)+'\n')
+def write_positions(path,doc):
+ path=Path(path); path.parent.mkdir(parents=True,exist_ok=True); path.write_text(json.dumps(doc,indent=2,sort_keys=True)+'\n')
 def load_led_positions(path,geometry=None,routes=None):
  d=json.loads(Path(path).read_text()); return validate_positions(d,geometry,routes) if geometry and routes else d['leds']

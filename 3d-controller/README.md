@@ -170,7 +170,7 @@ The reusable `thunderdome.animation.run_frame_loop` accepts either a static-fram
 
 See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
 
-## Persistent WLED control and clock-hand effect
+## Persistent WLED control and spatial effects
 
 WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. `controllers prepare-ddp` posts one state update per controller: `{"on":false,"bri":255,"live":false}`. This establishes an off fallback after realtime DDP expires while Python `--brightness` controls rendered-frame intensity.
 
@@ -185,5 +185,22 @@ thunderdome effect clock-hand --controllers config/controllers.json \
 ```
 
 `clock-hand` renders all 5,000 LED records from generated XYZ data and fans them out over DDP. Its centre is authoritative geometry hub H061's XY coordinate, never an LED-derived bound or average. Width is the full visible width in millimetres; zero degrees points along world `+X`; clockwise is viewed from above; and `--angle-offset-degrees` aligns the installation. Tails are included by default; use `--exclude-tail` to omit them. Because tails descend from H061 and share its XY location, they normally form a continuously lit centre at every angle.
+
+The implemented spatial effects are `clock-hand`, `expanding-rings`, and `height-wave`; see [`docs/effects.md`](docs/effects.md) for the complete command table and operational guidance. `expanding-rings` is a true XYZ spherical shell rather than a flat XY ring. Its `--origin` accepts `apex` (H061 XYZ), `centre` (H061 X/Y plus the midpoint of dome-only Z bounds), `base` (H061 X/Y plus dome-only minimum Z), or explicit `X,Y,Z` metres. Tails use real XYZ positions by default; `--exclude-tail` explicitly removes them.
+
+```bash
+# True XYZ spherical shell expands from H061.
+thunderdome effect expanding-rings \
+  --controllers config/controllers.json \
+  --origin apex --speed-mps 1.0 --thickness-mm 250 \
+  --brightness 24 --loops 2
+
+# A full-height bouncing band reverses at the selected Z bounds.
+thunderdome effect height-wave \
+  --controllers config/controllers.json \
+  --direction bounce --height-mm 300 --brightness 24 --hold
+```
+
+For spatial effects `--loops`, `--duration`, and `--hold` are mutually exclusive. A loop is one full shell expansion, one up/down traversal-and-wrap, or one bounce out-and-back. Use `--dry-run` first to validate local configuration and frame generation without UDP; `--dry-run --prepare-ddp` reports preparation but makes no HTTP request. `--prepare-ddp` posts `{"on":false,"bri":255,"live":false}` once to each enabled controller before streaming, aborting before DDP if any controller fails. Start at low brightness and Ctrl+C cleanly stops held output.
 
 To restore native fallback output, address every controller (for example `controllers power ... on`, `controllers brightness ... 64`, then `controllers effect ... EFFECT_ID`). Native WLED effects run independently and are not guaranteed spatially or phase synchronized; use Pi-rendered DDP for one coherent dome effect.

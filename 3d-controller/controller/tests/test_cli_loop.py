@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome.cli import main, parse_args
 from thunderdome.animation.loop import FrameLoopStats
+from thunderdome.frame import RGBFrame
 from thunderdome.transport.ddp import packets_for_frame
 from thunderdome.transport.multi_ddp import SendResult
 
@@ -70,6 +71,34 @@ class CLILoopTests(unittest.TestCase):
         self.assertTrue(args.exclude_tail)
         with self.assertRaises(SystemExit):
             parse_args(["effect", "clock-hand", "--include-tail"])
+
+    def test_new_spatial_effect_parsers_expose_bounded_metric_controls(self):
+        rings = parse_args(
+            ["effect", "expanding-rings", "--thickness-mm", "120", "--speed-mps", "0.3"]
+        )
+        wave = parse_args(
+            ["effect", "height-wave", "--height-mm", "100", "--speed-mps", "0.25", "--direction", "bounce"]
+        )
+        self.assertEqual((rings.thickness_mm, rings.speed_mps), (120, 0.3))
+        self.assertEqual((wave.height_mm, wave.speed_mps, wave.direction), (100, 0.25, "bounce"))
+
+    def test_expanding_rings_dry_run_renders_and_does_not_open_network_sockets(self):
+        session = FakeMultiSession([controller_results()])
+        rendered = RGBFrame.allocate(5_000, (1, 2, 3))
+        stdout = io.StringIO()
+        with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()) as load_context, patch(
+            "thunderdome.cli.selected_xyz", return_value=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0))
+        ), patch("thunderdome.cli.parse_spatial_origin", return_value=(0.0, 0.0, 0.0)), patch(
+            "thunderdome.cli.render_expanding_rings", return_value=rendered
+        ) as render, patch("thunderdome.cli.MultiControllerDDPSession", return_value=session):
+            with contextlib.redirect_stdout(stdout):
+                result = main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS_EXAMPLE), "--dry-run"])
+
+        self.assertEqual(result, 0)
+        load_context.assert_called_once()
+        render.assert_called_once()
+        self.assertEqual(session.frames, [(rendered, True)])
+        self.assertIn("controller 1", stdout.getvalue())
     def test_multi_dry_run_rejects_loop_controls(self):
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):

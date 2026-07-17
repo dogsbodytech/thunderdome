@@ -9,9 +9,12 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
-from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LOGICAL_LED_COUNT
+from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT
 from .controllers import load_controllers
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
+from .effects.common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
+from .effects.expanding_rings import render_expanding_rings
+from .effects.height_wave import render_height_wave
 from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
@@ -71,7 +74,35 @@ def _ddp_options(parser: argparse.ArgumentParser, *, colour: bool = False) -> No
 
 
 def _controllers_option(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--controllers", default="config/controllers.json")
+    parser.add_argument("--controllers", default=str(GEOMETRY_PATH.parent.parent / "config" / "controllers.json"))
+
+
+def _positive_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"expected a positive integer, got {value!r}") from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(f"expected a positive integer, got {value!r}")
+    return parsed
+
+
+def _add_spatial_effect_options(parser: argparse.ArgumentParser) -> None:
+    _controllers_option(parser)
+    parser.add_argument("--positions", default=str(LED_POSITIONS_PATH))
+    parser.add_argument("--geometry", default=str(GEOMETRY_PATH))
+    parser.add_argument("--color", default="FFFFFF")
+    parser.add_argument("--background", default="000000")
+    parser.add_argument("--brightness", type=int, default=32)
+    parser.add_argument("--speed-mps", type=float, default=0.5, help="movement speed in metres per second")
+    parser.add_argument("--exclude-tail", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--prepare-ddp", action="store_true", help="set safe WLED fallback once before streaming")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--hold", action="store_true")
+    mode.add_argument("--duration", type=float)
+    mode.add_argument("--loops", type=_positive_int, help="complete spatial movement cycles")
+    parser.add_argument("--fps", type=int, default=30)
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -146,13 +177,21 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     effect_sub = effect.add_subparsers(dest="command", required=True)
     clock = effect_sub.add_parser("clock-hand", help="render a rotating radial hand through DDP")
     _controllers_option(clock)
-    clock.add_argument("--positions", default="geometry/generated/led_positions_3d.json"); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
+    clock.add_argument("--positions", default=str(LED_POSITIONS_PATH)); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
     clock.add_argument("--color", default="FFFFFF"); clock.add_argument("--background", default="000000")
     clock.add_argument("--brightness", type=int, default=32); clock.add_argument("--width-mm", type=float, default=300)
     clock.add_argument("--rotation-seconds", type=float, default=3); clock.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise")
     clock.add_argument("--angle-offset-degrees", type=float, default=0); clock.add_argument("--exclude-tail", action="store_true"); clock.add_argument("--dry-run", action="store_true")
     mode=clock.add_mutually_exclusive_group(); mode.add_argument("--hold", action="store_true"); mode.add_argument("--duration", type=float); mode.add_argument("--rotations", type=int)
     clock.add_argument("--fps", type=int, default=30)
+    rings = effect_sub.add_parser("expanding-rings", help="render an expanding XYZ spherical shell through DDP")
+    _add_spatial_effect_options(rings)
+    rings.add_argument("--origin", default="apex", metavar="apex|centre|base|X,Y,Z")
+    rings.add_argument("--thickness-mm", type=float, default=200)
+    wave = effect_sub.add_parser("height-wave", help="render a moving horizontal height band through DDP")
+    _add_spatial_effect_options(wave)
+    wave.add_argument("--direction", choices=("up", "down", "bounce"), default="up")
+    wave.add_argument("--height-mm", type=float, default=200)
 
     all_ddp = groups.add_parser(
         "ddp-all",
@@ -341,6 +380,94 @@ def _run_clock_hand(args: argparse.Namespace) -> int:
     return 1 if failures else 0
 
 
+def _run_spatial_effect(args: argparse.Namespace) -> int:
+    if not 1 <= args.fps <= 60:
+        raise ValueError("fps must be in range 1..60")
+    if args.speed_mps <= 0:
+        raise ValueError("speed-mps must be greater than zero")
+    if args.duration is not None and args.duration <= 0:
+        raise ValueError("duration must be greater than zero")
+    if args.command == "expanding-rings":
+        thickness_mm = args.thickness_mm
+        if thickness_mm <= 0:
+            raise ValueError("thickness-mm must be greater than zero")
+    else:
+        thickness_mm = args.height_mm
+        if thickness_mm <= 0:
+            raise ValueError("height-mm must be greater than zero")
+    path = Path(args.positions)
+    if not path.exists():
+        raise ValueError(f"positions file not found: {path}; run 'thunderdome positions generate'")
+    context = SpatialContext.load(path, args.geometry)
+    controllers = load_controllers(args.controllers)
+    color = parse_hex_color(args.color)
+    background = parse_hex_color(args.background)
+    thickness_m = thickness_mm / 1000
+    selected = selected_xyz(context, exclude_tail=args.exclude_tail)
+    if args.command == "expanding-rings":
+        origin = parse_spatial_origin(args.origin, context)
+        cycle_distance = max(distance3(point, origin) for point in selected)
+        if cycle_distance <= 0:
+            raise ValueError("maximum shell distance must be greater than zero")
+        cycle_seconds = cycle_distance / args.speed_mps
+    else:
+        origin = None
+        minimum_z = min(point[2] for point in selected)
+        maximum_z = max(point[2] for point in selected)
+        traversal = maximum_z - minimum_z
+        if traversal <= 0:
+            raise ValueError("selected Z bounds must have positive height")
+        cycle_seconds = traversal / args.speed_mps * (2 if args.direction == "bounce" else 1)
+
+    def frame_for(_number: int, elapsed: float) -> RGBFrame:
+        kwargs = dict(
+            elapsed_seconds=elapsed,
+            speed_m_per_s=args.speed_mps,
+            color=color,
+            background=background,
+            brightness=args.brightness,
+            exclude_tail=args.exclude_tail,
+        )
+        if args.command == "expanding-rings":
+            return render_expanding_rings(context, thickness_m=thickness_m, origin=origin, **kwargs)
+        return render_height_wave(context, height_m=thickness_m, direction=args.direction, **kwargs)
+
+    if args.dry_run:
+        if args.prepare_ddp:
+            print("Dry run: would prepare enabled controllers for DDP; no HTTP requests made")
+        with MultiControllerDDPSession(controllers) as session:
+            results = session.send_frame(frame_for(0, 0), dry_run=True)
+        _report_results(results)
+        return 1 if any(result.error for result in results) else 0
+
+    if args.prepare_ddp:
+        prepared = run_wled_operation(
+            controllers, lambda client: client.prepare_ddp(), client_factory=WLEDClient
+        )
+        for result in prepared:
+            message = "failed" if result.error else "ok"
+            print(f"controller {result.controller_number} {result.host}: prepare-ddp {message}" + (f": {result.error}" if result.error else ""), file=sys.stderr if result.error else sys.stdout)
+        if any(result.error for result in prepared):
+            return 1
+
+    duration = None if args.hold else (args.duration if args.duration is not None else (args.loops or 1) * cycle_seconds)
+    print(f"Starting {args.command}: thickness {thickness_mm:g}mm, speed {args.speed_mps:g}m/s, {args.fps} FPS")
+    failures: dict[int, SendResult] = {}
+    last: list[SendResult] = []
+
+    def send(frame: RGBFrame) -> None:
+        nonlocal last
+        last = session.send_frame(frame)
+        _record_controller_failures(failures, last)
+
+    with MultiControllerDDPSession(controllers) as session:
+        stats = run_frame_loop(frame_for, send, fps=args.fps, duration=duration)
+    _report_results(last)
+    _report_persistent_failures(failures)
+    _report_loop(stats)
+    return 1 if failures else 0
+
+
 def _main(args: argparse.Namespace) -> int:
     if args.area == "controller":
         client = WLEDClient(args.host)
@@ -418,7 +545,8 @@ def _main(args: argparse.Namespace) -> int:
     if args.area == "ddp-all":
         return _run_multi_ddp(args)
 
-    if args.area == "effect": return _run_clock_hand(args)
+    if args.area == "effect":
+        return _run_clock_hand(args) if args.command == "clock-hand" else _run_spatial_effect(args)
 
     return _run_single_ddp(args)
 

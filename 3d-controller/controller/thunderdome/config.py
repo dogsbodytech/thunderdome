@@ -11,3 +11,4 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 GEOMETRY_PATH = PROJECT_ROOT / "geometry" / "thunderdome_geometry.json"
 REFERENCE_ROUTE_PATH = PROJECT_ROOT / "geometry" / "reference_string_route.md"
 LED_POSITIONS_PATH = PROJECT_ROOT / "geometry" / "generated" / "led_positions_3d.json"
+CONTROLLERS_PATH = PROJECT_ROOT / "config" / "controllers.json"
