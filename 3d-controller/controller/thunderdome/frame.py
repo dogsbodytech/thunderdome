@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-DEFAULT_LED_COUNT = 5_000
+from .config import LOGICAL_LED_COUNT
+
+
+DEFAULT_LOGICAL_LED_COUNT = LOGICAL_LED_COUNT
 RGB = tuple[int, int, int]
 
 
@@ -25,7 +28,7 @@ class RGBFrame:
     data: bytearray
 
     @classmethod
-    def allocate(cls, led_count: int = DEFAULT_LED_COUNT, fill: RGB = (0, 0, 0)) -> "RGBFrame":
+    def allocate(cls, led_count: int = DEFAULT_LOGICAL_LED_COUNT, fill: RGB = (0, 0, 0)) -> "RGBFrame":
         if not isinstance(led_count, int) or led_count <= 0:
             raise FrameError("led_count must be a positive integer")
         rgb = validate_rgb(fill)

@@ -52,4 +52,8 @@ thunderdome ddp-all controller-colors \
 
 `ddp-all --dry-run` simulates one frame allocation and packet report without opening UDP sockets or sending traffic. To preserve that safety guarantee, it rejects `--hold`, `--duration`, and `--loops`.
 
+## Exit status
+
+A successful one-shot send or stream returns exit status `0`. `ddp-all` returns a non-zero status if any enabled controller reports a send failure. For a stream, the controller records failures for the entire session: an earlier failed frame still makes the final status non-zero even if that controller succeeds on a later frame. Successful controllers continue to receive frames where practical, and failure output identifies the controller number, host, and error.
+
 Start at low brightness and validate controller mapping before a live stream.

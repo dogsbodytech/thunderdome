@@ -4,6 +4,7 @@ import socket,time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from ..controllers import ControllerSet
+from ..config import CONTROLLER_LED_COUNT, LOGICAL_LED_COUNT
 from ..frame import RGBFrame
 from .ddp import packets_for_frame,send_frame
 @dataclass(frozen=True)
@@ -16,8 +17,8 @@ class MultiControllerDDPSession:
   for s in self.sockets.values(): s.close()
   self.sockets.clear()
  def split_frame(self,frame:RGBFrame):
-  if frame.led_count!=5000: raise ValueError('fan-out requires exactly 5,000 LEDs')
-  return {c.controller_number:RGBFrame(1000,bytearray(frame.data[c.global_start*3:(c.global_end+1)*3])) for c in self.config.controllers}
+  if frame.led_count!=LOGICAL_LED_COUNT: raise ValueError('fan-out requires exactly 5,000 LEDs')
+  return {c.controller_number:RGBFrame(CONTROLLER_LED_COUNT,bytearray(frame.data[c.global_start*3:(c.global_end+1)*3])) for c in self.config.controllers}
  def send_frame(self,frame,*,mode='parallel',dry_run=False,subset=None):
   pieces=self.split_frame(frame); selected=[c for c in self.config.controllers if c.enabled and (subset is None or c.controller_number in subset)]
   def one(c):
