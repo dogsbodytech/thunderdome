@@ -26,6 +26,11 @@ class WLEDSupportTests(unittest.TestCase):
             WLEDClient("wled.local").set_brightness(32)
             post.assert_called_once_with({"bri": 32}, return_state=False)
 
+    def test_client_sets_realtime_live_mode(self):
+        with patch.object(WLEDClient, "post_state", return_value={}) as post:
+            WLEDClient("wled.local").set_live(True)
+            post.assert_called_once_with({"live": True}, return_state=False)
+
     def test_favorites_store_deduplicates_effects(self):
         from tempfile import TemporaryDirectory
         with TemporaryDirectory() as directory:

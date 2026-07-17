@@ -131,6 +131,10 @@ class WLEDClient:
         # Payload: global brightness 0-255. Prefer on:false to fully turn off.
         return self.post_state({"bri": value}, return_state=return_state)
 
+    def set_live(self, enabled: bool, *, return_state: bool = False) -> Any:
+        """Enable or disable WLED realtime/live mode."""
+        return self.post_state({"live": bool(enabled)}, return_state=return_state)
+
     def set_transition(self, value: int, *, temporary: bool = False, return_state: bool = False) -> Any:
         self._validate_u16(value, "transition")
         # transition persists in state; tt applies only to this API call.

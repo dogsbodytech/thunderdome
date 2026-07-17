@@ -12,6 +12,7 @@ from thunderdome.transport.ddp import (
     DDP_DESTINATION_ID,
     DDP_PUSH,
     DDP_VER1,
+    DirectDDPSession,
     build_ddp_packet,
     chunk_frame,
     empty_frame,
@@ -85,6 +86,17 @@ class DDPTests(unittest.TestCase):
         self.assertEqual(count, 3)
         self.assertEqual(sock.sendto.call_args_list[0].args[1], ("192.0.2.1", 4048))
         sock.close.assert_not_called()
+
+    def test_direct_session_reuses_one_socket_for_multiple_frames(self):
+        sock = Mock()
+        factory = Mock(return_value=sock)
+        with DirectDDPSession("192.0.2.1", socket_factory=factory) as session:
+            session.send(bytes(3))
+            session.send(bytes(3))
+
+        factory.assert_called_once()
+        self.assertEqual(sock.sendto.call_count, 2)
+        sock.close.assert_called_once()
 
 
 if __name__ == "__main__":

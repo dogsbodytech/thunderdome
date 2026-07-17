@@ -8,6 +8,7 @@ This repository's active lighting software is the Python controller in [`3d-cont
 - [Install and configure](#install-and-configure)
 - [Controller mapping](#controller-mapping)
 - [Test and safely dry run DDP](#test-and-safely-dry-run-ddp)
+- [Realtime control and frame streaming](#realtime-control-and-frame-streaming)
 - [WLED mapping](#wled-mapping)
 - [Audio control](#audio-control)
 - [SIP to audio feed](#sip-to-audio-feed)
@@ -83,6 +84,35 @@ thunderdome ddp-all controller-colors \
 ```
 
 The dry run validates the configuration and frame fan-out but does not open sockets or send UDP packets. Once its reported controller allocation and packet counts are correct, remove `--dry-run` only when the DDP network and hardware are ready. Start at low brightness.
+
+## Realtime control and frame streaming
+
+One-shot DDP commands send one frame and exit. Because WLED can exit realtime mode after its realtime timeout, use a repeated frame when the displayed state must remain active.
+
+Use WLED live mode explicitly when needed:
+
+```bash
+thunderdome controller live --host 192.168.12.10 on
+thunderdome controller live --host 192.168.12.10 off
+thunderdome controllers live --controllers config/controllers.json on
+thunderdome controllers live --controllers config/controllers.json off
+```
+
+Static `ddp` and `ddp-all` commands support mutually exclusive `--hold`, `--duration SECONDS`, and `--loops COUNT` controls. A loop defaults to 20 FPS; `--fps` accepts 1..60. The Python application, not a shell loop, owns the monotonic frame schedule and keeps one UDP socket per controller open for the whole session.
+
+```bash
+# Stream a single controller until Ctrl+C.
+thunderdome ddp pixel --host 192.168.12.10 --led-count 1000 \
+  20 --color FF0000 --brightness 255 --hold --fps 20
+
+# Stream the logical 5,000-pixel controller-identification frame for five seconds.
+thunderdome ddp-all controller-colors --controllers config/controllers.json \
+  --brightness 16 --duration 5 --fps 20
+```
+
+Ctrl+C stops a held stream cleanly and reports frame and elapsed-time statistics. `--dry-run` remains one-shot and is rejected with `--hold`, `--duration`, or `--loops` so it can never accidentally stream UDP data.
+
+The same reusable frame-loop abstraction accepts static frames, generated frames, and frame generators. Future spatial effects, such as a moving clock hand around the dome, can produce a different 5,000-pixel frame on each iteration and reuse the same scheduler and DDP transports.
 
 ## WLED Mapping
 

@@ -101,4 +101,71 @@ thunderdome ddp-all controller-colors \
 
 For a single-controller diagnostic, use `thunderdome ddp clear --host WLED_HOST` or `thunderdome ddp pixel --host WLED_HOST 0 --color FF0000 --brightness 16`; these commands transmit immediately, so do not use them as a dry-run substitute.
 
+## Realtime live mode and DDP streaming
+
+A normal `ddp clear`, `solid`, `pixel`, or `range` command sends **one** DDP frame and exits. WLED may leave realtime mode when its configured realtime timeout expires, then restore its previous WLED effect. Use a held frame or animation loop when output must remain active.
+
+### Set WLED realtime live mode
+
+Use the WLED JSON state API through the controller CLI to explicitly enable or disable WLED live mode:
+
+```bash
+thunderdome controller live --host 192.168.12.10 on
+thunderdome controller live --host 192.168.12.10 off
+
+thunderdome controllers live --controllers config/controllers.json on
+thunderdome controllers live --controllers config/controllers.json off
+```
+
+The multi-controller form attempts every enabled controller and reports each result; it returns a non-zero status if any controller cannot be updated.
+
+### Hold or repeat a static frame
+
+`--hold`, `--duration`, and `--loops` use the same Python frame-loop engine as future animations. They are mutually exclusive. `--fps` defaults to 20 when a loop mode is used and must be in the range 1..60. Each session reuses its UDP socket(s), rather than creating a socket per frame. Ctrl+C stops cleanly and reports frames sent and elapsed time.
+
+```bash
+# Keep one red pixel active until Ctrl+C.
+thunderdome ddp pixel \
+  --host 192.168.12.10 \
+  --led-count 1000 \
+  20 --color FF0000 --brightness 255 \
+  --hold --fps 20
+
+# Keep a low-brightness blue frame active for 10 seconds.
+thunderdome ddp solid \
+  --host 192.168.12.10 \
+  --led-count 1000 \
+  --color 0000FF --brightness 32 \
+  --duration 10 --fps 20
+
+# Send exactly 100 copies of a static frame.
+thunderdome ddp pixel \
+  --host 192.168.12.10 \
+  --led-count 1000 \
+  20 --color FF0000 --brightness 255 \
+  --loops 100 --fps 20
+```
+
+The same controls apply to the one logical 5,000-pixel multi-controller frame:
+
+```bash
+thunderdome ddp-all controller-colors \
+  --controllers config/controllers.json \
+  --brightness 16 --hold --fps 20
+
+thunderdome ddp-all clear \
+  --controllers config/controllers.json \
+  --duration 5 --fps 10
+
+thunderdome ddp-all controller-colors \
+  --controllers config/controllers.json \
+  --brightness 16 --loops 200 --fps 20
+```
+
+`ddp-all --dry-run` remains deliberately one-shot and never opens UDP sockets or sends UDP packets. It cannot be combined with `--hold`, `--duration`, or `--loops`.
+
+### Future spatial animations
+
+The reusable `thunderdome.animation.run_frame_loop` accepts either a static-frame callback, a callback that receives `(frame_number, elapsed_seconds)`, or a frame generator. This lets an effect render a different 5,000-pixel `RGBFrame` for each iteration while retaining the same scheduler and direct-DDP transports. A future clock-face or clock-hand sweep can therefore generate a frame from its current angle on each tick, then use the normal single- or multi-controller sender.
+
 See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
