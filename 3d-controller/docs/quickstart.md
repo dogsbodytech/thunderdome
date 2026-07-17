@@ -1,7 +1,7 @@
 # Quickstart
 
 ```bash
-cd /workspace/thunderdome
+cd 3d-controller
 python3 -m pip install -e .
 python3 -m unittest discover -s controller/tests -v
 thunderdome geometry validate
