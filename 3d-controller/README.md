@@ -184,6 +184,6 @@ thunderdome effect clock-hand --controllers config/controllers.json \
   --rotation-seconds 3 --fps 30 --hold
 ```
 
-`clock-hand` renders a 5,000-pixel frame from XY positions and fans it out over DDP. Width is the full visible width in millimetres; zero degrees points along world `+X`; clockwise is the default top-down direction; `--angle-offset-degrees` aligns the installation; and tails are background unless `--include-tail` is supplied. Without `--hold`, `--duration`, or `--rotations`, it safely runs one rotation. Ctrl+C closes DDP sockets cleanly.
+`clock-hand` renders all 5,000 LED records from generated XYZ data and fans them out over DDP. Its centre is authoritative geometry hub H061's XY coordinate, never an LED-derived bound or average. Width is the full visible width in millimetres; zero degrees points along world `+X`; clockwise is viewed from above; and `--angle-offset-degrees` aligns the installation. Tails are included by default; use `--exclude-tail` to omit them. Because tails descend from H061 and share its XY location, they normally form a continuously lit centre at every angle.
 
 To restore native fallback output, address every controller (for example `controllers power ... on`, `controllers brightness ... 64`, then `controllers effect ... EFFECT_ID`). Native WLED effects run independently and are not guaranteed spatially or phase synchronized; use Pi-rendered DDP for one coherent dome effect.
