@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import math
+import io
 import sys
 import unittest
 from pathlib import Path
+from contextlib import redirect_stderr
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -11,10 +13,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from thunderdome import cli
 from thunderdome.effects.common import SpatialContext
 from thunderdome.effects.procedural import (
+    build_rotating_plane_samples,
     finite_vector,
+    plane_intensity_from_samples,
     render_rotating_plane,
     rotating_plane_intensity,
     rotating_plane_normal,
+    rotate_vector,
 )
 from thunderdome.frame import RGBFrame
 
@@ -139,6 +144,36 @@ class RotatingPlaneGeometryFollowupTests(unittest.TestCase):
         self.assertNotEqual(bytes(no_trail.data), bytes(with_trail.data))
         self.assertTrue(all(0 <= byte <= 255 for byte in with_trail.data))
 
+    def test_rotating_plane_builds_geometry_once_per_frame(self):
+        with patch("thunderdome.effects.procedural.build_rotating_plane_samples", wraps=build_rotating_plane_samples) as builder, patch(
+            "thunderdome.effects.procedural.plane_intensity_from_samples", wraps=plane_intensity_from_samples
+        ) as intensity:
+            render_rotating_plane(self.ctx, 0.25, brightness=255, axis="tilted", rotation_seconds=1.0, thickness_mm=200, trail_degrees=45)
+
+        builder.assert_called_once()
+        self.assertEqual(intensity.call_count, len(self.ctx.xyz))
+        sample_arg = intensity.call_args_list[0].args[2]
+        self.assertTrue(all(call.args[2] is sample_arg for call in intensity.call_args_list))
+
+    def test_rotation_helper_calls_are_sample_bounded_not_led_bounded(self):
+        with patch("thunderdome.effects.procedural.rotate_vector", wraps=rotate_vector) as rotate:
+            render_rotating_plane(self.ctx, 0.25, brightness=255, axis="tilted", rotation_seconds=1.0, thickness_mm=200, trail_degrees=180)
+        self.assertLessEqual(rotate.call_count, 13)
+        self.assertLess(rotate.call_count, len(self.ctx.xyz) // 100)
+
+    def test_sample_builder_counts_and_weights_are_bounded(self):
+        only_main = build_rotating_plane_samples(axis="tilted", elapsed=0.0, rotation_seconds=1.0, trail_degrees=0, direction="clockwise")
+        small = build_rotating_plane_samples(axis="tilted", elapsed=0.0, rotation_seconds=1.0, trail_degrees=5, direction="clockwise")
+        full = build_rotating_plane_samples(axis="tilted", elapsed=0.0, rotation_seconds=1.0, trail_degrees=180, direction="clockwise")
+
+        self.assertEqual(len(only_main), 1)
+        self.assertGreater(len(small), 1)
+        self.assertLessEqual(len(full), 13)
+        self.assertEqual(full[0].weight, 1.0)
+        weights = [sample.weight for sample in full]
+        self.assertEqual(weights, sorted(weights, reverse=True))
+        self.assertAlmostEqual(weights[-1], 0.0, places=6)
+
     def test_trail_is_behind_directional_and_fades(self):
         axis = "0,0,1"
         kwargs = dict(axis=axis, elapsed=0.25, rotation_seconds=1.0, thickness_m=0.05)
@@ -160,6 +195,13 @@ class RotatingPlaneGeometryFollowupTests(unittest.TestCase):
         no_trail = render_rotating_plane(self.ctx, 0.25, brightness=255, axis="tilted", rotation_seconds=10, thickness_mm=220, trail_degrees=0)
         preset_trail = render_rotating_plane(self.ctx, 0.25, brightness=255, axis="tilted", rotation_seconds=10, thickness_mm=220, trail_degrees=20)
         self.assertNotEqual(bytes(no_trail.data), bytes(preset_trail.data))
+
+    def test_trail_validation_range_is_zero_through_180(self):
+        render_rotating_plane(self.ctx, 0.0, brightness=255, trail_degrees=0)
+        render_rotating_plane(self.ctx, 0.0, brightness=255, trail_degrees=180)
+        for bad in (-0.1, 180.0001, 181):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError, "trail-degrees.*0..180"):
+                build_rotating_plane_samples(axis="tilted", elapsed=0.0, rotation_seconds=1.0, trail_degrees=bad, direction="clockwise")
 
 
 class ProceduralValidationFollowupTests(unittest.TestCase):
@@ -184,13 +226,23 @@ class ProceduralValidationFollowupTests(unittest.TestCase):
         cases = [
             ["fire", "--turbulence", "-0.1"],
             ["fire", "--cooling", "1.1"],
-            ["rotating-plane", "--trail-degrees", "361"],
+            ["rotating-plane", "--trail-degrees", "-1"],
+            ["rotating-plane", "--trail-degrees", "181"],
             ["radar", "--beam-width-degrees", "361"],
             ["fireflies", "--color-variation", "-0.1", "--count", "3"],
         ]
         for args in cases:
             with self.subTest(args=args):
                 self.assertEqual(self.run_command(args), 1)
+
+    def test_real_main_trail_181_error_names_valid_range(self):
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            result = self.run_command(["rotating-plane", "--trail-degrees", "181"])
+        self.assertEqual(result, 1)
+        self.assertIn("trail-degrees", stderr.getvalue())
+        self.assertIn("181", stderr.getvalue())
+        self.assertIn("0..180", stderr.getvalue())
 
 
 if __name__ == "__main__":

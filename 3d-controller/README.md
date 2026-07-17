@@ -121,7 +121,7 @@ thunderdome effect auto \
   --brightness 24
 ```
 
-Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness. The earlier `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear. `rotating-plane` uses true 3D axis rotation (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and a directional fading `--trail-degrees` trail; zero trail disables it. Auto crossfades preserve incoming effect time across interval boundaries. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
+Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness. The earlier `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear. `rotating-plane` uses true 3D axis rotation (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and precomputes its plane/trail samples once per frame; LEDs then only do signed-distance work against the bounded samples. `--trail-degrees` accepts `0..180`, where zero disables the trail and values above 180 are rejected. Auto crossfades preserve incoming effect time across interval boundaries. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
 
 ## Realtime live mode and DDP streaming
 

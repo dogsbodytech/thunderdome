@@ -13,6 +13,14 @@ from .common import SpatialContext, distance3, selected_xyz, smoothstep
 
 TAU = math.tau
 Vector = tuple[float, float, float]
+MAX_ROTATING_PLANE_TRAIL_DEGREES = 180.0
+MAX_ROTATING_PLANE_TRAIL_SAMPLES = 12
+
+
+@dataclass(frozen=True)
+class PlaneSample:
+    normal: Vector
+    weight: float
 
 
 def finite_vector(value: str | Sequence[float], *, option: str = "vector", allow_named_axis: bool = False) -> Vector:
@@ -135,27 +143,54 @@ def rotating_plane_intensity(
     trail_degrees: float,
     direction: str,
 ) -> float:
-    if trail_degrees < 0 or trail_degrees > 360:
-        raise ValueError("trail-degrees must be in range 0..360")
+    samples = build_rotating_plane_samples(
+        axis=axis,
+        elapsed=elapsed,
+        rotation_seconds=rotation_seconds,
+        trail_degrees=trail_degrees,
+        direction=direction,
+    )
+    return plane_intensity_from_samples(point, centre, samples, thickness_m)
+
+
+def build_rotating_plane_samples(
+    *,
+    axis: str | Sequence[float],
+    elapsed: float,
+    rotation_seconds: float,
+    trail_degrees: float,
+    direction: str,
+) -> tuple[PlaneSample, ...]:
+    """Build current and trailing plane normals once for a rotating-plane frame."""
+    if rotation_seconds <= 0:
+        raise ValueError("rotation-seconds must be greater than zero")
+    if trail_degrees < 0 or trail_degrees > MAX_ROTATING_PLANE_TRAIL_DEGREES:
+        raise ValueError(f"trail-degrees={trail_degrees!r} must be in range 0..180")
     axis_vector = finite_vector(axis, option="axis", allow_named_axis=True)
     sign = -1.0 if direction == "clockwise" else 1.0 if direction == "counterclockwise" else None
     if sign is None:
         raise ValueError(f"direction must be clockwise or counterclockwise, got {direction!r}")
     current_angle = sign * elapsed * TAU / rotation_seconds
     initial = rotating_plane_initial_normal(axis_vector)
-    main_normal = rotate_vector(initial, axis_vector, current_angle)
-    level = _plane_level(point, centre, main_normal, thickness_m)
+    samples = [PlaneSample(rotate_vector(initial, axis_vector, current_angle), 1.0)]
     if trail_degrees <= 0:
-        return level
+        return tuple(samples)
     trail_angle = math.radians(trail_degrees)
-    sample_count = max(1, min(12, int(math.ceil(trail_degrees / 10))))
+    sample_count = max(2, min(MAX_ROTATING_PLANE_TRAIL_SAMPLES, int(math.ceil(trail_degrees / 10))))
     for sample in range(1, sample_count + 1):
         fraction = sample / sample_count
         previous_angle = current_angle - sign * trail_angle * fraction
         normal = rotate_vector(initial, axis_vector, previous_angle)
-        trail_level = _plane_level(point, centre, normal, thickness_m)
-        if trail_level > 0:
-            level = max(level, trail_level * smoothstep(1.0 - fraction) * 0.7)
+        samples.append(PlaneSample(normal, smoothstep(1.0 - fraction) * 0.7))
+    return tuple(samples)
+
+
+def plane_intensity_from_samples(point: Vector, centre: Vector, samples: Sequence[PlaneSample], thickness_m: float) -> float:
+    level = 0.0
+    for sample in samples:
+        plane_level = _plane_level(point, centre, sample.normal, thickness_m)
+        if plane_level > 0:
+            level = max(level, plane_level * sample.weight)
     return _clamp(level)
 
 
@@ -352,24 +387,22 @@ def render_radar(context: SpatialContext, elapsed: float, *, brightness=32, excl
 def render_rotating_plane(context: SpatialContext, elapsed: float, *, brightness=32, exclude_tail=False, axis="vertical", color="FFFFFF", background="000000", rotation_seconds=10.0, thickness_mm=220.0, trail_degrees=20.0, direction="clockwise", **_) -> RGBFrame:
     if rotation_seconds <= 0 or thickness_mm <= 0:
         raise ValueError("rotation-seconds and thickness-mm must be positive")
-    if trail_degrees < 0 or trail_degrees > 360:
-        raise ValueError("trail-degrees must be in range 0..360")
+    if trail_degrees < 0 or trail_degrees > MAX_ROTATING_PLANE_TRAIL_DEGREES:
+        raise ValueError(f"trail-degrees={trail_degrees!r} must be in range 0..180")
     fg = parse_rgb(color)
     frame = _frame(parse_rgb(background), brightness)
     thickness_m = thickness_mm / 1000.0
+    samples = build_rotating_plane_samples(
+        axis=axis,
+        elapsed=elapsed,
+        rotation_seconds=rotation_seconds,
+        trail_degrees=trail_degrees,
+        direction=direction,
+    )
     for index, point in enumerate(context.xyz):
         if exclude_tail and context.tails[index]:
             continue
-        level = rotating_plane_intensity(
-            point,
-            context.center,
-            axis=axis,
-            elapsed=elapsed,
-            rotation_seconds=rotation_seconds,
-            thickness_m=thickness_m,
-            trail_degrees=trail_degrees,
-            direction=direction,
-        )
+        level = plane_intensity_from_samples(point, context.center, samples, thickness_m)
         if level > 0:
             frame.set_pixel(index, _scale(tuple(int(channel * level) for channel in fg), brightness))
     return frame

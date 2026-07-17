@@ -223,7 +223,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
     plane = effect_sub.add_parser("rotating-plane", help="render a rotating signed-distance plane")
     _add_effect_runtime_options(plane, loops=True)
-    plane.add_argument("--axis", default="vertical", metavar="vertical|horizontal|tilted|X,Y,Z", help="rotation axis: vertical=(0,0,1), horizontal=(1,0,0), tilted=normalize(1,1,1), or explicit X,Y,Z"); plane.add_argument("--rotation-seconds", type=float, default=10); plane.add_argument("--thickness-mm", type=float, default=220); plane.add_argument("--color", default="FFFFFF"); plane.add_argument("--background", default="000000"); plane.add_argument("--trail-degrees", type=float, default=20); plane.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); plane.add_argument("--seed", type=int, default=1)
+    plane.add_argument("--axis", default="vertical", metavar="vertical|horizontal|tilted|X,Y,Z", help="rotation axis: vertical=(0,0,1), horizontal=(1,0,0), tilted=normalize(1,1,1), or explicit X,Y,Z"); plane.add_argument("--rotation-seconds", type=float, default=10); plane.add_argument("--thickness-mm", type=float, default=220); plane.add_argument("--color", default="FFFFFF"); plane.add_argument("--background", default="000000"); plane.add_argument("--trail-degrees", type=float, default=20, metavar="0..180", help="directional fading trail in degrees; 0 disables, 180 covers all unique plane orientations"); plane.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); plane.add_argument("--seed", type=int, default=1)
 
     radar = effect_sub.add_parser("radar", help="render a rotating XY radar beam")
     _add_effect_runtime_options(radar, loops=True)
@@ -548,7 +548,8 @@ def _validate_procedural_options(args: argparse.Namespace) -> None:
     elif args.command == "rotating-plane":
         _validate_range("rotation-seconds", args.rotation_seconds, minimum=0, inclusive_minimum=False)
         _validate_range("thickness-mm", args.thickness_mm, minimum=0, inclusive_minimum=False)
-        _validate_range("trail-degrees", args.trail_degrees, minimum=0, maximum=360)
+        if args.trail_degrees < 0 or args.trail_degrees > 180:
+            raise ValueError(f"trail-degrees={args.trail_degrees!r} must be in range 0..180")
     elif args.command == "radar":
         _validate_range("rotation-seconds", args.rotation_seconds, minimum=0, inclusive_minimum=False)
         _validate_range("beam-width-degrees", args.beam_width_degrees, minimum=0, maximum=360, inclusive_minimum=False)
