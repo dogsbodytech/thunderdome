@@ -18,7 +18,7 @@ Vector = tuple[float, float, float]
 def finite_vector(value: str | Sequence[float], *, option: str = "vector", allow_named_axis: bool = False) -> Vector:
     """Parse and normalize a finite non-zero XYZ vector."""
     if isinstance(value, str):
-        named = {"vertical": (0.0, 0.0, 1.0), "horizontal": (1.0, 0.0, 0.0), "tilted": (1.0, 1.0, 0.55)}
+        named = {"vertical": (0.0, 0.0, 1.0), "horizontal": (1.0, 0.0, 0.0), "tilted": (1.0, 1.0, 1.0)}
         if allow_named_axis and value in named:
             raw = named[value]
         else:
@@ -68,6 +68,95 @@ def angular_delta(a: float, b: float) -> float:
 
 def signed_plane_distance(point: Vector, centre: Vector, normal: Vector) -> float:
     return sum((point[i] - centre[i]) * normal[i] for i in range(3))
+
+
+def dot(a: Vector, b: Vector) -> float:
+    return sum(x * y for x, y in zip(a, b))
+
+
+def cross(a: Vector, b: Vector) -> Vector:
+    return (
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    )
+
+
+def rotating_plane_initial_normal(axis: str | Sequence[float]) -> Vector:
+    axis_vector = finite_vector(axis, option="axis", allow_named_axis=True)
+    reference = (0.0, 0.0, 1.0)
+    if abs(dot(axis_vector, reference)) > 0.9:
+        reference = (1.0, 0.0, 0.0)
+    return finite_vector(cross(axis_vector, reference), option="plane initial normal")
+
+
+def rotate_vector(vector: Vector, axis: Vector, angle: float) -> Vector:
+    """Rotate ``vector`` around normalized ``axis`` using Rodrigues' formula."""
+    cosine = math.cos(angle)
+    sine = math.sin(angle)
+    axis_cross = cross(axis, vector)
+    axis_dot = dot(axis, vector)
+    return finite_vector(
+        tuple(
+            vector[i] * cosine + axis_cross[i] * sine + axis[i] * axis_dot * (1.0 - cosine)
+            for i in range(3)
+        ),
+        option="rotated plane normal",
+    )
+
+
+def rotating_plane_normal(axis: str | Sequence[float], *, elapsed: float, rotation_seconds: float, direction: str) -> Vector:
+    if rotation_seconds <= 0:
+        raise ValueError("rotation-seconds must be greater than zero")
+    sign = -1.0 if direction == "clockwise" else 1.0 if direction == "counterclockwise" else None
+    if sign is None:
+        raise ValueError(f"direction must be clockwise or counterclockwise, got {direction!r}")
+    axis_vector = finite_vector(axis, option="axis", allow_named_axis=True)
+    angle = sign * elapsed * TAU / rotation_seconds
+    return rotate_vector(rotating_plane_initial_normal(axis_vector), axis_vector, angle)
+
+
+def _plane_level(point: Vector, centre: Vector, normal: Vector, thickness_m: float) -> float:
+    half = thickness_m / 2.0
+    if half <= 0:
+        raise ValueError("thickness must be greater than zero")
+    dist = abs(signed_plane_distance(point, centre, normal))
+    return 1.0 - smoothstep(dist / half) if dist <= half else 0.0
+
+
+def rotating_plane_intensity(
+    point: Vector,
+    centre: Vector,
+    *,
+    axis: str | Sequence[float],
+    elapsed: float,
+    rotation_seconds: float,
+    thickness_m: float,
+    trail_degrees: float,
+    direction: str,
+) -> float:
+    if trail_degrees < 0 or trail_degrees > 360:
+        raise ValueError("trail-degrees must be in range 0..360")
+    axis_vector = finite_vector(axis, option="axis", allow_named_axis=True)
+    sign = -1.0 if direction == "clockwise" else 1.0 if direction == "counterclockwise" else None
+    if sign is None:
+        raise ValueError(f"direction must be clockwise or counterclockwise, got {direction!r}")
+    current_angle = sign * elapsed * TAU / rotation_seconds
+    initial = rotating_plane_initial_normal(axis_vector)
+    main_normal = rotate_vector(initial, axis_vector, current_angle)
+    level = _plane_level(point, centre, main_normal, thickness_m)
+    if trail_degrees <= 0:
+        return level
+    trail_angle = math.radians(trail_degrees)
+    sample_count = max(1, min(12, int(math.ceil(trail_degrees / 10))))
+    for sample in range(1, sample_count + 1):
+        fraction = sample / sample_count
+        previous_angle = current_angle - sign * trail_angle * fraction
+        normal = rotate_vector(initial, axis_vector, previous_angle)
+        trail_level = _plane_level(point, centre, normal, thickness_m)
+        if trail_level > 0:
+            level = max(level, trail_level * smoothstep(1.0 - fraction) * 0.7)
+    return _clamp(level)
 
 
 def _noise(x: float, y: float, z: float, t: float, seed: int) -> float:
@@ -261,22 +350,26 @@ def render_radar(context: SpatialContext, elapsed: float, *, brightness=32, excl
 
 
 def render_rotating_plane(context: SpatialContext, elapsed: float, *, brightness=32, exclude_tail=False, axis="vertical", color="FFFFFF", background="000000", rotation_seconds=10.0, thickness_mm=220.0, trail_degrees=20.0, direction="clockwise", **_) -> RGBFrame:
-    if rotation_seconds <= 0 or thickness_mm <= 0 or trail_degrees < 0:
-        raise ValueError("rotation-seconds and thickness-mm must be positive; trail-degrees must be non-negative")
-    axis_vector = finite_vector(axis, option="axis", allow_named_axis=True)
-    sign = -1.0 if direction == "clockwise" else 1.0 if direction == "counterclockwise" else None
-    if sign is None:
-        raise ValueError(f"direction must be clockwise or counterclockwise, got {direction!r}")
-    angle = sign * elapsed * TAU / rotation_seconds
-    normal = finite_vector((math.cos(angle), math.sin(angle), axis_vector[2] * 0.6), option="plane normal")
+    if rotation_seconds <= 0 or thickness_mm <= 0:
+        raise ValueError("rotation-seconds and thickness-mm must be positive")
+    if trail_degrees < 0 or trail_degrees > 360:
+        raise ValueError("trail-degrees must be in range 0..360")
     fg = parse_rgb(color)
     frame = _frame(parse_rgb(background), brightness)
-    half = thickness_mm / 2000.0
+    thickness_m = thickness_mm / 1000.0
     for index, point in enumerate(context.xyz):
         if exclude_tail and context.tails[index]:
             continue
-        dist = abs(signed_plane_distance(point, context.center, normal))
-        level = 1 - smoothstep(dist / half) if dist <= half else 0
+        level = rotating_plane_intensity(
+            point,
+            context.center,
+            axis=axis,
+            elapsed=elapsed,
+            rotation_seconds=rotation_seconds,
+            thickness_m=thickness_m,
+            trail_degrees=trail_degrees,
+            direction=direction,
+        )
         if level > 0:
             frame.set_pixel(index, _scale(tuple(int(channel * level) for channel in fg), brightness))
     return frame

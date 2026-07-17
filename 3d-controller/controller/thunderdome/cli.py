@@ -223,7 +223,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
     plane = effect_sub.add_parser("rotating-plane", help="render a rotating signed-distance plane")
     _add_effect_runtime_options(plane, loops=True)
-    plane.add_argument("--axis", default="vertical"); plane.add_argument("--rotation-seconds", type=float, default=10); plane.add_argument("--thickness-mm", type=float, default=220); plane.add_argument("--color", default="FFFFFF"); plane.add_argument("--background", default="000000"); plane.add_argument("--trail-degrees", type=float, default=20); plane.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); plane.add_argument("--seed", type=int, default=1)
+    plane.add_argument("--axis", default="vertical", metavar="vertical|horizontal|tilted|X,Y,Z", help="rotation axis: vertical=(0,0,1), horizontal=(1,0,0), tilted=normalize(1,1,1), or explicit X,Y,Z"); plane.add_argument("--rotation-seconds", type=float, default=10); plane.add_argument("--thickness-mm", type=float, default=220); plane.add_argument("--color", default="FFFFFF"); plane.add_argument("--background", default="000000"); plane.add_argument("--trail-degrees", type=float, default=20); plane.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); plane.add_argument("--seed", type=int, default=1)
 
     radar = effect_sub.add_parser("radar", help="render a rotating XY radar beam")
     _add_effect_runtime_options(radar, loops=True)
@@ -528,6 +528,45 @@ def _procedural_duration(args: argparse.Namespace) -> float | None:
     return PROCEDURAL_DURATION_DEFAULTS[args.command]
 
 
+def _validate_range(option: str, value: float, *, minimum: float | None = None, maximum: float | None = None, inclusive_minimum: bool = True) -> None:
+    if minimum is not None:
+        valid = value >= minimum if inclusive_minimum else value > minimum
+        if not valid:
+            comparator = ">=" if inclusive_minimum else ">"
+            raise ValueError(f"{option}={value!r} must be {comparator} {minimum:g}")
+    if maximum is not None and value > maximum:
+        raise ValueError(f"{option}={value!r} must be <= {maximum:g}")
+
+
+def _validate_procedural_options(args: argparse.Namespace) -> None:
+    if args.command == "fire":
+        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
+        _validate_range("flame-height-m", args.flame_height_m, minimum=0, inclusive_minimum=False)
+        _validate_range("scale", args.scale, minimum=0, inclusive_minimum=False)
+        _validate_range("turbulence", args.turbulence, minimum=0, maximum=1)
+        _validate_range("cooling", args.cooling, minimum=0, maximum=1)
+    elif args.command == "rotating-plane":
+        _validate_range("rotation-seconds", args.rotation_seconds, minimum=0, inclusive_minimum=False)
+        _validate_range("thickness-mm", args.thickness_mm, minimum=0, inclusive_minimum=False)
+        _validate_range("trail-degrees", args.trail_degrees, minimum=0, maximum=360)
+    elif args.command == "radar":
+        _validate_range("rotation-seconds", args.rotation_seconds, minimum=0, inclusive_minimum=False)
+        _validate_range("beam-width-degrees", args.beam_width_degrees, minimum=0, maximum=360, inclusive_minimum=False)
+        _validate_range("trail-degrees", args.trail_degrees, minimum=0, maximum=360)
+        _validate_range("range-m", args.range_m, minimum=0, inclusive_minimum=False)
+        _validate_range("vertical-falloff", args.vertical_falloff, minimum=0, maximum=1)
+    elif args.command == "aurora":
+        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
+        _validate_range("scale", args.scale, minimum=0, inclusive_minimum=False)
+        _validate_range("band-width", args.band_width, minimum=0, maximum=1, inclusive_minimum=False)
+        _validate_range("intensity", args.intensity, minimum=0, maximum=1, inclusive_minimum=False)
+    elif args.command == "fireflies":
+        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
+        _validate_range("glow-radius-mm", args.glow_radius_mm, minimum=0, inclusive_minimum=False)
+        _validate_range("lifetime-seconds", args.lifetime_seconds, minimum=0, inclusive_minimum=False)
+        _validate_range("color-variation", args.color_variation, minimum=0, maximum=1)
+
+
 def _run_procedural_effect(args: argparse.Namespace) -> int:
     if args.command not in {"fire", "rotating-plane", "radar", "aurora", "fireflies"}:
         raise ValueError(f"unknown procedural effect command: {args.command}")
@@ -537,14 +576,8 @@ def _run_procedural_effect(args: argparse.Namespace) -> int:
         raise ValueError("duration must be greater than zero")
     if not 0 <= args.brightness <= 255:
         raise ValueError("brightness must be in range 0..255")
+    _validate_procedural_options(args)
     options = _procedural_options(args)
-    for key, value in options.items():
-        if isinstance(value, float) and key not in {"vertical_falloff", "color_variation"} and value <= 0:
-            raise ValueError(f"{key.replace('_', '-')} must be greater than zero")
-    if options.get("vertical_falloff", 0) < 0:
-        raise ValueError("vertical-falloff must be non-negative")
-    if options.get("color_variation", 0) < 0:
-        raise ValueError("color-variation must be non-negative")
     context = SpatialContext.load(args.positions, args.geometry)
     controllers = load_controllers(args.controllers)
     seed = int(options.pop("seed", 1))
@@ -589,17 +622,41 @@ def _auto_duration(args: argparse.Namespace, names: list[str]) -> float | None:
     return None
 
 
-def _auto_frame_for_elapsed(names, renderer_for, *, elapsed: float, interval: float, transition: float, brightness: int) -> RGBFrame:
-    slot = int(elapsed // interval)
+def _auto_timing(names: list[str], *, elapsed: float, interval: float, transition: float) -> dict[str, object]:
+    slot = int((elapsed + 1e-12) // interval)
+    interval_start = slot * interval
+    local_in_interval = elapsed - interval_start
     index = slot % len(names)
-    local = elapsed - slot * interval
-    outgoing = names[index]
-    if transition and local >= interval - transition:
-        incoming = names[(index + 1) % len(names)]
-        incoming_elapsed = local - (interval - transition)
-        frame = blend(renderer_for(outgoing, local), renderer_for(incoming, incoming_elapsed), incoming_elapsed / transition)
+    active_started = 0.0 if slot == 0 else interval_start - transition
+    active_elapsed = elapsed - active_started
+    timing: dict[str, object] = {
+        "active": names[index],
+        "active_elapsed": active_elapsed,
+        "transitioning": False,
+    }
+    if transition and local_in_interval >= interval - transition - 1e-12:
+        incoming_start = interval_start + interval - transition
+        timing.update(
+            {
+                "transitioning": True,
+                "incoming": names[(index + 1) % len(names)],
+                "incoming_elapsed": elapsed - incoming_start,
+                "blend": (elapsed - incoming_start) / transition,
+            }
+        )
+    return timing
+
+
+def _auto_frame_for_elapsed(names, renderer_for, *, elapsed: float, interval: float, transition: float, brightness: int) -> RGBFrame:
+    timing = _auto_timing(names, elapsed=elapsed, interval=interval, transition=transition)
+    if timing["transitioning"]:
+        frame = blend(
+            renderer_for(timing["active"], timing["active_elapsed"]),
+            renderer_for(timing["incoming"], timing["incoming_elapsed"]),
+            timing["blend"],
+        )
     else:
-        frame = renderer_for(outgoing, local)
+        frame = renderer_for(timing["active"], timing["active_elapsed"])
     frame.apply_brightness(brightness)
     return frame
 

@@ -80,9 +80,11 @@ Common individual-effect runtime controls are `--controllers`, `--positions`, `-
 
 ## Procedural effects
 
-`fire` renders a volumetric plume using Z height, radial position, and deterministic turbulence. `--cooling` controls height falloff; `--turbulence` and `--speed` control flicker.
+`fire` renders a volumetric plume using Z height, radial position, and deterministic turbulence. `--cooling` controls height falloff; `--turbulence` and `--speed` control flicker. `--turbulence 0` and `--cooling 0` are valid ways to disable those modifiers; values are bounded to `0..1`.
 
-`rotating-plane` lights LEDs near a signed-distance plane rotating through the generated XYZ volume. `--axis` accepts named axes such as `vertical`, `horizontal`, `tilted`, or explicit `X,Y,Z` vectors. `--thickness-mm` is the full luminous band thickness; `--loops N` means N complete plane rotations.
+`rotating-plane` lights LEDs near a signed-distance plane rotating through the generated XYZ volume. `--axis` is the true 3D rotation axis, not the plane normal. Named axes are exactly: `vertical=(0,0,1)`, `horizontal=(1,0,0)`, and `tilted=normalize(1,1,1)`. Explicit `--axis X,Y,Z` values must be finite and nonzero; they are normalized internally. The renderer chooses a deterministic initial normal perpendicular to the axis and rotates it with Rodrigues' formula. `--thickness-mm` is the full luminous band thickness; `--loops N` means N complete plane rotations.
+
+`rotating-plane --trail-degrees 0` disables the trail. Positive trail values sample a bounded set of previous plane orientations behind the moving plane, combine them with a smooth fading weight, and keep the current plane brightest. Clockwise and counterclockwise place the trail on opposite sides of the plane.
 
 `radar` sweeps an angular beam around the dome centre. `--beam-width-degrees` controls the bright beam, `--trail-degrees` controls the fading tail, and `--loops N` means N complete beam rotations.
 
@@ -121,7 +123,7 @@ Finite controls are mutually exclusive:
 - `--duration S`: run the scheduler for S seconds.
 - neither: continue until Ctrl+C.
 
-Crossfade timing for interval `I` and transition `T` uses one interval per effect. The first `I - T` seconds show only the current effect. The last `T` seconds render outgoing elapsed time and incoming elapsed time starting at zero at transition start, blend them, apply brightness once, then send one logical frame. `T` may be zero and must satisfy `0 <= T < I`.
+Crossfade timing for interval `I` and transition `T` uses one interval per effect. The first `I - T` seconds show only the current effect. The last `T` seconds render outgoing elapsed time and incoming elapsed time starting at zero at transition start, blend them, apply brightness once, then send one logical frame. At the interval boundary, the incoming effect becomes primary with elapsed time continuing from `T` rather than resetting to zero. Playlist wrap starts a fresh first-effect instance at the wrap transition. `T` may be zero and must satisfy `0 <= T < I`.
 
 ```bash
 thunderdome effect auto \
