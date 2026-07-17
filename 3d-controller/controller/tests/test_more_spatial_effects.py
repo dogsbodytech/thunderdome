@@ -125,7 +125,7 @@ class AutoCliTests(unittest.TestCase):
         self.assertEqual(explicit.effects, "fire,aurora,fireflies")
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
-            self.assertEqual(main(["effect", "auto", "--effects", "fire,fire", "--dry-run"]), 1)
+            self.assertEqual(main(["effect", "auto", "--effects", "fire,fire", "--dry-run", "--cycles", "1"]), 1)
         self.assertIn("duplicates", stderr.getvalue())
 
     def test_auto_dry_run_uses_one_context_one_session_no_http_and_reports_packets(self):
@@ -134,7 +134,7 @@ class AutoCliTests(unittest.TestCase):
             with contextlib.redirect_stdout(stdout):
                 result = main([
                     "effect", "auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora,fireflies",
-                    "--cycles", "1", "--interval", "1", "--transition", "0.2", "--fps", "5", "--dry-run", "--prepare-ddp",
+                    "--cycles", "1", "--interval", "1", "--transition", "0.2", "--fps", "5", "--dry-run",
                 ])
         self.assertEqual(result, 0)
         prepare.assert_not_called()

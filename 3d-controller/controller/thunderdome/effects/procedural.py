@@ -306,6 +306,64 @@ def render_fireflies(context: SpatialContext, elapsed: float, *, brightness=32, 
     return frame
 
 
+
+class ProceduralRenderer:
+    """Stateful renderer wrapper that keeps reusable per-run objects alive."""
+
+    def __init__(self, kind: str, context: SpatialContext, *, brightness=32, exclude_tail=False, seed=1, **options):
+        self.kind = kind
+        self.context = context
+        self.brightness = brightness
+        self.exclude_tail = exclude_tail
+        self.seed = seed
+        self.options = options
+        self._particle_system = None
+        if kind == "fireflies":
+            bounds = _selected_bounds(context, exclude_tail)
+            self._particle_system = ParticleSystem(
+                int(options.get("count", 25)),
+                seed,
+                bounds,
+                color=options.get("color", "FFFFB0"),
+                color_variation=float(options.get("color_variation", 0.25)),
+            )
+
+    def render(self, elapsed: float) -> RGBFrame:
+        if self.kind != "fireflies":
+            return render(self.kind, self.context, elapsed, brightness=self.brightness, exclude_tail=self.exclude_tail, seed=self.seed, **self.options)
+        options = self.options
+        system = self._particle_system
+        if system is None:
+            raise RuntimeError("fireflies particle system was not initialized")
+        speed = float(options.get("speed", 0.35))
+        glow_radius_mm = float(options.get("glow_radius_mm", 300.0))
+        lifetime_seconds = float(options.get("lifetime_seconds", 8.0))
+        if min(speed, glow_radius_mm, lifetime_seconds) <= 0:
+            raise ValueError("speed, glow-radius-mm, and lifetime-seconds must be positive")
+        radius = glow_radius_mm / 1000.0
+        particles = system.particles(elapsed, speed=speed, lifetime_seconds=lifetime_seconds)
+        accum = [[0.0, 0.0, 0.0] for _ in range(LOGICAL_LED_COUNT)]
+        for particle in particles:
+            for index, point in enumerate(self.context.xyz):
+                if self.exclude_tail and self.context.tails[index]:
+                    continue
+                falloff = max(0.0, 1.0 - distance3(point, particle.position) / radius)
+                glow = falloff * falloff * particle.brightness
+                if glow <= 0:
+                    continue
+                for channel in range(3):
+                    accum[index][channel] += particle.color[channel] * glow
+        frame = _frame(brightness=self.brightness)
+        for index, rgb in enumerate(accum):
+            if any(rgb):
+                frame.set_pixel(index, _scale(tuple(min(255, int(channel)) for channel in rgb), self.brightness))
+        return frame
+
+
+def create_renderer(kind: str, context: SpatialContext, *, brightness=32, exclude_tail=False, seed=1, **options) -> ProceduralRenderer:
+    return ProceduralRenderer(kind, context, brightness=brightness, exclude_tail=exclude_tail, seed=seed, **options)
+
+
 def render(kind: str, context: SpatialContext, elapsed: float, *, brightness=32, exclude_tail=False, seed=1, **options) -> RGBFrame:
     renderers = {
         "fire": render_fire,

@@ -39,11 +39,13 @@ class Session:
 
 
 class SpatialCLIRegressionTests(unittest.TestCase):
-    def test_spatial_commands_use_loops_not_rotations_and_parse_new_options(self):
+    def test_spatial_commands_use_loops_not_rotations_and_prepare_removed(self):
         for command in ("expanding-rings", "height-wave"):
-            args = parse_args(["effect", command, "--loops", "2", "--prepare-ddp"])
+            args = parse_args(["effect", command, "--loops", "2"])
             self.assertEqual(args.loops, 2)
-            self.assertTrue(args.prepare_ddp)
+            self.assertFalse(hasattr(args, "prepare_ddp"))
+            with self.assertRaises(SystemExit):
+                parse_args(["effect", command, "--prepare" "-ddp"])
             with self.assertRaises(SystemExit):
                 parse_args(["effect", command, "--rotations", "2"])
         self.assertEqual(parse_args(["effect", "clock-hand", "--rotations", "2"]).rotations, 2)
@@ -54,7 +56,7 @@ class SpatialCLIRegressionTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             parse_args(["effect", "expanding-rings", "--hold", "--duration", "1"])
 
-    def test_prepare_runs_once_before_streaming_and_failures_abort(self):
+    def test_effect_runners_do_not_call_prepare_operation(self):
         context = Mock(spec=SpatialContext)
         session = Session()
         calls = []
@@ -67,24 +69,15 @@ class SpatialCLIRegressionTests(unittest.TestCase):
         with patch("thunderdome.cli.SpatialContext.load", return_value=context), patch(
             "thunderdome.cli.selected_xyz", return_value=((0.0, 0.0, 0.0), (0.0, 0.0, 1.0))
         ), patch(
-            "thunderdome.cli.run_wled_operation", return_value=[]
+            "thunderdome.cli.run_wled_operation"
         ) as prepare, patch("thunderdome.cli.render_height_wave", return_value=RGBFrame.allocate(5_000)), patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
             "thunderdome.cli.run_frame_loop", side_effect=loop
         ):
-            self.assertEqual(main(["effect", "height-wave", "--controllers", str(CONTROLLERS), "--prepare-ddp", "--loops", "1"]), 0)
-        prepare.assert_called_once()
+            self.assertEqual(main(["effect", "height-wave", "--controllers", str(CONTROLLERS), "--loops", "1"]), 0)
+        prepare.assert_not_called()
         self.assertEqual(calls, ["stream"])
 
-        with patch("thunderdome.cli.SpatialContext.load", return_value=context), patch(
-            "thunderdome.cli.selected_xyz", return_value=((0.0, 0.0, 0.0), (0.0, 0.0, 1.0))
-        ), patch(
-            "thunderdome.cli.run_wled_operation", return_value=[Mock(error="offline", controller_number=1, host="bad")]
-        ) as prepare, patch("thunderdome.cli.MultiControllerDDPSession") as ddp:
-            self.assertEqual(main(["effect", "height-wave", "--controllers", str(CONTROLLERS), "--prepare-ddp", "--loops", "1"]), 1)
-        prepare.assert_called_once()
-        ddp.assert_not_called()
-
-    def test_prepare_is_omitted_normally_and_dry_run_never_uses_http(self):
+    def test_dry_run_uses_ddp_dry_run_without_http(self):
         context = Mock(spec=SpatialContext)
         session = Session()
         with patch("thunderdome.cli.SpatialContext.load", return_value=context), patch(
@@ -93,8 +86,10 @@ class SpatialCLIRegressionTests(unittest.TestCase):
             "thunderdome.cli.render_expanding_rings", return_value=RGBFrame.allocate(5_000)
         ), patch(
             "thunderdome.cli.run_wled_operation"
-        ) as prepare, patch("thunderdome.cli.MultiControllerDDPSession", return_value=session):
-            self.assertEqual(main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS), "--dry-run", "--prepare-ddp", "--loops", "1"]), 0)
+        ) as prepare, patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
+            "thunderdome.cli.run_frame_loop", side_effect=lambda producer, sender, **_: (sender(producer(0, 0.0)) or Mock(frames_sent=1, elapsed_seconds=0.0, interrupted=False))
+        ):
+            self.assertEqual(main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS), "--dry-run", "--loops", "1"]), 0)
         prepare.assert_not_called()
         self.assertEqual(session.frames[0][1], True)
 
