@@ -41,10 +41,9 @@ class SpatialEffectRendererTests(unittest.TestCase):
     def test_expanding_ring_moves_outward_and_can_exclude_tails(self):
         frame = render_expanding_rings(
             self.context,
-            elapsed_seconds=1.0,
+            elapsed_seconds=1.11803398875,
             speed_m_per_s=1.0,
-            ring_spacing_m=4.0,
-            ring_width_m=0.2,
+            thickness_m=0.2,
             color=(255, 0, 0),
             brightness=255,
             exclude_tail=True,
@@ -59,8 +58,7 @@ class SpatialEffectRendererTests(unittest.TestCase):
             self.context,
             elapsed_seconds=0.5,
             speed_m_per_s=1.0,
-            wave_spacing_m=4.0,
-            wave_width_m=0.2,
+            height_m=0.2,
             color=(0, 255, 0),
             background=(1, 2, 3),
             brightness=255,
@@ -73,11 +71,11 @@ class SpatialEffectRendererTests(unittest.TestCase):
 
     def test_effects_reject_nonpositive_spatial_parameters(self):
         with self.assertRaises(ValueError):
-            render_expanding_rings(self.context, elapsed_seconds=0, speed_m_per_s=1, ring_spacing_m=0, ring_width_m=0.1)
+            render_expanding_rings(self.context, elapsed_seconds=0, speed_m_per_s=1, thickness_m=0)
         with self.assertRaises(ValueError):
-            render_height_wave(self.context, elapsed_seconds=0, speed_m_per_s=1, wave_spacing_m=1, wave_width_m=0)
+            render_height_wave(self.context, elapsed_seconds=0, speed_m_per_s=1, height_m=0)
         with self.assertRaises(ValueError):
-            render_expanding_rings(self.context, elapsed_seconds=0, speed_m_per_s=0, ring_spacing_m=1, ring_width_m=0.1)
+            render_expanding_rings(self.context, elapsed_seconds=0, speed_m_per_s=0, thickness_m=0.1)
 
 
 if __name__ == "__main__":

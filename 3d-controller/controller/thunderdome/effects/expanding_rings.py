@@ -1,9 +1,9 @@
-"""Concentric XY-plane rings expanding outward from the apex."""
+"""True XYZ spherical shells expanding outward from a selected origin."""
 from __future__ import annotations
 
 from ..frame import RGBFrame, validate_rgb
 from ..transport.ddp import scale_color
-from .common import SpatialContext
+from .common import SpatialContext, distance3, selected_xyz
 
 
 def render_expanding_rings(
@@ -11,32 +11,35 @@ def render_expanding_rings(
     *,
     elapsed_seconds: float,
     speed_m_per_s: float,
-    ring_spacing_m: float,
-    ring_width_m: float,
+    thickness_m: float,
+    origin: tuple[float, float, float] | None = None,
     color: tuple[int, int, int] = (255, 255, 255),
     background: tuple[int, int, int] = (0, 0, 0),
     brightness: int = 32,
     exclude_tail: bool = False,
 ) -> RGBFrame:
-    """Render periodic radial bands whose centres move away from ``context.center``.
+    """Render one expanding spherical shell using true Euclidean XYZ distance.
 
-    Width and spacing are in metres.  The modulo phase gives a seamless,
-    bounded repeat while retaining an outward physical direction.
+    The shell radius advances with elapsed time and wraps after it reaches the
+    maximum selected LED distance from the selected origin. ``thickness_m`` is
+    the full shell thickness.
     """
     if speed_m_per_s <= 0:
         raise ValueError("speed_m_per_s must be greater than zero")
-    if ring_spacing_m <= 0:
-        raise ValueError("ring_spacing_m must be greater than zero")
-    if not 0 < ring_width_m <= ring_spacing_m:
-        raise ValueError("ring_width_m must be greater than zero and no larger than ring_spacing_m")
+    if thickness_m <= 0:
+        raise ValueError("thickness_m must be greater than zero")
     foreground = scale_color(validate_rgb(color), brightness)
     frame = RGBFrame.allocate(len(context.xyz), scale_color(validate_rgb(background), brightness))
-    half_width = ring_width_m / 2
-    travelled = elapsed_seconds * speed_m_per_s
-    for index, radius in enumerate(context.radius_xy):
+    selected_origin = context.center if origin is None else origin
+    selected = selected_xyz(context, exclude_tail=exclude_tail)
+    maximum_distance = max(distance3(point, selected_origin) for point in selected)
+    if maximum_distance <= 0:
+        raise ValueError("maximum shell distance must be greater than zero")
+    radius = (elapsed_seconds * speed_m_per_s) % maximum_distance
+    half_width = thickness_m / 2
+    for index, point in enumerate(context.xyz):
         if exclude_tail and context.tails[index]:
             continue
-        phase = (radius - travelled) % ring_spacing_m
-        if min(phase, ring_spacing_m - phase) <= half_width:
+        if abs(distance3(point, selected_origin) - radius) <= half_width:
             frame.set_pixel(index, foreground)
     return frame

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import atan2, sqrt
+from math import atan2, isfinite, sqrt
 from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping, Sequence
@@ -18,6 +18,7 @@ class SpatialContext:
 
     positions: tuple[Mapping[str, object], ...]
     center: tuple[float, float, float]
+    apex: tuple[float, float, float]
     xyz: tuple[tuple[float, float, float], ...]
     tails: tuple[bool, ...]
     radius_xy: tuple[float, ...]
@@ -30,6 +31,7 @@ class SpatialContext:
         positions: Sequence[Mapping[str, object]],
         *,
         center: tuple[float, float, float],
+        apex: tuple[float, float, float] | None = None,
     ) -> "SpatialContext":
         """Build validated immutable effect inputs from ordered LED records."""
         rows = tuple(MappingProxyType(dict(row)) for row in positions)
@@ -44,7 +46,7 @@ class SpatialContext:
             raise ValueError("positions and center must contain finite XYZ coordinates") from exc
         if len(origin) != 3:
             raise ValueError("center must be an XYZ tuple")
-        if not all(value == value and abs(value) != float("inf") for point in (*xyz, origin) for value in point):
+        if not all(isfinite(value) for point in (*xyz, origin) for value in point):
             raise ValueError("positions and center must contain finite XYZ coordinates")
         radii = tuple(sqrt((x - origin[0]) ** 2 + (y - origin[1]) ** 2) for x, y, _ in xyz)
         angles = tuple(atan2(y - origin[1], x - origin[0]) for x, y, _ in xyz)
@@ -52,6 +54,7 @@ class SpatialContext:
         return cls(
             positions=rows,
             center=origin,
+            apex=origin if apex is None else tuple(float(value) for value in apex),
             xyz=xyz,
             tails=tuple(row.get("location_type") == "tail" for row in rows),
             radius_xy=radii,
@@ -66,7 +69,40 @@ class SpatialContext:
         if "H061" not in geometry.hubs:
             raise ValueError("geometry is missing apex hub H061")
         apex = geometry.hubs["H061"]
-        return cls.from_rows(load_led_positions(positions_path), center=apex.xyz)
+        return cls.from_rows(load_led_positions(positions_path), center=apex.xyz, apex=apex.xyz)
+
+
+def selected_xyz(context: SpatialContext, *, exclude_tail: bool) -> tuple[tuple[float, float, float], ...]:
+    """Return physical coordinates participating in an effect invocation."""
+    points = tuple(point for point, tail in zip(context.xyz, context.tails) if not (exclude_tail and tail))
+    if not points:
+        raise ValueError("selected position set is empty")
+    return points
+
+
+def parse_spatial_origin(value: str, context: SpatialContext) -> tuple[float, float, float]:
+    """Resolve a shared shell origin selector without putting parsing in renderers."""
+    normalized = value.strip().lower()
+    if normalized == "apex":
+        return context.apex
+    dome_points = tuple(point for point, tail in zip(context.xyz, context.tails) if not tail)
+    if normalized in {"centre", "base"}:
+        if not dome_points:
+            raise ValueError(f"invalid origin {value!r}: dome-only position set is empty")
+        minimum_z = min(z for _, _, z in dome_points)
+        if normalized == "base":
+            return (context.apex[0], context.apex[1], minimum_z)
+        return (context.apex[0], context.apex[1], (minimum_z + context.apex[2]) / 2)
+    parts = value.split(",")
+    if len(parts) != 3:
+        raise ValueError(f"invalid origin {value!r}: expected apex, centre, base, or X,Y,Z")
+    try:
+        origin = tuple(float(part.strip()) for part in parts)
+    except ValueError as exc:
+        raise ValueError(f"invalid origin {value!r}: X,Y,Z must be numeric") from exc
+    if not all(isfinite(component) for component in origin):
+        raise ValueError(f"invalid origin {value!r}: X,Y,Z must be finite")
+    return origin
 
 
 def smoothstep(value: float) -> float:

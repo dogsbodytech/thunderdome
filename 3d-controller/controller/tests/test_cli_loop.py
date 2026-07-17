@@ -74,19 +74,21 @@ class CLILoopTests(unittest.TestCase):
 
     def test_new_spatial_effect_parsers_expose_bounded_metric_controls(self):
         rings = parse_args(
-            ["effect", "expanding-rings", "--ring-spacing-mm", "900", "--ring-width-mm", "120", "--speed-mm-per-second", "300"]
+            ["effect", "expanding-rings", "--thickness-mm", "120", "--speed-mps", "0.3"]
         )
         wave = parse_args(
-            ["effect", "height-wave", "--wave-spacing-mm", "800", "--wave-width-mm", "100", "--speed-mm-per-second", "250"]
+            ["effect", "height-wave", "--height-mm", "100", "--speed-mps", "0.25", "--direction", "bounce"]
         )
-        self.assertEqual((rings.ring_spacing_mm, rings.ring_width_mm, rings.speed_mm_per_second), (900, 120, 300))
-        self.assertEqual((wave.wave_spacing_mm, wave.wave_width_mm, wave.speed_mm_per_second), (800, 100, 250))
+        self.assertEqual((rings.thickness_mm, rings.speed_mps), (120, 0.3))
+        self.assertEqual((wave.height_mm, wave.speed_mps, wave.direction), (100, 0.25, "bounce"))
 
     def test_expanding_rings_dry_run_renders_and_does_not_open_network_sockets(self):
         session = FakeMultiSession([controller_results()])
         rendered = RGBFrame.allocate(5_000, (1, 2, 3))
         stdout = io.StringIO()
         with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()) as load_context, patch(
+            "thunderdome.cli.selected_xyz", return_value=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0))
+        ), patch("thunderdome.cli.parse_spatial_origin", return_value=(0.0, 0.0, 0.0)), patch(
             "thunderdome.cli.render_expanding_rings", return_value=rendered
         ) as render, patch("thunderdome.cli.MultiControllerDDPSession", return_value=session):
             with contextlib.redirect_stdout(stdout):

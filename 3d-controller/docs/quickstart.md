@@ -72,14 +72,16 @@ thunderdome effect clock-hand --controllers config/controllers.json --geometry g
 
 `prepare-ddp` posts `{"on":false,"bri":255,"live":false}` in one JSON update to each enabled controller, so a DDP timeout falls back to off rather than a bright native effect. The hand centre is H061's authoritative XY coordinate; zero degrees is world `+X` and clockwise is viewed from above. All 5,000 generated XYZ records, including tails, participate by default. Tails share H061 XY and normally light the centre continuously; use `--exclude-tail` when that is not desired.
 
-`expanding-rings` and `height-wave` use the same generated 5,000-record XYZ context and direct multi-controller DDP output. The former sends concentric bands outward from H061 in the XY plane; the latter sends horizontal bands toward increasing Z. Their spacing and width are millimetres, and `--speed-mm-per-second` must be positive. Every spatial effect supports `--dry-run` before hardware output.
+`expanding-rings` and `height-wave` use the same generated 5,000-record XYZ context and direct multi-controller DDP output. `expanding-rings` is a true XYZ spherical shell with `--origin apex|centre|base|X,Y,Z`, `--speed-mps`, and full `--thickness-mm`. `height-wave` uses actual selected Z bounds with `--direction up|down|bounce`, `--speed-mps`, and full `--height-mm`. Tails participate by default; use `--exclude-tail` to remove them. Spatial `--loops`, `--duration`, and `--hold` are mutually exclusive; a bounce loop is a complete out-and-back. See [effects.md](effects.md) for origin definitions and all options.
 
 ```bash
-thunderdome effect expanding-rings --controllers config/controllers.json \
-  --ring-spacing-mm 1000 --ring-width-mm 200 --speed-mm-per-second 500 \
-  --brightness 32 --dry-run
+thunderdome effect expanding-rings \
+  --controllers config/controllers.json --origin apex --speed-mps 1.0 \
+  --thickness-mm 250 --brightness 24 --loops 1 --dry-run
 
-thunderdome effect height-wave --controllers config/controllers.json \
-  --wave-spacing-mm 1000 --wave-width-mm 200 --speed-mm-per-second 500 \
-  --brightness 32 --hold --fps 30
+thunderdome effect height-wave \
+  --controllers config/controllers.json --direction bounce --height-mm 300 \
+  --brightness 24 --prepare-ddp --hold
 ```
+
+`--prepare-ddp` sends the persistent WLED fallback `{"on":false,"bri":255,"live":false}` once per enabled controller before Python streams DDP; it aborts before DDP on a preparation failure. With `--dry-run`, preparation is only reported and no HTTP or UDP traffic is made. Start at low brightness; Ctrl+C cleanly ends a held stream.
