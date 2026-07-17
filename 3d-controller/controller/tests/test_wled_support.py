@@ -38,7 +38,7 @@ class WLEDSupportTests(unittest.TestCase):
             post.assert_called_once_with({"on": False}, return_state=False)
             post.reset_mock()
             client.set_color((1, 2, 3))
-            post.assert_called_once_with({"seg": [{"col": [[1, 2, 3]]}]}, return_state=False)
+            post.assert_called_once_with({"seg": [{"fx": 0, "col": [[1, 2, 3]]}]}, return_state=False)
             post.reset_mock()
             client.set_preset(4)
             post.assert_called_once_with({"ps": 4}, return_state=False)

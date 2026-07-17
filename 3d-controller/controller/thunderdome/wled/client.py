@@ -157,7 +157,7 @@ class WLEDClient:
 
     def set_color(self, rgb: RGB, segment_id: int | None = None, *, return_state: bool = False) -> Any:
         r, g, b = self._validate_rgb(rgb)
-        segment: JsonDict = {"col": [[r, g, b]]}
+        segment: JsonDict = {"fx": 0, "col": [[r, g, b]]}
         if segment_id is not None:
             self._validate_nonnegative_int(segment_id, "segment_id")
             segment["id"] = segment_id

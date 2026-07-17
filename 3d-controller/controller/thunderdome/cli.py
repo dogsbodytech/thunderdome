@@ -146,11 +146,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     effect_sub = effect.add_subparsers(dest="command", required=True)
     clock = effect_sub.add_parser("clock-hand", help="render a rotating radial hand through DDP")
     _controllers_option(clock)
-    clock.add_argument("--positions", default="geometry/generated/led_positions_3d.json")
+    clock.add_argument("--positions", default="geometry/generated/led_positions_3d.json"); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
     clock.add_argument("--color", default="FFFFFF"); clock.add_argument("--background", default="000000")
     clock.add_argument("--brightness", type=int, default=32); clock.add_argument("--width-mm", type=float, default=300)
     clock.add_argument("--rotation-seconds", type=float, default=3); clock.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise")
-    clock.add_argument("--angle-offset-degrees", type=float, default=0); clock.add_argument("--include-tail", action="store_true"); clock.add_argument("--dry-run", action="store_true")
+    clock.add_argument("--angle-offset-degrees", type=float, default=0); clock.add_argument("--exclude-tail", action="store_true"); clock.add_argument("--dry-run", action="store_true")
     mode=clock.add_mutually_exclusive_group(); mode.add_argument("--hold", action="store_true"); mode.add_argument("--duration", type=float); mode.add_argument("--rotations", type=int)
     clock.add_argument("--fps", type=int, default=30)
 
@@ -319,10 +319,13 @@ def _run_clock_hand(args: argparse.Namespace) -> int:
     path=Path(args.positions)
     if not path.exists(): raise ValueError(f"positions file not found: {path}; run 'thunderdome positions generate'")
     rows=load_led_positions(path); controllers=load_controllers(args.controllers)
+    geometry=load_geometry(args.geometry)
+    if "H061" not in geometry.hubs: raise ValueError("geometry is missing apex hub H061")
+    apex=geometry.hubs["H061"]; center_xy=(apex.x, apex.y)
     duration=None if args.hold else (args.duration if args.duration is not None else (args.rotations or 1) * args.rotation_seconds)
     color=parse_hex_color(args.color); background=parse_hex_color(args.background)
     def frame_for(_number: int, elapsed: float) -> RGBFrame:
-        return render_clock_hand(rows, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=args.rotation_seconds, direction=args.direction, offset_degrees=args.angle_offset_degrees), width_m=args.width_mm / 1000, color=color, background=background, brightness=args.brightness, include_tail=args.include_tail)
+        return render_clock_hand(rows, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=args.rotation_seconds, direction=args.direction, offset_degrees=args.angle_offset_degrees), width_m=args.width_mm / 1000, color=color, background=background, brightness=args.brightness, center_xy=center_xy, exclude_tail=args.exclude_tail)
     if args.dry_run:
         with MultiControllerDDPSession(controllers) as session: results=session.send_frame(frame_for(0, 0), dry_run=True)
         _report_results(results); return 1 if any(r.error for r in results) else 0

@@ -35,16 +35,6 @@ def angle_for_elapsed(
     return math.radians(offset_degrees) + direction_sign * progress * math.tau
 
 
-def _centre_xy(rows: list[PositionRow]) -> tuple[float, float]:
-    """Derive the represented dome centre from the non-tail XY extent."""
-    dome_rows = [row for row in rows if row.get("location_type") != "tail"]
-    if not dome_rows:
-        raise ValueError("positions must contain non-tail LEDs")
-    xs = [float(row["x"]) for row in dome_rows]
-    ys = [float(row["y"]) for row in dome_rows]
-    return (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-
-
 def render_clock_hand(
     positions: Iterable[PositionRow],
     *,
@@ -53,7 +43,8 @@ def render_clock_hand(
     color: tuple[int, int, int] = (255, 255, 255),
     background: tuple[int, int, int] = (0, 0, 0),
     brightness: int = 32,
-    include_tail: bool = False,
+    center_xy: tuple[float, float],
+    exclude_tail: bool = False,
 ) -> RGBFrame:
     """Render a radial XY half-ray into one 5,000-pixel RGB frame.
 
@@ -68,7 +59,7 @@ def render_clock_hand(
     indexes = [row.get("global_index") for row in rows]
     if indexes != list(range(LOGICAL_LED_COUNT)):
         raise ValueError("positions must be ordered by global_index 0..4999")
-    center_x, center_y = _centre_xy(rows)
+    center_x, center_y = center_xy
     direction_x = math.cos(angle_radians)
     direction_y = math.sin(angle_radians)
     hand_color = scale_color(validate_rgb(color), brightness)
@@ -77,7 +68,7 @@ def render_clock_hand(
     half_width_m = width_m / 2
 
     for row in rows:
-        if row.get("location_type") == "tail" and not include_tail:
+        if row.get("location_type") == "tail" and exclude_tail:
             continue
         dx = float(row["x"]) - center_x
         dy = float(row["y"]) - center_y

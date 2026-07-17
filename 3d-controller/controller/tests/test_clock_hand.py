@@ -33,19 +33,19 @@ class ClockHandRendererTests(unittest.TestCase):
     def test_zero_angle_selects_forward_ray_not_opposite_or_tail(self):
         frame = render_clock_hand(
             positions(), angle_radians=0.0, width_m=0.3,
-            color=(255, 0, 0), background=(1, 2, 3), brightness=128,
+            color=(255, 0, 0), background=(1, 2, 3), brightness=128, center_xy=(0, 0),
         )
         self.assertEqual(frame.led_count, LOGICAL_LED_COUNT)
         self.assertEqual(tuple(frame.data[0:3]), (128, 0, 0))
         self.assertEqual(tuple(frame.data[3:6]), (0, 1, 1))
         self.assertEqual(tuple(frame.data[6:9]), (0, 1, 1))
-        self.assertEqual(tuple(frame.data[12:15]), (0, 1, 1))
+        self.assertEqual(tuple(frame.data[12:15]), (128, 0, 0))
 
     def test_width_is_metres_and_tail_can_be_opted_in(self):
         rows = positions()
-        narrow = render_clock_hand(rows, angle_radians=0.0, width_m=0.001, color=(255, 255, 255))
+        narrow = render_clock_hand(rows, angle_radians=0.0, width_m=0.001, color=(255, 255, 255), center_xy=(0, 0))
         self.assertEqual(tuple(narrow.data[6:9]), (0, 0, 0))
-        tail = render_clock_hand(rows, angle_radians=0.0, width_m=0.3, color=(255, 255, 255), include_tail=True)
+        tail = render_clock_hand(rows, angle_radians=0.0, width_m=0.3, color=(255, 255, 255), center_xy=(0, 0))
         self.assertEqual(tuple(tail.data[12:15]), (32, 32, 32))
 
     def test_angle_direction_and_offset_are_deterministic(self):
@@ -56,8 +56,8 @@ class ClockHandRendererTests(unittest.TestCase):
 
     def test_different_angles_render_different_frames(self):
         rows = positions()
-        east = render_clock_hand(rows, angle_radians=0.0, width_m=0.3, color=(255, 255, 255))
-        north = render_clock_hand(rows, angle_radians=math.pi / 2, width_m=0.3, color=(255, 255, 255))
+        east = render_clock_hand(rows, angle_radians=0.0, width_m=0.3, color=(255, 255, 255), center_xy=(0, 0))
+        north = render_clock_hand(rows, angle_radians=math.pi / 2, width_m=0.3, color=(255, 255, 255), center_xy=(0, 0))
         self.assertNotEqual(east.data, north.data)
 
 
