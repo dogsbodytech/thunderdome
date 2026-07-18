@@ -13,12 +13,12 @@ from aiohttp import web
 
 from .animation.loop import run_frame_loop
 from .auto_scheduler import AutoScheduler, auto_duration
-from .effects.common import SpatialContext, parse_spatial_origin
+from .effects._common import SpatialContext, parse_spatial_origin
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.expanding_rings import render_expanding_rings
 from .effects.height_wave import render_height_wave
 from .effects.procedural import create_renderer
-from .effects.registry import BY_NAME
+from .effects._registry import BY_NAME
 from .effect_defaults import EffectDefaults
 from .frame import RGBFrame
 from .runtime import CommandAction, CommandSource, DisplayDefinition, OutputMode, RuntimeCommand, RuntimeCoordinator

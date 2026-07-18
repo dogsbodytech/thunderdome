@@ -6,7 +6,7 @@ import math
 import re
 from typing import Any, Mapping
 
-from .effects.registry import BY_NAME, DEFAULT_PLAYLIST
+from .effects._registry import BY_NAME, DEFAULT_PLAYLIST
 
 
 @dataclass(frozen=True)

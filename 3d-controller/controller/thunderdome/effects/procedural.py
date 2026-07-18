@@ -9,7 +9,7 @@ from typing import Iterable, Sequence
 
 from ..config import LOGICAL_LED_COUNT
 from ..frame import RGBFrame, validate_rgb
-from .common import SpatialContext, distance3, selected_xyz, smoothstep
+from ._common import SpatialContext, distance3, selected_xyz, smoothstep
 
 TAU = math.tau
 Vector = tuple[float, float, float]
