@@ -13,6 +13,8 @@ thunderdome control serve \
 
 There is no authentication; the service is designed for `127.0.0.1`. Controller addresses are server-owned: clients can never submit them, and no API returns them. `ddp`/`both` output is rejected unless the service was started with both `--controllers` and `--allow-live-control`. See [control-service.md](control-service.md) for the safety model.
 
+This service is the HTTP ingress into the same `RuntimeCoordinator` used by future adapters (e.g. MQTT); it is not an MQTT bridge and does not connect to MQTT.
+
 ## Conventions
 
 - All requests and responses are JSON (`Content-Type: application/json`).
@@ -230,3 +232,10 @@ curl -s http://127.0.0.1:8080/api/runtime/status
 curl -s -X POST http://127.0.0.1:8080/api/runtime/stop \
   -H 'Content-Type: application/json' -d '{}'
 ```
+
+## Related contributor contracts
+
+- [Control architecture](control-architecture.md)
+- [Runtime command contract](runtime-command-contract.md)
+- [MQTT integration specification](mqtt-integration-spec.md) — future adapter contract; current service does not connect to MQTT.
+- [MQTT temporary overrides ADR](adr/0001-mqtt-temporary-overrides.md)
