@@ -13,6 +13,7 @@ Start the control service first, e.g.:
 """
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -32,6 +33,21 @@ CONTROL_URL = os.environ.get("CONTROL_URL", "http://127.0.0.1:8080").rstrip("/")
 OUTPUT = os.environ.get("EFFECT_OUTPUT") or None
 # How long a publicly triggered effect runs before the baseline is restored.
 DURATION_SECONDS = float(os.environ.get("EFFECT_DURATION_SECONDS", "120"))
+# Optional comma-separated allow-list. Unset = any well-formed name is forwarded
+# and the control service rejects unknown effects with a 400.
+ALLOWLIST = frozenset(filter(None, (n.strip() for n in os.environ.get("EFFECT_ALLOWLIST", "").split(",")))) or None
+# The topic is public, so bound what we parse and forward.
+MAX_PAYLOAD_BYTES = 4096
+NAME_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
+
+
+def validate_name(name) -> str | None:
+    """Return `name` if it is a well-formed, allowed effect name, else None."""
+    if not isinstance(name, str) or not NAME_PATTERN.fullmatch(name):
+        return None
+    if ALLOWLIST is not None and name not in ALLOWLIST:
+        return None
+    return name
 
 
 def override_payload(name: str) -> dict:
@@ -63,6 +79,9 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 
 def on_message(client, userdata, msg):
+    if len(msg.payload) > MAX_PAYLOAD_BYTES:
+        print(f"ignored {msg.topic}: payload over {MAX_PAYLOAD_BYTES} bytes", file=sys.stderr, flush=True)
+        return
     raw = msg.payload.decode("utf-8", errors="replace").strip()
     if not raw:
         return
@@ -70,6 +89,9 @@ def on_message(client, userdata, msg):
         name = json.loads(raw)["name"]  # payload is {"name": "fire", ...}
     except (ValueError, KeyError, TypeError):
         print(f"ignored {msg.topic}: no effect name in {raw!r}", file=sys.stderr, flush=True)
+        return
+    if validate_name(name) is None:
+        print(f"ignored {msg.topic}: invalid or disallowed effect name {name!r:.80}", file=sys.stderr, flush=True)
         return
     print(f"{msg.topic} -> override {name} for {DURATION_SECONDS:g}s", flush=True)
     try:

@@ -71,6 +71,23 @@ class RunEffectTests(unittest.TestCase):
             self.post({"accepted": False, "reason": "lower priority override rejected"})
 
 
+class ValidateNameTests(unittest.TestCase):
+    def test_wellformed_names_pass_without_allowlist(self):
+        with mock.patch.object(mqtt_client, "ALLOWLIST", None):
+            for name in ("fire", "expanding-rings", "auto"):
+                self.assertEqual(mqtt_client.validate_name(name), name)
+
+    def test_malformed_names_are_rejected(self):
+        with mock.patch.object(mqtt_client, "ALLOWLIST", None):
+            for bad in (None, 7, "", "Fire", "fire effect", "fire\n", "-fire", "a" * 65, {"n": 1}):
+                self.assertIsNone(mqtt_client.validate_name(bad))
+
+    def test_allowlist_restricts_names(self):
+        with mock.patch.object(mqtt_client, "ALLOWLIST", frozenset({"fire"})):
+            self.assertEqual(mqtt_client.validate_name("fire"), "fire")
+            self.assertIsNone(mqtt_client.validate_name("aurora"))
+
+
 class OnMessageTests(unittest.TestCase):
     def test_named_effect_is_run(self):
         out, err = quiet()
@@ -84,6 +101,21 @@ class OnMessageTests(unittest.TestCase):
             mqtt_client.on_message(None, None, FakeMessage(""))
             mqtt_client.on_message(None, None, FakeMessage("fire"))  # bare string, not a JSON object
             mqtt_client.on_message(None, None, FakeMessage('{"nope": 1}'))
+        run.assert_not_called()
+
+    def test_oversized_payloads_are_ignored_before_parsing(self):
+        big = b'{"name": "' + b"a" * (mqtt_client.MAX_PAYLOAD_BYTES + 1) + b'"}'
+        out, err = quiet()
+        with mock.patch.object(mqtt_client, "run_effect") as run, out, err:
+            mqtt_client.on_message(None, None, FakeMessage(big))
+        run.assert_not_called()
+
+    def test_disallowed_names_are_not_forwarded(self):
+        out, err = quiet()
+        with mock.patch.object(mqtt_client, "ALLOWLIST", frozenset({"fire"})), \
+                mock.patch.object(mqtt_client, "run_effect") as run, out, err:
+            mqtt_client.on_message(None, None, FakeMessage('{"name": "aurora"}'))
+            mqtt_client.on_message(None, None, FakeMessage('{"name": "fire; rm -rf /"}'))
         run.assert_not_called()
 
 
