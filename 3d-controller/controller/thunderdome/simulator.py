@@ -217,7 +217,7 @@ def build_simulator_payload(geometry_path: str | Path, routes_path: str | Path, 
 class SimulatorHTTPServer:
     """Compatibility wrapper that hosts the aiohttp simulator in its own loop thread."""
 
-    def __init__(self, server_address: tuple[str, int], payload: dict[str, Any], static_dir: Path):
+    def __init__(self, server_address: tuple[str, int], payload: dict[str, Any], static_dir: Path, control_api: Any | None = None):
         self.payload = payload
         self.static_dir = static_dir.resolve()
         self._host, self._requested_port = server_address
@@ -233,6 +233,7 @@ class SimulatorHTTPServer:
         self._last_frame: dict[str, Any] | None = None
         self._received_frames = 0
         self._rejected_frames = 0
+        self.control_api = control_api
         self._app = web.Application(client_max_size=FRAME_PAYLOAD_LENGTH + 64)
         self._configure_routes()
         self._thread = threading.Thread(target=self._run, name="thunderdome-simulator", daemon=True)
@@ -248,6 +249,8 @@ class SimulatorHTTPServer:
         self._app.router.add_get("/api/simulator/leds", self._leds)
         self._app.router.add_get("/ws/producer", self._producer_ws)
         self._app.router.add_get("/ws/viewer", self._viewer_ws)
+        if self.control_api is not None:
+            self.control_api.register_routes(self._app)
         self._app.router.add_get("/{path:.*}", self._static)
 
     def _run(self) -> None:
@@ -418,14 +421,16 @@ class SimulatorHTTPServer:
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._loop.stop)
         self._thread.join(timeout=5)
+        if self.control_api is not None:
+            self.control_api.shutdown()
 
     def server_close(self) -> None:
         self.shutdown()
 
 
-def create_http_server(host: str, port: int, geometry_path: str | Path, routes_path: str | Path, positions_path: str | Path) -> SimulatorHTTPServer:
+def create_http_server(host: str, port: int, geometry_path: str | Path, routes_path: str | Path, positions_path: str | Path, control_api: Any | None = None) -> SimulatorHTTPServer:
     payload = build_simulator_payload(geometry_path, routes_path, positions_path)
-    return SimulatorHTTPServer((host, port), payload, simulator_static_dir())
+    return SimulatorHTTPServer((host, port), payload, simulator_static_dir(), control_api)
 
 
 def _local_urls(host: str, port: int) -> list[str]:
