@@ -27,7 +27,10 @@ On connect you'll see `connected to <host>:<port>`. The payload is JSON with a
 `name` key, e.g. `mosquitto_pub -h mqtt.emf.camp -t
 open/dogsbody/thunderdome/effect -m '{"name": "fire"}'`.
 Valid names come from `GET /api/effects`: `clock-hand`, `expanding-rings`,
-`height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, `auto`.
+`height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`,
+`twinkle`, `auto`, and the solar-system bodies `sol`, `mercury`, `venus`,
+`earth`, `mars`, `jupiter`, `saturn`, `uranus`, `neptune`, `asteroid-belt`,
+`kuiper-belt`, `voyager-1`.
 
 ## Config
 

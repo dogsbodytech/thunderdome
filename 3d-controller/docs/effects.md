@@ -43,6 +43,7 @@ Then run an effect directly, without preparation.
 | `radar` | Angular XYZ/XY sweep around dome centre | `--rotation-seconds`, `--beam-width-degrees`, `--trail-degrees`, `--range-m`, `--vertical-falloff`, `--color`, `--background`, `--direction`, `--loops` | One beam rotation | `thunderdome effect radar --loops 1 --brightness 24` |
 | `aurora` | Height/angle/direction waves in XYZ | `--direction X,Y,Z`, `--speed`, `--scale`, `--band-width`, `--intensity`, `--palette`, `--seed` | 10 seconds | `thunderdome effect aurora --duration 20 --brightness 24` |
 | `fireflies` | Deterministic moving 3D particles and distance falloff | `--count`, `--speed`, `--glow-radius-mm`, `--lifetime-seconds`, `--color`, `--color-variation`, `--seed` | 8 seconds | `thunderdome effect fireflies --count 30 --duration 12` |
+| `twinkle` | Stateful per-LED fade-in/hold/fade-out sparkles | `--density`, `--spawn-rate`, `--fade-in`, `--hold-time`, `--fade-out`, `--minimum-brightness`, `--maximum-brightness`, `--color`, `--mode`, `--background`, `--color-change-speed`, `--seed` | 10 seconds | `thunderdome effect twinkle --duration 15 --brightness 24` |
 | solar-system bodies | XYZ colour wash; palette and style fixed per body | `--speed`, `--seed` | 12 seconds | `thunderdome effect sol --brightness 24` |
 | `auto` | Registry playlist of production effects | `--playlist`/`--effects`, `--preset`, `--interval`, `--crossfade`/`--transition`, `--cycles`, `--duration`, `--shuffle`, `--seed` | Continuous until Ctrl+C | `thunderdome effect auto --preset calm` |
 
@@ -52,7 +53,7 @@ All effects produce exactly 5,000 RGB pixels / 15,000 bytes. Tails are included 
 
 Common individual-effect runtime controls are `--output simulator|ddp|both|null`, `--simulator-url`, `--controllers`, `--positions`, `--geometry`, `--brightness`, `--fps`, `--duration`, `--hold`, `--exclude-tail`, and `--dry-run`. Controller configuration is loaded only for `ddp` and `both`; simulator and null output do not inspect it. Only effects with meaningful cycles expose cycle options: `clock-hand --rotations`; `expanding-rings --loops`; `height-wave --loops`; `rotating-plane --loops`; `radar --loops`.
 
-`fire`, `aurora`, and `fireflies` use `--duration` or `--hold`; they do not expose `--loops` because their procedural motion does not naturally return to a guaranteed starting visual state.
+`fire`, `aurora`, `fireflies`, `twinkle`, and the solar-system bodies use `--duration` or `--hold`; they do not expose `--loops` because their procedural motion does not naturally return to a guaranteed starting visual state.
 
 `--fps` controls frame rate, 1..60, default 30. Ctrl+C cleanly stops held or continuous streams, closes DDP sessions, and reports frame statistics. Start at safe low Python brightness such as `--brightness 24`.
 

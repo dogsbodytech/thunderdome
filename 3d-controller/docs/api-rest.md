@@ -49,7 +49,7 @@ What this service instance can do. Check `supported_outputs` before requesting `
   "default_output": "simulator",
   "supported_outputs": ["simulator"],
   "brightness_default": 255,
-  "effect_count": 9,
+  "effect_count": 22,
   "auto_mode_available": true,
   "mqtt_configured": false
 }
@@ -57,7 +57,7 @@ What this service instance can do. Check `supported_outputs` before requesting `
 
 ### `GET /api/effects`
 
-All effect schemas: `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, and `auto`. Each entry lists every parameter with its type, default, bounds, units, and choices — this is the authoritative parameter reference; use it instead of hard-coding parameter lists. Non-`auto` entries also include `resolved_defaults` (built-in defaults merged with saved operator defaults).
+All effect schemas: `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, `twinkle`, `auto`, and the solar-system bodies (`sol`, `mercury`, `venus`, `earth`, `mars`, `jupiter`, `saturn`, `uranus`, `neptune`, `asteroid-belt`, `kuiper-belt`, `voyager-1`). Each entry lists every parameter with its type, default, bounds, units, and choices — this is the authoritative parameter reference; use it instead of hard-coding parameter lists. Non-`auto` entries also include `resolved_defaults` (built-in defaults merged with saved operator defaults).
 
 ### `GET /api/effects/{name}`
 
