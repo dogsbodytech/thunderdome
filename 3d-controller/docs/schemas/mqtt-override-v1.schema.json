@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thunderdome.local/schemas/mqtt-override-v1.schema.json",
+  "title": "Thunderdome MQTT temporary override v1",
+  "description": "Transport envelope only. parameters are subsequently validated against the server effect schema and runtime fields are rejected by the adapter.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "request_id", "effect", "parameters", "duration_seconds"],
+  "properties": {
+    "version": {"const": 1, "description": "MQTT contract version.", "examples": [1]},
+    "request_id": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$", "description": "Idempotency and acknowledgement correlation ID.", "examples": ["visitor-123"]},
+    "effect": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9-]*$", "description": "Non-auto effect name; adapter applies deployment allow-list and server schema validation.", "examples": ["twinkle"]},
+    "parameters": {"type": "object", "maxProperties": 64, "description": "Effect-only parameter object. No effect catalogue is duplicated here; validate with the server schema after envelope validation.", "examples": [{"density": 0.05, "mode": "random"}]},
+    "duration_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 3600, "description": "Temporary override lifetime in seconds.", "examples": [15]},
+    "priority": {"type": "integer", "minimum": 0, "maximum": 100, "default": 0, "description": "Coordinator override priority; equal priority newer commands replace.", "examples": [10]}
+  },
+  "examples": [{"version": 1, "request_id": "visitor-123", "effect": "twinkle", "parameters": {"density": 0.05, "mode": "random"}, "duration_seconds": 15, "priority": 10}]
+}

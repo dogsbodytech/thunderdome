@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thunderdome.local/schemas/mqtt-cancel-v1.schema.json",
+  "title": "Thunderdome MQTT override cancellation v1",
+  "description": "Requests cancellation of a matching active MQTT temporary override. The adapter never cancels a browser-owned baseline.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "request_id"],
+  "properties": {
+    "version": {"const": 1, "description": "MQTT contract version.", "examples": [1]},
+    "request_id": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$", "description": "The MQTT override request ID to cancel.", "examples": ["visitor-123"]},
+    "reason": {"type": "string", "maxLength": 256, "description": "Optional bounded audit reason; not passed to renderer or hardware.", "examples": ["visitor departed"]}
+  },
+  "examples": [{"version": 1, "request_id": "visitor-123", "reason": "visitor departed"}]
+}

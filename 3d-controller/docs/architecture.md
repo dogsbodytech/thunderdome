@@ -1,5 +1,9 @@
 # Architecture
 
+## External control contracts
+
+The local REST/browser control path and future MQTT adapters share one coordinator. See [control-architecture.md](control-architecture.md), [runtime-command-contract.md](runtime-command-contract.md), [api-rest.md](api-rest.md), and [mqtt-integration-spec.md](mqtt-integration-spec.md) for contributor-facing contracts.
+
 The authoritative flow is **geometry -> routes -> generated XYZ -> effects -> RGB frame -> DDP -> WLED**. `geometry/` holds authoritative structural facts and manually confirmed physical routes. The active `thunderdome positions generate` command deterministically derives `geometry/generated/led_positions_3d.json`, and `thunderdome positions validate` validates it. Generated positions are derived artefacts that may be ignored by Git, so users can regenerate them locally. They are nominal mathematical positions through the modelled geometry, not a replacement for future physical calibration.
 
 Effects render a logical 5,000-pixel linear `RGBFrame`, which DDP sends in physical order after fan-out to the five controllers. WLED HTTP support is secondary controller management/fallback functionality. WLED 2D ledmaps, old SVG coordinate experiments, and related archives are not the active mapping authority.
