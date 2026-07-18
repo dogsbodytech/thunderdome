@@ -238,7 +238,8 @@ class ControlAPI:
             if parsed_output in {OutputMode.DDP, OutputMode.BOTH} and not self.settings.live_available:
                 raise ValueError("live DDP output is not enabled")
             duration = payload.get("duration_seconds")
-            command = RuntimeCommand(CommandSource.BROWSER, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
+            source = CommandSource(str(payload.get("source") or CommandSource.BROWSER))
+            command = RuntimeCommand(source, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
             result = self.coordinator.execute(command)
             if result.accepted and action == CommandAction.APPLY_OVERRIDE and command.duration_seconds is not None:
                 timer = threading.Timer(command.duration_seconds, self.coordinator.expire_overrides)
