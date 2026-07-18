@@ -1,36 +1,36 @@
 # Dome Audio Reactor
 
-This is the start of a Linux-side audio source for the dome.
+This directory contains exploratory WLED Audio Sync tools. They are separate from the active [`3d-controller`](../../3d-controller/) application, which renders the complete 5,000-pixel dome in Python and sends five direct DDP frames to the WLED controllers.
 
-The first step is deliberately simple: send fake WLED Audio Sync packets so we can confirm that the WLED controller reacts to network audio before adding SIP call handling.
+These experiments temporarily use WLED's AudioReactive receive mode instead of the normal spatial DDP rendering path.
 
-## Current flow
+## Experiments
+
+- [`pulse_generator.py`](pulse_generator.py) sends fake WLED Audio Sync V2 packets for basic network testing.
+- [`sip-bridge/`](sip-bridge/) converts incoming Asterisk EAGI call audio into WLED Audio Sync packets.
+
+## Pulse generator flow
 
 ```text
 Linux server
   -> WLED Audio Sync V2 UDP packets
-  -> WLED controller in AudioReactive receive mode
-  -> Dome LEDs
+  -> test WLED controller in AudioReactive receive mode
+  -> LEDs attached to that controller
 ```
 
 ## WLED setup
 
-On the main WLED controller:
+On a test controller:
 
 1. Go to `Config -> Usermods -> AudioReactive`.
 2. Set Audio Sync to `Receive`.
 3. Use UDP port `11988`.
 4. Save and reboot the controller if needed.
-5. Select an audio reactive effect, for example `Gravimeter`, `DJ Light`, `GEQ`, or similar.
+5. Select an AudioReactive effect, for example `Gravimeter`, `DJ Light` or `GEQ`.
 
-The default target is multicast `239.0.0.1:11988`, which is what WLED Audio Sync uses.
+The default target is multicast `239.0.0.1:11988`. For unicast testing, use one controller address from the current mapping in [`Software.md`](../../Software.md).
 
-For the current dome layout, controller 1 is the main controller and drives the other controllers using virtual LEDs. Start by testing against controller 1 only.
-
-Known controller 1 addresses from the lighting notes:
-
-- Wi-Fi: `192.168.12.10`
-- Wired: `192.168.12.11`
+Do not assume controller 1 relays pixels to the other controllers. The current architecture sends a separate local DDP frame to each of the five controllers.
 
 ## Run the pulse generator
 
@@ -54,10 +54,10 @@ python3 pulse_generator.py --level 255
 # Run for 30 seconds
 python3 pulse_generator.py --duration 30
 
-# If multicast does not work, send directly to controller 1 wired
-python3 pulse_generator.py --target 192.168.12.11
+# Send directly to controller 1
+python3 pulse_generator.py --target 192.168.12.10
 
-# If the server has multiple network interfaces, force the source interface
+# Force the source interface on a multi-homed host
 python3 pulse_generator.py --interface-ip 192.168.12.123
 ```
 
@@ -65,23 +65,9 @@ python3 pulse_generator.py --interface-ip 192.168.12.123
 
 If WLED does not react:
 
-1. Confirm the WLED effect actually supports Audio Reactive.
+1. Confirm the selected effect supports AudioReactive input.
 2. Confirm Audio Sync is set to `Receive`, not `Send`.
-3. Try unicast to the controller IP using `--target 192.168.12.11`.
-4. Confirm the Linux server is on the same network as the controller.
+3. Try unicast to a single controller.
+4. Confirm the Linux host can reach the controller network.
 5. Check whether the router or access point blocks multicast.
-6. Try the wired controller IP if Wi-Fi multicast is unreliable.
-
-## Next step
-
-Once this is working, add a SIP bridge:
-
-```text
-EMF SIP account
-  -> Asterisk
-  -> Python EAGI script
-  -> WLED Audio Sync packets
-  -> Dome LEDs
-```
-
-The SIP bridge should reuse the packet sender from this pulse generator and replace the fake pulse with analysed call audio.
+6. Keep the test separate from the normal DDP controller session.
