@@ -97,7 +97,7 @@ class RuntimeCoordinator:
     def _definition(self, command: RuntimeCommand, *, inherited_output: OutputMode | None = None) -> DisplayDefinition:
         if command.effect is None:
             raise ValueError("effect is required")
-        output = command.output or inherited_output or (self.default_output if command.action == CommandAction.SET_BASELINE else None)
+        output = command.output or inherited_output or self.default_output
         if output is None:
             raise ValueError("output is required")
         parameters = validate_effect_parameters(command.effect, command.parameters)

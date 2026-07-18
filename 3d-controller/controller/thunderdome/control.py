@@ -13,12 +13,12 @@ from aiohttp import web
 
 from .animation.loop import run_frame_loop
 from .auto_scheduler import AutoScheduler, auto_duration
-from .effects.common import SpatialContext, parse_spatial_origin
+from .effects._common import SpatialContext, parse_spatial_origin
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.expanding_rings import render_expanding_rings
 from .effects.height_wave import render_height_wave
 from .effects.procedural import ProceduralRenderer, create_renderer
-from .effects.registry import BY_NAME
+from .effects._registry import BY_NAME
 from .effect_defaults import EffectDefaults
 from .frame import RGBFrame
 from .runtime import CommandAction, CommandSource, DisplayDefinition, OutputMode, RuntimeCommand, RuntimeCoordinator
@@ -240,7 +240,8 @@ class ControlAPI:
             if parsed_output in {OutputMode.DDP, OutputMode.BOTH} and not self.settings.live_available:
                 raise ValueError("live DDP output is not enabled")
             duration = payload.get("duration_seconds")
-            command = RuntimeCommand(CommandSource.BROWSER, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
+            source = CommandSource(str(payload.get("source") or CommandSource.BROWSER))
+            command = RuntimeCommand(source, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
             result = self.coordinator.execute(command)
             if result.accepted and action == CommandAction.APPLY_OVERRIDE and command.duration_seconds is not None:
                 timer = threading.Timer(command.duration_seconds, self.coordinator.expire_overrides)

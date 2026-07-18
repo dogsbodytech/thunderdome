@@ -16,11 +16,11 @@ from .effect_defaults import EffectDefaults
 from .runtime import OutputMode
 from .controllers import load_controllers
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
-from .effects.common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
+from .effects._common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
 from .effects.expanding_rings import render_expanding_rings
 from .effects.height_wave import render_height_wave
 from .effects.procedural import blend, create_renderer, render as render_procedural
-from .effects.registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
+from .effects._registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
 from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions

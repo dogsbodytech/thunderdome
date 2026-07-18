@@ -6,9 +6,9 @@ from unittest.mock import Mock, patch
 from thunderdome import cli
 from thunderdome.cli import parse_args
 from thunderdome.effect_defaults import EffectDefaults
-from thunderdome.effects.common import SpatialContext
+from thunderdome.effects._common import SpatialContext
 from thunderdome.effects.procedural import TwinkleOverlay, create_renderer, render
-from thunderdome.effects.registry import BY_NAME, DEFAULT_PLAYLIST
+from thunderdome.effects._registry import BY_NAME, DEFAULT_PLAYLIST
 from thunderdome.frame import RGBFrame
 from thunderdome.schemas import EFFECT_SCHEMAS, validate_effect_parameters
 
@@ -106,7 +106,7 @@ class TwinkleEffectTests(unittest.TestCase):
             store.save("twinkle", {"density": .12, "mode": "random"})
             renderer = Mock(render=lambda _elapsed: RGBFrame.allocate(COUNT))
             args = parse_args(["effect", "auto", "--effects", "twinkle", "--duration", ".2", "--dry-run"])
-            with patch("thunderdome.cli.PROJECT_ROOT", root), patch("thunderdome.cli.SpatialContext.load", return_value=self.ctx), patch("thunderdome.effects.registry.create_renderer", return_value=renderer) as create, patch("thunderdome.cli._send_effect_frames", return_value=0):
+            with patch("thunderdome.cli.PROJECT_ROOT", root), patch("thunderdome.cli.SpatialContext.load", return_value=self.ctx), patch("thunderdome.effects._registry.create_renderer", return_value=renderer) as create, patch("thunderdome.cli._send_effect_frames", return_value=0):
                 self.assertEqual(cli._run_auto(args), 0)
             self.assertEqual(create.call_args.kwargs["density"], .12)
             self.assertEqual(create.call_args.kwargs["mode"], "random")

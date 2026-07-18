@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome.cli import main, parse_args
-from thunderdome.effects.common import SpatialContext
+from thunderdome.effects._common import SpatialContext
 from thunderdome.frame import RGBFrame
 from thunderdome.transport.multi_ddp import SendResult
 

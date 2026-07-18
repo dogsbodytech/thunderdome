@@ -11,7 +11,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome import cli
-from thunderdome.effects.common import SpatialContext
+from thunderdome.effects._common import SpatialContext
 from thunderdome.effects.procedural import (
     build_rotating_plane_samples,
     finite_vector,

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ..frame import RGBFrame, validate_rgb
 from ..transport.ddp import scale_color
-from .common import SpatialContext, distance3, selected_xyz
+from ._common import SpatialContext, distance3, selected_xyz
 
 
 def render_expanding_rings(

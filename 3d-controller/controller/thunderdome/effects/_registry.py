@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Mapping
 
-from .common import SpatialContext
+from ._common import SpatialContext
 from .procedural import create_renderer
 
 

@@ -58,6 +58,15 @@ class RuntimeCoordinatorTests(unittest.TestCase):
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="radar", priority=1, duration=5, output=None)).accepted)
         self.assertEqual(self.coordinator.status()["effective"]["effect"], "radar")
 
+    def test_override_without_baseline_uses_configured_default_output(self):
+        self.coordinator.default_output = OutputMode.SIMULATOR
+        result = self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="aurora", duration=5, output=None))
+        self.assertTrue(result.accepted)
+        self.assertEqual(self.coordinator.status()["override"]["output"], "simulator")
+        self.clock[0] += 6
+        self.coordinator.expire_overrides()
+        self.assertIsNone(self.coordinator.status()["effective"])
+
     def test_baseline_uses_configured_default_without_restarting_on_invalid_replacement(self):
         self.coordinator.default_output = OutputMode.SIMULATOR
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE, output=None)).accepted)

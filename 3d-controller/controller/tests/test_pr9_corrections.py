@@ -10,7 +10,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome import cli
-from thunderdome.effects.registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
+from thunderdome.effects._registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
 from thunderdome.frame import RGBFrame
 
 ROOT = Path(__file__).resolve().parents[2]

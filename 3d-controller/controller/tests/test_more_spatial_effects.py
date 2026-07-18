@@ -10,12 +10,12 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome.cli import main, parse_args
-from thunderdome.effects.common import SpatialContext
+from thunderdome.effects._common import SpatialContext
 from thunderdome.effects.procedural import (
     ParticleSystem, angular_delta, blend, finite_vector, palette_color, render,
     render_fire, render_fireflies, signed_plane_distance,
 )
-from thunderdome.effects.registry import BY_NAME, REGISTRY
+from thunderdome.effects._registry import BY_NAME, REGISTRY
 from thunderdome.frame import RGBFrame
 from thunderdome.transport.multi_ddp import SendResult
 

@@ -34,6 +34,8 @@ Brightness defaults to **255** in schemas and control requests.
 
 ## APIs
 
+Full endpoint reference with request/response bodies and examples: [api-rest.md](api-rest.md).
+
 - `GET /api/control/capabilities`
 - `GET /api/effects`
 - `GET /api/effects/{name}`
