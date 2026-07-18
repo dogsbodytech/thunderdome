@@ -67,6 +67,38 @@ class RuntimeCoordinatorTests(unittest.TestCase):
         self.assertEqual(len(self.runtime.started), starts)
         self.assertEqual(self.coordinator.status()["effective"]["effect"], "fire")
 
+    def test_completed_baseline_clears_only_its_own_request(self):
+        self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
+        request_id = self.coordinator.status()["baseline"]["request_id"]
+        self.assertTrue(self.coordinator.complete_baseline(request_id))
+        self.assertEqual(self.coordinator.status()["service_state"], "idle")
+        self.assertIsNone(self.coordinator.status()["baseline"])
+        self.assertIsNone(self.coordinator.status()["effective"])
+
+    def test_old_completed_baseline_cannot_clear_replacement(self):
+        self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
+        old_id = self.coordinator.status()["baseline"]["request_id"]
+        self.coordinator.execute(RuntimeCommand(CommandSource.BROWSER, CommandAction.SET_BASELINE, "new", "aurora", {"brightness": 255}, OutputMode.SIMULATOR))
+        self.assertFalse(self.coordinator.complete_baseline(old_id))
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "aurora")
+
+    def test_continuous_baseline_remains_effective_without_completion(self):
+        self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
+        status = self.coordinator.status()
+        self.assertEqual(status["service_state"], "running")
+        self.assertEqual(status["baseline"]["effect"], "fire")
+        self.assertEqual(status["effective"]["effect"], "fire")
+
+    def test_override_expiry_restores_baseline_before_baseline_completion(self):
+        self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
+        baseline_id = self.coordinator.status()["baseline"]["request_id"]
+        self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="aurora", priority=1, duration=1))
+        self.clock[0] += 2
+        self.coordinator.expire_overrides()
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "fire")
+        self.assertTrue(self.coordinator.complete_baseline(baseline_id))
+        self.assertEqual(self.coordinator.status()["service_state"], "idle")
+
 
 if __name__ == "__main__":
     unittest.main()

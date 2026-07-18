@@ -48,6 +48,7 @@ class FrameRuntime:
         self.frames = 0
         self.active_since: float | None = None
         self.error: str | None = None
+        self.on_baseline_complete: Callable[[str], bool] | None = None
 
     def _sink(self, output: OutputMode) -> FrameSink:
         if output == OutputMode.NULL:
@@ -86,7 +87,9 @@ class FrameRuntime:
                         raise OSError(f"{result.name}: {result.error or 'delivery failed'}")
                     with self._lock:
                         self.frames += 1
-                run_frame_loop(producer, send, fps=fps, duration=duration, cancel_event=cancel)
+                stats = run_frame_loop(producer, send, fps=fps, duration=duration, cancel_event=cancel)
+                if display.expires_at is not None and not stats.interrupted and self.on_baseline_complete is not None:
+                    self.on_baseline_complete(display.request_id)
         except (OSError, ValueError) as exc:
             with self._lock:
                 self.error = str(exc)
@@ -145,6 +148,7 @@ class ControlAPI:
         self.settings = settings
         self.runtime = runtime or FrameRuntime(settings)
         self.coordinator = RuntimeCoordinator(self.runtime, default_output=settings.default_output)
+        self.runtime.on_baseline_complete = self.coordinator.complete_baseline
         self._timers: list[threading.Timer] = []
         self._shutdown = False
 
