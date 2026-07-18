@@ -78,7 +78,7 @@ class PR9CorrectionTests(unittest.TestCase):
 
     def test_registry_contains_unique_default_playlist_and_valid_presets(self):
         self.assertEqual(set(DEFAULT_PLAYLIST), set(BY_NAME))
-        self.assertEqual(len(DEFAULT_PLAYLIST), 9)
+        self.assertEqual(len(DEFAULT_PLAYLIST), 21)
         self.assertEqual(len(DEFAULT_PLAYLIST), len(set(DEFAULT_PLAYLIST)))
         for preset in PRESETS.values():
             self.assertTrue(preset)

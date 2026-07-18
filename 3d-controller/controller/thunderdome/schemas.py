@@ -6,6 +6,7 @@ import math
 import re
 from typing import Any, Mapping
 
+from .effects.Procedural import SPACE_BODIES
 from .effects.Registry import BY_NAME, DEFAULT_PLAYLIST, LEGACY_NAMES
 
 
@@ -96,6 +97,12 @@ EFFECT_SCHEMAS: dict[str, EffectSchema] = {
     "Auto": _schema("Auto", "Auto showcase", "Cycle existing effects with crossfades.",
         _parameter("effects", "effect-list", list(DEFAULT_PLAYLIST), "Ordered auto playlist", required=True), _parameter("interval", "float", 30.0, "Effect interval", minimum=.001, step=.1, units="seconds"), _parameter("transition", "float", 2.0, "Crossfade duration", minimum=0, step=.1, units="seconds"), _parameter("cycles", "integer", None, "Completed playlist cycles", minimum=1, step=1), _parameter("shuffle", "boolean", False, "Shuffle playlist"), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
 }
+
+# Solar-system bodies: one colour-wash renderer each, tunable only by speed/seed.
+for _name, _space_body in SPACE_BODIES.items():
+    EFFECT_SCHEMAS[_name] = _schema(_name, _space_body.label, BY_NAME[_name].description,
+        _parameter("speed", "float", _space_body.speed, "Animation speed", minimum=.001, step=.01),
+        _parameter("seed", "integer", 1, "Deterministic seed", step=1))
 
 
 def validate_effect_parameters(effect: str, values: Mapping[str, Any] | None = None) -> dict[str, object]:

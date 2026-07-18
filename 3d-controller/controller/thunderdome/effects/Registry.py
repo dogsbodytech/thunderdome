@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Callable, Mapping
 
 from .Common import SpatialContext
-from .Procedural import create_renderer
+from .Procedural import SPACE_BODIES, create_renderer
 
 
 @dataclass(frozen=True)
@@ -34,6 +34,7 @@ REGISTRY = (
     EffectRegistration("Aurora", "flowing multi-frequency luminous bands", {"speed": 0.25, "scale": 1.2, "band_width": 0.45, "intensity": 1.0, "palette": "mixed", "direction": "1,0,0"}, "procedural"),
     EffectRegistration("Fireflies", "deterministic moving 3D glow particles", {"count": 25, "speed": 0.35, "glow_radius_mm": 300, "lifetime_seconds": 8, "color": "FFFFB0", "color_variation": 0.25}, "procedural"),
     EffectRegistration("Twinkle", "stateful per-LED fade-in hold fade-out sparkles", {"density": 0.08, "spawn_rate": 12.0, "fade_in": 0.25, "hold": 0.25, "fade_out": 0.7, "minimum_brightness": 0.05, "maximum_brightness": 1.0, "color": "FFFFFF", "mode": "fixed", "background": "000000", "color_change_speed": 0.0}, "procedural"),
+    *(EffectRegistration(name, space_body.description, {"speed": space_body.speed}, "procedural") for name, space_body in SPACE_BODIES.items()),
 )
 
 BY_NAME = {registration.name: registration for registration in REGISTRY}
@@ -42,6 +43,7 @@ DEFAULT_PLAYLIST = tuple(registration.name for registration in REGISTRY if regis
 PRESETS = {
     "calm": ("HeightWave", "Aurora", "Fireflies", "ExpandingRings"),
     "energetic": ("ClockHand", "Fire", "RotatingPlane", "Radar", "Aurora", "Fireflies"),
+    "solar-system": tuple(SPACE_BODIES),
 }
 
 

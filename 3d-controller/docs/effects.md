@@ -43,6 +43,8 @@ Then run an effect directly, without preparation.
 | `radar` | Angular XYZ/XY sweep around dome centre | `--rotation-seconds`, `--beam-width-degrees`, `--trail-degrees`, `--range-m`, `--vertical-falloff`, `--color`, `--background`, `--direction`, `--loops` | One beam rotation | `thunderdome effect radar --loops 1 --brightness 24` |
 | `aurora` | Height/angle/direction waves in XYZ | `--direction X,Y,Z`, `--speed`, `--scale`, `--band-width`, `--intensity`, `--palette`, `--seed` | 10 seconds | `thunderdome effect aurora --duration 20 --brightness 24` |
 | `fireflies` | Deterministic moving 3D particles and distance falloff | `--count`, `--speed`, `--glow-radius-mm`, `--lifetime-seconds`, `--color`, `--color-variation`, `--seed` | 8 seconds | `thunderdome effect fireflies --count 30 --duration 12` |
+| `twinkle` | Stateful per-LED fade-in/hold/fade-out sparkles | `--density`, `--spawn-rate`, `--fade-in`, `--hold-time`, `--fade-out`, `--minimum-brightness`, `--maximum-brightness`, `--color`, `--mode`, `--background`, `--color-change-speed`, `--seed` | 10 seconds | `thunderdome effect twinkle --duration 15 --brightness 24` |
+| solar-system bodies | XYZ colour wash; palette and style fixed per body | `--speed`, `--seed` | 12 seconds | `thunderdome effect Sol --brightness 24` |
 | `auto` | Registry playlist of production effects | `--playlist`/`--effects`, `--preset`, `--interval`, `--crossfade`/`--transition`, `--cycles`, `--duration`, `--shuffle`, `--seed` | Continuous until Ctrl+C | `thunderdome effect auto --preset calm` |
 
 ## Shared controls
@@ -51,7 +53,7 @@ All effects produce exactly 5,000 RGB pixels / 15,000 bytes. Tails are included 
 
 Common individual-effect runtime controls are `--output simulator|ddp|both|null`, `--simulator-url`, `--controllers`, `--positions`, `--geometry`, `--brightness`, `--fps`, `--duration`, `--hold`, `--exclude-tail`, and `--dry-run`. Controller configuration is loaded only for `ddp` and `both`; simulator and null output do not inspect it. Only effects with meaningful cycles expose cycle options: `clock-hand --rotations`; `expanding-rings --loops`; `height-wave --loops`; `rotating-plane --loops`; `radar --loops`.
 
-`fire`, `aurora`, and `fireflies` use `--duration` or `--hold`; they do not expose `--loops` because their procedural motion does not naturally return to a guaranteed starting visual state.
+`fire`, `aurora`, `fireflies`, `twinkle`, and the solar-system bodies use `--duration` or `--hold`; they do not expose `--loops` because their procedural motion does not naturally return to a guaranteed starting visual state.
 
 `--fps` controls frame rate, 1..60, default 30. Ctrl+C cleanly stops held or continuous streams, closes DDP sessions, and reports frame statistics. Start at safe low Python brightness such as `--brightness 24`.
 
@@ -96,6 +98,32 @@ Common individual-effect runtime controls are `--output simulator|ddp|both|null`
 
 `fireflies` uses a deterministic reusable particle system. Particles have stable seeded position/velocity/lifecycle templates retained for the whole effect run; each frame computes moving 3D particle positions and lights nearby LEDs by true 3D distance.
 
+## Solar system bodies
+
+Twelve ambient effects, one per body, so someone standing in the dome and looking around sees the colours of that object. Each is the same colour-wash renderer with a fixed palette and rendering style; only `--speed` (animation rate) and `--seed` are tunable. All are auto-capable; the `solar-system` auto preset tours them in order.
+
+| Effect | Style | Colours the viewer sees |
+| --- | --- | --- |
+| `AsteroidBelt` | belt | sparse drifting grey/brown rocks on black |
+| `Jupiter` | bands | cream, tan, rust and orange horizontal bands |
+| `Saturn` | bands | soft pale-gold and butterscotch bands |
+| `Uranus` | soft | featureless pale cyan |
+| `Neptune` | soft | deep vivid blue with lighter azure streaks |
+| `KuiperBelt` | belt | cold, sparse icy blue-white debris on black |
+| `Voyager1` | belt | near-black with a lonely faint gold glint |
+| `Sol` | sun | full roiling yellow, orange-to-white shimmer |
+| `Mercury` | mottled | scorched grey rock with faint warm patches |
+| `Venus` | soft | thick creamy pale-yellow cloud |
+| `Earth` | mottled | blue oceans, green land, white cloud |
+| `Mars` | mottled | rusty red dust, all reds and orange |
+
+Styles: `bands` maps the palette repeatedly up the dome's Z height with slow drift; `mottled` mixes palette colours by 3D noise blobs; `soft` is a near-uniform wash with gentle cloud movement; `sun` is a bright turbulent warm field; `belt` lights only a sparse, drifting fraction of LEDs and leaves the rest dark.
+
+```bash
+thunderdome effect Mars --brightness 24 --duration 20
+thunderdome effect auto --preset solar-system --interval 20 --brightness 24
+```
+
 ## Auto showcase
 
 `thunderdome effect auto` cycles through the registry playlist with optional linear RGB crossfade. Crossfade blends full-brightness source frames first and applies global `--brightness` exactly once to the blended frame.
@@ -118,6 +146,7 @@ Presets:
 
 - `--preset calm`: `height-wave, aurora, fireflies, expanding-rings`
 - `--preset energetic`: `clock-hand, fire, rotating-plane, radar, aurora, fireflies`
+- `--preset solar-system`: `AsteroidBelt, Jupiter, Saturn, Uranus, Neptune, KuiperBelt, Voyager1, Sol, Mercury, Venus, Earth, Mars`
 
 Use `--playlist` or `--effects` for a comma-separated explicit playlist. Supplied order is preserved. Empty playlists, unknown names, duplicates, and non-auto-capable entries are rejected. `--shuffle --seed N` shuffles once at startup; the same seed produces the same playlist order.
 
