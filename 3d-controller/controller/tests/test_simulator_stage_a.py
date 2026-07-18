@@ -6,6 +6,7 @@ import socket
 import sys
 import threading
 import time
+import tempfile
 import unittest
 import urllib.error
 import urllib.request
@@ -15,7 +16,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome import cli
-from thunderdome.config import GEOMETRY_PATH, LED_POSITIONS_PATH, PROJECT_ROOT
+from thunderdome.config import GEOMETRY_PATH, LED_POSITIONS_PATH, PROJECT_ROOT, REFERENCE_ROUTE_PATH
 from thunderdome.simulator import (
     SimulatorDataError,
     build_simulator_payload,
@@ -29,7 +30,7 @@ from thunderdome.simulator import (
 class SimulatorDataTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.payload = build_simulator_payload(GEOMETRY_PATH, LED_POSITIONS_PATH)
+        cls.payload = build_simulator_payload(GEOMETRY_PATH, REFERENCE_ROUTE_PATH, LED_POSITIONS_PATH)
 
     def test_metadata_reports_authoritative_counts_and_paths_without_ips(self):
         metadata = self.payload["metadata"]
@@ -38,6 +39,9 @@ class SimulatorDataTests(unittest.TestCase):
         self.assertEqual(metadata["total_led_count"], 5000)
         self.assertEqual(metadata["controller_count"], 5)
         self.assertEqual(metadata["string_count"], 5)
+        self.assertEqual(metadata["route_count"], 5)
+        self.assertEqual(metadata["routes_source"], str(REFERENCE_ROUTE_PATH))
+        self.assertEqual(metadata["routes_source_filename"], REFERENCE_ROUTE_PATH.name)
         self.assertEqual(metadata["hub_count"], 61)
         self.assertEqual(metadata["spar_count"], 165)
         self.assertGreater(metadata["tail_count"], 0)
@@ -81,12 +85,54 @@ class SimulatorDataTests(unittest.TestCase):
         payload = json.loads(json.dumps(self.payload))
         payload["leds"][42]["global_index"] = 99
         with self.assertRaises(SimulatorDataError):
-            validate_simulator_data(payload, GEOMETRY_PATH, LED_POSITIONS_PATH)
+            validate_simulator_data(payload, GEOMETRY_PATH, REFERENCE_ROUTE_PATH, LED_POSITIONS_PATH)
 
     def test_path_resolution_defaults_are_project_root_and_explicit_relatives_are_cwd_relative(self):
         self.assertEqual(resolve_user_path(None, GEOMETRY_PATH), GEOMETRY_PATH)
+        self.assertEqual(resolve_user_path(None, REFERENCE_ROUTE_PATH), REFERENCE_ROUTE_PATH)
         relative = resolve_user_path("somewhere/file.json", GEOMETRY_PATH)
         self.assertEqual(relative, Path("somewhere/file.json"))
+
+    def test_explicit_json_routes_are_loaded_with_geometry_and_positions(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            geometry_path = Path(temp_dir) / "custom_geometry.json"
+            route_path = Path(temp_dir) / "custom_routes.json"
+            positions_path = Path(temp_dir) / "custom_positions.json"
+            geometry_path.write_text(GEOMETRY_PATH.read_text(), encoding="utf-8")
+            route_path.write_text((PROJECT_ROOT / "geometry" / "routes" / "string_routes.json").read_text(), encoding="utf-8")
+            positions_path.write_text(LED_POSITIONS_PATH.read_text(), encoding="utf-8")
+            payload = build_simulator_payload(geometry_path, route_path, positions_path)
+        self.assertEqual(payload["metadata"]["routes_source"], str(route_path))
+        self.assertEqual(payload["metadata"]["route_count"], 5)
+
+    def test_bad_route_hub_and_spar_references_are_rejected_with_route_path(self):
+        route_doc = json.loads((PROJECT_ROOT / "geometry" / "routes" / "string_routes.json").read_text())
+        with tempfile.TemporaryDirectory() as temp_dir:
+            route_path = Path(temp_dir) / "custom_routes.json"
+            route_doc["routes"][0]["segments"][0]["from_hub"] = "H999"
+            route_path.write_text(json.dumps(route_doc), encoding="utf-8")
+            with self.assertRaisesRegex(SimulatorDataError, rf"{route_path}.*unknown hub.*H999"):
+                build_simulator_payload(GEOMETRY_PATH, route_path, LED_POSITIONS_PATH)
+            route_doc["routes"][0]["segments"][0]["from_hub"] = "H032"
+            route_doc["routes"][0]["segments"][0]["spar_id"] = "S999"
+            route_path.write_text(json.dumps(route_doc), encoding="utf-8")
+            with self.assertRaisesRegex(SimulatorDataError, rf"{route_path}.*unknown spar.*S999"):
+                build_simulator_payload(GEOMETRY_PATH, route_path, LED_POSITIONS_PATH)
+
+    def test_malformed_routes_and_positions_route_mismatch_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            route_path = Path(temp_dir) / "custom_routes.json"
+            route_path.write_text("{not json", encoding="utf-8")
+            with self.assertRaisesRegex(SimulatorDataError, rf"{route_path}.*malformed routes JSON"):
+                build_simulator_payload(GEOMETRY_PATH, route_path, LED_POSITIONS_PATH)
+
+            route_path.write_text((PROJECT_ROOT / "geometry" / "routes" / "string_routes.json").read_text(), encoding="utf-8")
+            positions_path = Path(temp_dir) / "custom_positions.json"
+            positions = json.loads(LED_POSITIONS_PATH.read_text())
+            positions["leds"][0]["from_hub"] = "H033"
+            positions_path.write_text(json.dumps(positions), encoding="utf-8")
+            with self.assertRaisesRegex(SimulatorDataError, rf"{positions_path}.*conflicts with {route_path}"):
+                build_simulator_payload(GEOMETRY_PATH, route_path, positions_path)
 
 
 class SimulatorStaticAssetTests(unittest.TestCase):
@@ -128,6 +174,17 @@ class SimulatorStaticAssetTests(unittest.TestCase):
         self.assertIn("set(0, 0, 1)", js)
         self.assertIn("raycaster.params.Points.threshold", js)
 
+    def test_frontend_builds_cached_canvas_hub_id_labels_and_toggles_them(self):
+        js = (simulator_static_dir() / "simulator.js").read_text(encoding="utf-8")
+        self.assertIn("function createTextSprite", js)
+        self.assertIn("new THREE.CanvasTexture", js)
+        self.assertIn("createHubLabel(hub)", js)
+        self.assertIn("hub.id === 'H061'", js)
+        self.assertIn("labels.visible = false", js)
+        self.assertIn("setHubLabelsVisible", js)
+        self.assertIn("setHubLabelsVisible(document.getElementById('show-labels').checked)", js)
+        self.assertNotRegex(js, r"https?://|fonts\.googleapis")
+
     def test_frontend_exports_testable_helpers(self):
         js = (simulator_static_dir() / "simulator.js").read_text(encoding="utf-8")
         self.assertIn("export function stringColor", js)
@@ -154,10 +211,13 @@ class SimulatorCliTests(unittest.TestCase):
         self.assertEqual(args.host, "127.0.0.1")
         self.assertEqual(args.port, 8080)
         self.assertFalse(args.open_browser)
+        self.assertIsNone(args.routes)
         args = cli.parse_args(["simulator", "serve", "--host", "0.0.0.0", "--port", "18080", "--open-browser"])
         self.assertEqual(args.host, "0.0.0.0")
         self.assertEqual(args.port, 18080)
         self.assertTrue(args.open_browser)
+        args = cli.parse_args(["simulator", "serve", "--routes", "custom_routes.json"])
+        self.assertEqual(args.routes, "custom_routes.json")
 
     def test_invalid_paths_do_not_start_server(self):
         with patch("thunderdome.cli.serve_simulator") as serve:
@@ -165,11 +225,17 @@ class SimulatorCliTests(unittest.TestCase):
         self.assertEqual(result, 1)
         serve.assert_not_called()
 
+    def test_missing_routes_path_does_not_start_server(self):
+        with patch("thunderdome.cli.serve_simulator") as serve:
+            result = cli.main(["simulator", "serve", "--routes", "missing-routes.json", "--no-open-browser"])
+        self.assertEqual(result, 1)
+        serve.assert_not_called()
+
 
 class SimulatorHttpTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = create_http_server("127.0.0.1", 0, GEOMETRY_PATH, LED_POSITIONS_PATH)
+        cls.server = create_http_server("127.0.0.1", 0, GEOMETRY_PATH, REFERENCE_ROUTE_PATH, LED_POSITIONS_PATH)
         cls.port = cls.server.server_address[1]
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -195,7 +261,10 @@ class SimulatorHttpTests(unittest.TestCase):
 
         content_type, body = self.fetch("/api/simulator/metadata")
         self.assertIn("application/json", content_type)
-        self.assertEqual(json.loads(body)["total_led_count"], 5000)
+        metadata = json.loads(body)
+        self.assertEqual(metadata["total_led_count"], 5000)
+        self.assertEqual(metadata["route_count"], 5)
+        self.assertEqual(metadata["routes_source_filename"], REFERENCE_ROUTE_PATH.name)
         content_type, body = self.fetch("/api/simulator/geometry")
         self.assertIn("application/json", content_type)
         self.assertEqual(len(json.loads(body)["hubs"]), 61)

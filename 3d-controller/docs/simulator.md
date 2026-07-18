@@ -9,11 +9,12 @@ Included in Stage A:
 - local HTTP server: `thunderdome simulator serve`;
 - browser viewer served from local repository files;
 - all 61 hubs, 165 spars, and all 5,000 generated LED XYZ records;
-- H061 apex marker;
+- H061 apex marker and distinct H061 hub-ID label styling;
 - tail visibility and highlighting;
 - five diagnostic string/controller colours;
 - LED and hub inspection;
 - camera presets, orbit/pan/zoom, reset, perspective/orthographic switch;
+- optional canvas-texture labels that display every real hub ID;
 - metadata, geometry, and LED JSON APIs.
 
 Not included in Stage A:
@@ -54,6 +55,7 @@ Defaults:
 - `--host 127.0.0.1`
 - `--port 8080`
 - project-root-safe `geometry/thunderdome_geometry.json`
+- project-root-safe `geometry/reference_string_route.md`
 - project-root-safe `geometry/generated/led_positions_3d.json`
 - browser is not opened automatically
 
@@ -63,6 +65,15 @@ The command prints:
 Simulator mode: static viewer
 No HTTP requests will be sent to WLED controllers.
 No UDP/DDP packets will be sent.
+
+Geometry:
+  /resolved/path/to/thunderdome_geometry.json
+
+Routes:
+  /resolved/path/to/reference_string_route.md
+
+Positions:
+  /resolved/path/to/led_positions_3d.json
 
 Simulator available at:
 http://127.0.0.1:8080/
@@ -75,11 +86,12 @@ thunderdome simulator serve \
   --host 127.0.0.1 \
   --port 18080 \
   --geometry geometry/thunderdome_geometry.json \
+  --routes geometry/reference_string_route.md \
   --positions geometry/generated/led_positions_3d.json \
   --open-browser
 ```
 
-Use `--no-open-browser` to force no browser launch. `--open-browser` uses Python's standard `webbrowser` module; failure to open a browser does not invalidate the server.
+`--routes FILE` defines string traversal and spar association. Geometry, routes, and positions must describe the same dome. The built-in route document is `geometry/reference_string_route.md`; an explicit generated route document such as `geometry/routes/string_routes.json` is also supported. Use `--no-open-browser` to force no browser launch. `--open-browser` uses Python's standard `webbrowser` module; failure to open a browser does not invalidate the server.
 
 ## Binding and security
 
@@ -100,7 +112,8 @@ Returns:
 - simulator schema version;
 - simulator mode;
 - Three.js version;
-- geometry and positions source filenames;
+- geometry, routes, and positions source filenames/paths;
+- route count and string count;
 - total LED count;
 - tail count;
 - controller/string count;
@@ -135,7 +148,7 @@ Controller IP addresses are not exposed because Stage A does not require live co
 
 ## Geometry and validation
 
-The simulator loads authoritative project data through Python:
+The simulator loads a compatible geometry/routes/positions set through Python. Built-in defaults are:
 
 - `geometry/thunderdome_geometry.json`
 - `geometry/reference_string_route.md`
@@ -152,6 +165,9 @@ Before serving, it validates:
 - local indexes remain `0..999` within each controller;
 - tail metadata is present for generated tail records;
 - spar endpoints reference known hubs.
+- every route hub and declared spar exists in the selected geometry;
+- every declared spar connects its selected route endpoints;
+- generated spar LED metadata belongs to the selected route.
 
 If generated positions are missing or invalid, regenerate them with:
 
@@ -160,7 +176,7 @@ thunderdome positions generate
 thunderdome positions validate
 ```
 
-Default paths are anchored to the installed project root. Explicit relative paths remain relative to the user's current working directory.
+Default paths are anchored to the installed project root. Explicit relative `--geometry`, `--routes`, and `--positions` paths remain relative to the user's current working directory. Invalid or incompatible files report their resolved paths and prevent server startup; the simulator never silently substitutes the built-in routes file for an explicit selection.
 
 ## Viewer controls
 
@@ -204,7 +220,23 @@ LED lookup accepts global indexes `0..4999`. Selecting or locating an LED displa
 - tail status;
 - available route/spar or tail metadata.
 
-Hub inspection displays hub ID and coordinates. H061 is visually distinct.
+Hub inspection displays hub ID and coordinates. Hub labels are hidden by default; enabling **Hub labels** creates no per-frame DOM nodes and displays reusable local canvas-texture sprites that always face the camera. Each sprite shows the real hub ID, and H061 is larger with a gold apex treatment. Label sprites are excluded from picking, so LED and hub selection remains on the underlying point objects.
+
+## Manual browser validation
+
+Run the local viewer from an activated environment:
+
+```bash
+cd /approved-repos/thunderdome/3d-controller
+source .venv/bin/activate
+
+thunderdome simulator serve \
+  --host 127.0.0.1 \
+  --port 8080 \
+  --open-browser
+```
+
+Verify that hub labels show actual IDs, H061 is labelled at the apex, labels remain readable while orbiting and hide immediately, LEDs and hubs remain selectable, camera presets work, tails remain visible, and all five string colours are distinct.
 
 ## Limitations
 

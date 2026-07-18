@@ -121,7 +121,7 @@ def _normalize_leds(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return leds
 
 
-def validate_simulator_data(payload: dict[str, Any], geometry_path: str | Path, positions_path: str | Path) -> None:
+def validate_simulator_data(payload: dict[str, Any], geometry_path: str | Path, routes_path: str | Path, positions_path: str | Path) -> None:
     leds = payload.get("leds")
     if not isinstance(leds, list) or len(leds) != 5000:
         raise SimulatorDataError(f"{positions_path}: expected exactly 5,000 LEDs; run `thunderdome positions generate`")
@@ -148,18 +148,35 @@ def validate_simulator_data(payload: dict[str, Any], geometry_path: str | Path, 
             raise SimulatorDataError(f"{geometry_path}: spar {spar.get('id')} has invalid endpoints")
 
 
-def build_simulator_payload(geometry_path: str | Path, positions_path: str | Path) -> dict[str, Any]:
+def _validate_position_route_metadata(led_rows: list[dict[str, Any]], routes: list[Any], routes_path: Path, positions_path: Path) -> None:
+    route_by_string = {route.string_id: route for route in routes}
+    for row in led_rows:
+        if row.get("location_type") != "spar":
+            continue
+        route = route_by_string.get(row.get("string_id"))
+        if route is None:
+            raise SimulatorDataError(f"{positions_path}: LED {row.get('global_index')} references unknown string route in {routes_path}")
+        segment = next((item for item in route.segments if item.spar_id == row.get("spar_id")), None)
+        if segment is None:
+            raise SimulatorDataError(f"{positions_path}: LED {row.get('global_index')} references spar {row.get('spar_id')} absent from {routes_path}")
+        if row.get("from_hub") != segment.from_hub or row.get("to_hub") != segment.to_hub:
+            raise SimulatorDataError(f"{positions_path}: LED {row.get('global_index')} route metadata conflicts with {routes_path} spar {segment.spar_id}")
+
+
+def build_simulator_payload(geometry_path: str | Path, routes_path: str | Path, positions_path: str | Path) -> dict[str, Any]:
     geometry_path = Path(geometry_path)
+    routes_path = Path(routes_path)
     positions_path = Path(positions_path)
     try:
         geometry = load_geometry(geometry_path)
-        routes = load_routes(REFERENCE_ROUTE_PATH, geometry)
+        routes = load_routes(routes_path, geometry)
         led_rows = load_led_positions(positions_path, geometry, routes)
     except Exception as exc:
         raise SimulatorDataError(
-            f"cannot load simulator data from geometry={geometry_path} positions={positions_path}: {exc}; "
+            f"cannot load simulator data from geometry={geometry_path} routes={routes_path} positions={positions_path}: {exc}; "
             "run `thunderdome positions generate` if generated positions are missing"
         ) from exc
+    _validate_position_route_metadata(led_rows, routes, routes_path, positions_path)
     normalized_geometry = _normalize_geometry(geometry)
     leds = _normalize_leds(led_rows)
     points = [tuple(led["xyz"]) for led in leds]
@@ -169,9 +186,12 @@ def build_simulator_payload(geometry_path: str | Path, positions_path: str | Pat
         "simulator_mode": "static viewer",
         "three_version": THREE_VERSION,
         "geometry_source": str(geometry_path),
+        "routes_source": str(routes_path),
         "positions_source": str(positions_path),
         "geometry_source_filename": geometry_path.name,
+        "routes_source_filename": routes_path.name,
         "positions_source_filename": positions_path.name,
+        "route_count": len(routes),
         "total_led_count": len(leds),
         "tail_count": tail_count,
         "controller_count": len({led["controller_number"] for led in leds}),
@@ -186,7 +206,7 @@ def build_simulator_payload(geometry_path: str | Path, positions_path: str | Pat
         ],
     }
     payload = {"metadata": metadata, "geometry": normalized_geometry, "leds": leds}
-    validate_simulator_data(payload, geometry_path, positions_path)
+    validate_simulator_data(payload, geometry_path, routes_path, positions_path)
     return payload
 
 
@@ -260,8 +280,8 @@ class SimulatorHTTPServer(ThreadingHTTPServer):
         self.static_dir = static_dir
 
 
-def create_http_server(host: str, port: int, geometry_path: str | Path, positions_path: str | Path) -> SimulatorHTTPServer:
-    payload = build_simulator_payload(geometry_path, positions_path)
+def create_http_server(host: str, port: int, geometry_path: str | Path, routes_path: str | Path, positions_path: str | Path) -> SimulatorHTTPServer:
+    payload = build_simulator_payload(geometry_path, routes_path, positions_path)
     return SimulatorHTTPServer((host, port), payload, simulator_static_dir())
 
 
@@ -289,15 +309,22 @@ def serve_simulator(
     host: str = "127.0.0.1",
     port: int = 8080,
     geometry_path: str | Path = GEOMETRY_PATH,
+    routes_path: str | Path = REFERENCE_ROUTE_PATH,
     positions_path: str | Path = LED_POSITIONS_PATH,
     open_browser: bool = False,
 ) -> int:
-    server = create_http_server(host, port, geometry_path, positions_path)
+    server = create_http_server(host, port, geometry_path, routes_path, positions_path)
     actual_port = server.server_address[1]
     urls = _local_urls(host, actual_port)
     print("Simulator mode: static viewer")
     print("No HTTP requests will be sent to WLED controllers.")
     print("No UDP/DDP packets will be sent.")
+    print("\nGeometry:")
+    print(f"  {Path(geometry_path).resolve()}")
+    print("\nRoutes:")
+    print(f"  {Path(routes_path).resolve()}")
+    print("\nPositions:")
+    print(f"  {Path(positions_path).resolve()}")
     print("\nSimulator available at:")
     for url in urls:
         print(url)

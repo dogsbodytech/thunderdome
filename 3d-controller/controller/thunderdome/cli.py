@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
-from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT
+from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, REFERENCE_ROUTE_PATH
 from .controllers import load_controllers
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
@@ -195,8 +195,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     serve = simulator_sub.add_parser("serve", help="serve the static offline dome simulator")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8080)
-    serve.add_argument("--geometry", default=None)
-    serve.add_argument("--positions", default=None)
+    serve.add_argument("--geometry", default=None, help="geometry file; built-in default is the standard project geometry")
+    serve.add_argument("--routes", default=None, help="route file defining LED traversal and spar association; geometry, routes, and positions must describe the same dome")
+    serve.add_argument("--positions", default=None, help="generated LED positions file; built-in default is the standard project positions")
     browser = serve.add_mutually_exclusive_group()
     browser.add_argument("--open-browser", dest="open_browser", action="store_true")
     browser.add_argument("--no-open-browser", dest="open_browser", action="store_false")
@@ -788,12 +789,15 @@ def _main(args: argparse.Namespace) -> int:
 
     if args.area == "simulator":
         geometry_path = resolve_user_path(args.geometry, GEOMETRY_PATH)
+        routes_path = resolve_user_path(args.routes, REFERENCE_ROUTE_PATH)
         positions_path = resolve_user_path(args.positions, LED_POSITIONS_PATH)
         if not geometry_path.is_file():
             raise SimulatorDataError(f"geometry file not found: {geometry_path}")
+        if not routes_path.is_file():
+            raise SimulatorDataError(f"routes file not found: {routes_path}")
         if not positions_path.is_file():
             raise SimulatorDataError(f"positions file not found: {positions_path}; run `thunderdome positions generate`")
-        return serve_simulator(host=args.host, port=args.port, geometry_path=geometry_path, positions_path=positions_path, open_browser=args.open_browser)
+        return serve_simulator(host=args.host, port=args.port, geometry_path=geometry_path, routes_path=routes_path, positions_path=positions_path, open_browser=args.open_browser)
 
     if args.area == "ddp-all":
         return _run_multi_ddp(args)

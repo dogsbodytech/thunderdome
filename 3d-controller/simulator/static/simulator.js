@@ -91,6 +91,38 @@ function makeSpars(spars) {
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: 0x64748b }));
 }
+function createTextSprite(text, { apex = false } = {}) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 96;
+  const context = canvas.getContext('2d');
+  const foreground = apex ? '#fff7a3' : '#e7efff';
+  const background = apex ? 'rgba(93, 66, 0, 0.82)' : 'rgba(15, 23, 42, 0.78)';
+  context.fillStyle = background;
+  context.roundRect(4, 4, canvas.width - 8, canvas.height - 8, 18);
+  context.fill();
+  context.strokeStyle = apex ? '#facc15' : '#93c5fd';
+  context.lineWidth = 4;
+  context.roundRect(4, 4, canvas.width - 8, canvas.height - 8, 18);
+  context.stroke();
+  context.fillStyle = foreground;
+  context.font = '600 52px sans-serif';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(apex ? 0.48 : 0.38, apex ? 0.18 : 0.14, 1);
+  sprite.raycast = () => {};
+  return sprite;
+}
+function createHubLabel(hub) {
+  const sprite = createTextSprite(hub.id, { apex: hub.id === 'H061' });
+  sprite.position.set(hub.x, hub.y, hub.z + (hub.id === 'H061' ? 0.10 : 0.06));
+  sprite.userData = { kind: 'hub-label', hubId: hub.id };
+  return sprite;
+}
 function makeHubs(hubs) {
   const group = new THREE.Group();
   const positions = new Float32Array(hubs.length * 3);
@@ -99,7 +131,7 @@ function makeHubs(hubs) {
   const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); geometry.setAttribute('color', new THREE.BufferAttribute(colours, 3));
   const points = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 0.07, vertexColors: true })); points.userData.kind = 'hubs'; group.add(points);
   const labels = new THREE.Group(); labels.visible = false;
-  hubs.forEach(hub => { const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ color: hub.id === 'H061' ? 0xffff00 : 0xbfdbfe })); sprite.position.set(...hub.xyz); sprite.userData = { kind: 'hub-label', hub }; labels.add(sprite); });
+  hubs.filter(hub => typeof hub.id === 'string' && hub.id).forEach(hub => labels.add(createHubLabel(hub)));
   group.labels = labels; group.points = points; group.add(labels); return group;
 }
 function makeGround(bounds) { const span = maxSpan(bounds) * 1.2; const mesh = new THREE.Mesh(new THREE.PlaneGeometry(span, span), new THREE.MeshBasicMaterial({ color: 0x111827, side: THREE.DoubleSide })); mesh.position.z = bounds.z[0]; return mesh; }
@@ -132,7 +164,8 @@ function updateLedColours() {
   });
   attr.needsUpdate = true;
 }
-function updateToggles() { objects.leds.visible = document.getElementById('show-leds').checked; objects.spars.visible = document.getElementById('show-spars').checked; objects.hubs.visible = document.getElementById('show-hubs').checked; objects.ground.visible = document.getElementById('show-ground').checked; objects.axes.visible = document.getElementById('show-axes').checked; objects.hubs.labels.visible = document.getElementById('show-labels').checked; updateLedColours(); }
+function setHubLabelsVisible(enabled) { objects.hubs.labels.visible = enabled; }
+function updateToggles() { objects.leds.visible = document.getElementById('show-leds').checked; objects.spars.visible = document.getElementById('show-spars').checked; objects.hubs.visible = document.getElementById('show-hubs').checked; objects.ground.visible = document.getElementById('show-ground').checked; objects.axes.visible = document.getElementById('show-axes').checked; setHubLabelsVisible(document.getElementById('show-labels').checked); updateLedColours(); }
 function selectLed(index) { state.selectedLed = state.leds[index]; state.selectedHub = null; inspection.innerHTML = formatLedMetadata(state.selectedLed); updateLedColours(); }
 function selectHub(index) { const hub = state.geometry.hubs[index]; state.selectedHub = hub; state.selectedLed = null; inspection.innerHTML = `<h2>Hub ${hub.id}</h2><dl class="kv"><dt>XYZ</dt><dd>${hub.xyz.map(v=>Number(v).toFixed(3)).join(', ')}</dd><dt>Apex</dt><dd>${hub.is_apex ? 'yes' : 'no'}</dd></dl>`; }
 
