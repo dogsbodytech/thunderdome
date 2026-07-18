@@ -19,6 +19,7 @@ from .effects.expanding_rings import render_expanding_rings
 from .effects.height_wave import render_height_wave
 from .effects.procedural import create_renderer
 from .effects.registry import BY_NAME
+from .effect_defaults import EffectDefaults
 from .frame import RGBFrame
 from .runtime import CommandAction, CommandSource, DisplayDefinition, OutputMode, RuntimeCommand, RuntimeCoordinator
 from .schemas import EFFECT_SCHEMAS, validate_effect_parameters
@@ -31,6 +32,7 @@ class ControlSettings:
     controllers_path: str | None = None
     live_control_enabled: bool = False
     default_output: OutputMode = OutputMode.SIMULATOR
+    effect_defaults_path: str = str(Path(__file__).resolve().parents[2] / "config/effect-defaults.json")
 
     @property
     def live_available(self) -> bool:
@@ -114,19 +116,23 @@ class FrameRuntime:
         self.stop()
 
 
-def make_effect_producer(display: DisplayDefinition) -> tuple[Callable[[int, float], RGBFrame], int, float | None]:
+def make_effect_producer(display: DisplayDefinition, defaults: EffectDefaults | None = None) -> tuple[Callable[[int, float], RGBFrame], int, float | None]:
     values = dict(display.parameters)
     context = SpatialContext.load(values.pop("positions", None) or Path(__file__).resolve().parents[2] / "geometry/generated/led_positions_3d.json", values.pop("geometry", None) or Path(__file__).resolve().parents[2] / "geometry/thunderdome_geometry.json")
     brightness = int(values.pop("brightness", 255)); fps = int(values.pop("fps", 30)); exclude_tail = bool(values.pop("exclude_tail", False))
     if display.effect == "auto":
         scheduler = AutoScheduler(list(values["effects"]), interval=float(values["interval"]), transition=float(values["transition"]), shuffle=bool(values["shuffle"]), seed=int(values["seed"]))
         names = scheduler.names; seed = int(values["seed"])
-        renderers = {name: create_renderer(name, context, brightness=255, exclude_tail=exclude_tail, seed=seed, **{k: v for k, v in dict(display.parameters).items() if k not in {"brightness", "fps", "exclude_tail", "effects", "interval", "transition", "cycles", "shuffle", "seed"}}) for name in names if BY_NAME[name].category == "procedural"}
+        def effect_values(name: str) -> dict[str, object]:
+            resolved = defaults.resolved(name) if defaults is not None else validate_effect_parameters(name)
+            resolved.update({key: values[key] for key in ("brightness", "fps", "exclude_tail") if key in values})
+            return resolved
+        renderers = {name: create_renderer(name, context, brightness=255, exclude_tail=exclude_tail, seed=int(effect_values(name).pop("seed", 1)), **{k: v for k, v in effect_values(name).items() if k not in {"brightness", "fps", "exclude_tail", "seed"}}) for name in names if BY_NAME[name].category == "procedural"}
         def auto(_number: int, elapsed: float) -> RGBFrame:
             def renderer_for(name: str, effect_elapsed: float) -> RGBFrame:
                 if name in renderers:
                     return renderers[name].render(effect_elapsed)
-                return _spatial_frame(name, context, effect_elapsed, brightness=255, exclude_tail=exclude_tail, values=validate_effect_parameters(name))
+                return _spatial_frame(name, context, effect_elapsed, brightness=brightness, exclude_tail=exclude_tail, values=effect_values(name))
             return scheduler.frame(elapsed, renderer_for, brightness=brightness)
         return auto, fps, auto_duration(names, interval=scheduler.interval, duration=None, cycles=values["cycles"])
     if BY_NAME[display.effect].category == "procedural":
@@ -146,7 +152,10 @@ def _spatial_frame(effect: str, context: SpatialContext, elapsed: float, *, brig
 class ControlAPI:
     def __init__(self, settings: ControlSettings, runtime: FrameRuntime | None = None) -> None:
         self.settings = settings
+        self.defaults = EffectDefaults(settings.effect_defaults_path)
         self.runtime = runtime or FrameRuntime(settings)
+        if runtime is None:
+            self.runtime.producer_factory = lambda display: make_effect_producer(display, self.defaults)
         self.coordinator = RuntimeCoordinator(self.runtime, default_output=settings.default_output)
         self.runtime.on_baseline_complete = self.coordinator.complete_baseline
         self._timers: list[threading.Timer] = []
@@ -156,6 +165,10 @@ class ControlAPI:
         app.router.add_get("/api/control/capabilities", self.capabilities)
         app.router.add_get("/api/effects", self.effects)
         app.router.add_get("/api/effects/{name}", self.effect)
+        app.router.add_get("/api/effect-defaults", self.effect_defaults)
+        app.router.add_get("/api/effect-defaults/{effect}", self.effect_defaults)
+        app.router.add_put("/api/effect-defaults/{effect}", self.effect_defaults)
+        app.router.add_delete("/api/effect-defaults/{effect}", self.effect_defaults)
         app.router.add_get("/api/runtime/status", self.status)
         app.router.add_post("/api/runtime/baseline", self.command)
         app.router.add_post("/api/runtime/override", self.command)
@@ -170,13 +183,31 @@ class ControlAPI:
         return web.json_response(self.capabilities_payload())
 
     async def effects(self, request: web.Request) -> web.Response:
-        return web.json_response({"effects": [schema.as_dict() for schema in EFFECT_SCHEMAS.values()]})
+        effects = []
+        for schema in EFFECT_SCHEMAS.values():
+            payload = schema.as_dict()
+            if schema.name != "auto": payload["resolved_defaults"] = self.defaults.resolved(schema.name)
+            effects.append(payload)
+        return web.json_response({"effects": effects})
 
     async def effect(self, request: web.Request) -> web.Response:
         schema = EFFECT_SCHEMAS.get(request.match_info["name"])
         if schema is None:
             return web.json_response({"error": "unknown effect"}, status=404)
         return web.json_response(schema.as_dict())
+
+    async def effect_defaults(self, request: web.Request) -> web.Response:
+        try:
+            effect = request.match_info.get("effect")
+            if effect is None:
+                return web.json_response(self.defaults.all_payload())
+            if request.method == "GET":
+                return web.json_response(self.defaults.payload(effect))
+            if request.method == "PUT":
+                return web.json_response(self.defaults.save(effect, (await request.json()).get("parameters", {})))
+            return web.json_response(self.defaults.delete(effect))
+        except (TypeError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
 
     async def status(self, request: web.Request) -> web.Response:
         payload = self.coordinator.status(); payload.update({"rendered_frames": self.runtime.frames, "active_since": self.runtime.active_since, "latest_sink_error": self.runtime.error})

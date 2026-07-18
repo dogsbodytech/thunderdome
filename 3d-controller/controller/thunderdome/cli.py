@@ -226,6 +226,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     control_serve.add_argument("--controllers")
     control_serve.add_argument("--allow-live-control", action="store_true")
     control_serve.add_argument("--default-output", choices=("simulator", "ddp", "both"), default="simulator")
+    control_serve.add_argument("--effect-defaults", default=None, metavar="FILE", help="operator effect-defaults JSON (default: config/effect-defaults.json)")
     control_serve.add_argument("--geometry", default=None)
     control_serve.add_argument("--routes", default=None)
     control_serve.add_argument("--positions", default=None)
@@ -835,7 +836,7 @@ def _main(args: argparse.Namespace) -> int:
             raise ValueError("--allow-live-control requires --controllers FILE")
         if args.default_output in {"ddp", "both"} and not (args.allow_live_control and args.controllers):
             raise ValueError("DDP default output requires --controllers FILE and --allow-live-control")
-        settings = ControlSettings(f"ws://{args.host}:{args.port}/ws/producer", args.controllers, args.allow_live_control, OutputMode(args.default_output))
+        settings = ControlSettings(f"ws://{args.host}:{args.port}/ws/producer", args.controllers, args.allow_live_control, OutputMode(args.default_output), args.effect_defaults or str(Path(__file__).resolve().parents[2] / "config/effect-defaults.json"))
         api = ControlAPI(settings)
         server = create_http_server(args.host, args.port, geometry_path, routes_path, positions_path, api)
         print("Control service mode: local simulator and runtime APIs")
