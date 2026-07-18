@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thunderdome.local/schemas/mqtt-ack-v1.schema.json",
+  "title": "Thunderdome MQTT acknowledgement v1",
+  "description": "Sanitized acknowledgement emitted by an MQTT adapter. It must not include controller, filesystem, credential, or raw exception details.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "request_id", "accepted", "status", "timestamp"],
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "MQTT contract version.",
+      "examples": [1]
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+      "description": "Command correlation ID, or adapter-generated ID for malformed JSON.",
+      "examples": ["visitor-123"]
+    },
+    "accepted": {
+      "type": "boolean",
+      "description": "Whether the coordinator accepted the command."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "malformed_json",
+        "unknown_effect",
+        "invalid_parameter",
+        "invalid_duration",
+        "lower_priority",
+        "unavailable_control_service",
+        "rate_limited",
+        "no_active_override",
+        "not_authorized"
+      ],
+      "description": "Stable machine-readable result code."
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 256,
+      "description": "Bounded redacted operator-facing explanation."
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Accepted override priority when applicable."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Accepted override expiry when applicable."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Acknowledgement creation time."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"accepted": {"const": true}},
+        "required": ["accepted"]
+      },
+      "then": {
+        "properties": {"status": {"const": "accepted"}}
+      },
+      "else": {
+        "properties": {"status": {"not": {"const": "accepted"}}}
+      }
+    }
+  ],
+  "examples": [
+    {
+      "version": 1,
+      "request_id": "visitor-123",
+      "accepted": true,
+      "status": "accepted",
+      "priority": 10,
+      "expires_at": "2026-07-18T18:00:15Z",
+      "timestamp": "2026-07-18T18:00:00Z"
+    },
+    {
+      "version": 1,
+      "request_id": "visitor-123",
+      "accepted": false,
+      "status": "lower_priority",
+      "message": "active override has higher priority",
+      "timestamp": "2026-07-18T18:00:00Z"
+    }
+  ]
+}
