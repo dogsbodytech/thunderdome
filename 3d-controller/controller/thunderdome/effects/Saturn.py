@@ -1,8 +1,8 @@
 """Saturn: soft pale-gold butterscotch bands."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="saturn",
+    name="Saturn",
     label="Saturn",
     description="soft pale-gold butterscotch bands",
     style="bands",

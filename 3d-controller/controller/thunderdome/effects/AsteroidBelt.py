@@ -1,8 +1,8 @@
 """Asteroid belt: sparse drifting grey rocky debris on black."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="asteroid-belt",
+    name="AsteroidBelt",
     label="Asteroid belt",
     description="sparse drifting grey rocky debris",
     style="belt",

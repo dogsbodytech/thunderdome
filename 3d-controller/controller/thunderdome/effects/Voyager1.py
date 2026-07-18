@@ -1,8 +1,8 @@
 """Voyager 1: near-black with a lonely faint gold glint in the dark."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="voyager-1",
+    name="Voyager1",
     label="Voyager 1",
     description="lonely faint gold glint in the dark",
     style="belt",

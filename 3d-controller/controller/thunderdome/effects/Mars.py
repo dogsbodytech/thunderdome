@@ -1,8 +1,8 @@
 """Mars: rusty red dust world."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="mars",
+    name="Mars",
     label="Mars",
     description="rusty red dust world",
     style="mottled",

@@ -1,8 +1,8 @@
 """Jupiter: banded cream, tan and rust gas giant."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="jupiter",
+    name="Jupiter",
     label="Jupiter",
     description="banded cream, tan and rust gas giant",
     style="bands",

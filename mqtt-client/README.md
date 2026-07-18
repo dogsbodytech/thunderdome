@@ -34,9 +34,9 @@ On connect you'll see `connected to <host>:<port>`. The payload is JSON with a
 open/dogsbody/thunderdome/effect -m '{"name": "fire"}'`.
 Valid names come from `GET /api/effects`: `clock-hand`, `expanding-rings`,
 `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`,
-`twinkle`, `auto`, and the solar-system bodies `sol`, `mercury`, `venus`,
-`earth`, `mars`, `jupiter`, `saturn`, `uranus`, `neptune`, `asteroid-belt`,
-`kuiper-belt`, `voyager-1`.
+`twinkle`, `auto`, and the solar-system bodies `Sol`, `Mercury`, `Venus`,
+`Earth`, `Mars`, `Jupiter`, `Saturn`, `Uranus`, `Neptune`, `AsteroidBelt`,
+`KuiperBelt`, `Voyager1`.
 
 ## Config
 

@@ -1,8 +1,8 @@
 """Kuiper belt: cold, sparse icy blue-white debris on black."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="kuiper-belt",
+    name="KuiperBelt",
     label="Kuiper belt",
     description="cold sparse icy blue-white debris",
     style="belt",

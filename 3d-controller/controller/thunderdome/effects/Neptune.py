@@ -1,8 +1,8 @@
 """Neptune: deep vivid blue with lighter azure streaks."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="neptune",
+    name="Neptune",
     label="Neptune",
     description="deep vivid blue with lighter streaks",
     style="soft",

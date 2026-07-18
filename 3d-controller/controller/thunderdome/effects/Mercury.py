@@ -1,8 +1,8 @@
 """Mercury: scorched grey cratered rock."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="mercury",
+    name="Mercury",
     label="Mercury",
     description="scorched grey cratered rock",
     style="mottled",

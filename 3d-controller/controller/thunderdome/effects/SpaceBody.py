@@ -1,8 +1,8 @@
 """Shared solar-system body preset type.
 
-Each body lives in its own module (``jupiter.py``, ``mars.py`` …) declaring a
+Each body lives in its own module (``Jupiter.py``, ``Mars.py`` …) declaring a
 ``SPACE_BODY = SpaceBody(...)``. The rendering engine (styles, colour ramp) is shared
-in ``procedural.render_space_body`` — the per-file data is the object's identity.
+in ``Procedural.render_space_body`` — the per-file data is the object's identity.
 """
 from __future__ import annotations
 

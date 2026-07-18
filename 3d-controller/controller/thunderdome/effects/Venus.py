@@ -1,8 +1,8 @@
 """Venus: thick creamy pale-yellow cloud."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="venus",
+    name="Venus",
     label="Venus",
     description="thick creamy pale-yellow cloud",
     style="soft",

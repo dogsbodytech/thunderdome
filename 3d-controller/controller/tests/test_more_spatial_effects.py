@@ -47,7 +47,7 @@ class MoreSpatialEffectsTests(unittest.TestCase):
     def test_registry_has_unique_expected_auto_effects(self):
         names = [r.name for r in REGISTRY]
         self.assertEqual(names, ["ClockHand", "ExpandingRings", "HeightWave", "Fire", "RotatingPlane", "Radar", "Aurora", "Fireflies", "Twinkle",
-                                 "asteroid-belt", "jupiter", "saturn", "uranus", "neptune", "kuiper-belt", "voyager-1", "sol", "mercury", "venus", "earth", "mars"])
+                                 "AsteroidBelt", "Jupiter", "Saturn", "Uranus", "Neptune", "KuiperBelt", "Voyager1", "Sol", "Mercury", "Venus", "Earth", "Mars"])
         self.assertEqual(len(names), len(set(names)))
         self.assertTrue(all(BY_NAME[name].supports_auto and BY_NAME[name].auto_options for name in names))
 
@@ -65,11 +65,11 @@ class MoreSpatialEffectsTests(unittest.TestCase):
             if space_body.style != "belt":
                 self.assertNotEqual(a.data, b.data, name)
 
-        r, g, b = avg(render("sol", self.ctx, 1.0, brightness=255))
+        r, g, b = avg(render("Sol", self.ctx, 1.0, brightness=255))
         self.assertGreater(r, 150); self.assertGreater(g, 120); self.assertLess(b, r)  # bright yellow
-        r, g, b = avg(render("mars", self.ctx, 1.0, brightness=255))
+        r, g, b = avg(render("Mars", self.ctx, 1.0, brightness=255))
         self.assertGreater(r, g); self.assertGreater(r, b)  # red dominant
-        r, g, b = avg(render("earth", self.ctx, 1.0, brightness=255))
+        r, g, b = avg(render("Earth", self.ctx, 1.0, brightness=255))
         self.assertGreater(b + g, r * 2)  # blue+green over red
 
     def test_fire_is_xyz_turbulent_seeded_time_varying_and_tail_aware(self):

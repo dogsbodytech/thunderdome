@@ -1,8 +1,8 @@
 """Sol: full roiling solar yellow."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="sol",
+    name="Sol",
     label="Sol",
     description="full roiling solar yellow",
     style="sun",

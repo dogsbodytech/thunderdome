@@ -1,8 +1,8 @@
 """Earth: blue oceans, green land, white cloud."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="earth",
+    name="Earth",
     label="Earth",
     description="blue oceans, green land, white cloud",
     style="mottled",

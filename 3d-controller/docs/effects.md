@@ -44,7 +44,7 @@ Then run an effect directly, without preparation.
 | `aurora` | Height/angle/direction waves in XYZ | `--direction X,Y,Z`, `--speed`, `--scale`, `--band-width`, `--intensity`, `--palette`, `--seed` | 10 seconds | `thunderdome effect aurora --duration 20 --brightness 24` |
 | `fireflies` | Deterministic moving 3D particles and distance falloff | `--count`, `--speed`, `--glow-radius-mm`, `--lifetime-seconds`, `--color`, `--color-variation`, `--seed` | 8 seconds | `thunderdome effect fireflies --count 30 --duration 12` |
 | `twinkle` | Stateful per-LED fade-in/hold/fade-out sparkles | `--density`, `--spawn-rate`, `--fade-in`, `--hold-time`, `--fade-out`, `--minimum-brightness`, `--maximum-brightness`, `--color`, `--mode`, `--background`, `--color-change-speed`, `--seed` | 10 seconds | `thunderdome effect twinkle --duration 15 --brightness 24` |
-| solar-system bodies | XYZ colour wash; palette and style fixed per body | `--speed`, `--seed` | 12 seconds | `thunderdome effect sol --brightness 24` |
+| solar-system bodies | XYZ colour wash; palette and style fixed per body | `--speed`, `--seed` | 12 seconds | `thunderdome effect Sol --brightness 24` |
 | `auto` | Registry playlist of production effects | `--playlist`/`--effects`, `--preset`, `--interval`, `--crossfade`/`--transition`, `--cycles`, `--duration`, `--shuffle`, `--seed` | Continuous until Ctrl+C | `thunderdome effect auto --preset calm` |
 
 ## Shared controls
@@ -104,23 +104,23 @@ Twelve ambient effects, one per body, so someone standing in the dome and lookin
 
 | Effect | Style | Colours the viewer sees |
 | --- | --- | --- |
-| `asteroid-belt` | belt | sparse drifting grey/brown rocks on black |
-| `jupiter` | bands | cream, tan, rust and orange horizontal bands |
-| `saturn` | bands | soft pale-gold and butterscotch bands |
-| `uranus` | soft | featureless pale cyan |
-| `neptune` | soft | deep vivid blue with lighter azure streaks |
-| `kuiper-belt` | belt | cold, sparse icy blue-white debris on black |
-| `voyager-1` | belt | near-black with a lonely faint gold glint |
-| `sol` | sun | full roiling yellow, orange-to-white shimmer |
-| `mercury` | mottled | scorched grey rock with faint warm patches |
-| `venus` | soft | thick creamy pale-yellow cloud |
-| `earth` | mottled | blue oceans, green land, white cloud |
-| `mars` | mottled | rusty red dust, all reds and orange |
+| `AsteroidBelt` | belt | sparse drifting grey/brown rocks on black |
+| `Jupiter` | bands | cream, tan, rust and orange horizontal bands |
+| `Saturn` | bands | soft pale-gold and butterscotch bands |
+| `Uranus` | soft | featureless pale cyan |
+| `Neptune` | soft | deep vivid blue with lighter azure streaks |
+| `KuiperBelt` | belt | cold, sparse icy blue-white debris on black |
+| `Voyager1` | belt | near-black with a lonely faint gold glint |
+| `Sol` | sun | full roiling yellow, orange-to-white shimmer |
+| `Mercury` | mottled | scorched grey rock with faint warm patches |
+| `Venus` | soft | thick creamy pale-yellow cloud |
+| `Earth` | mottled | blue oceans, green land, white cloud |
+| `Mars` | mottled | rusty red dust, all reds and orange |
 
 Styles: `bands` maps the palette repeatedly up the dome's Z height with slow drift; `mottled` mixes palette colours by 3D noise blobs; `soft` is a near-uniform wash with gentle cloud movement; `sun` is a bright turbulent warm field; `belt` lights only a sparse, drifting fraction of LEDs and leaves the rest dark.
 
 ```bash
-thunderdome effect mars --brightness 24 --duration 20
+thunderdome effect Mars --brightness 24 --duration 20
 thunderdome effect auto --preset solar-system --interval 20 --brightness 24
 ```
 
@@ -146,7 +146,7 @@ Presets:
 
 - `--preset calm`: `height-wave, aurora, fireflies, expanding-rings`
 - `--preset energetic`: `clock-hand, fire, rotating-plane, radar, aurora, fireflies`
-- `--preset solar-system`: `asteroid-belt, jupiter, saturn, uranus, neptune, kuiper-belt, voyager-1, sol, mercury, venus, earth, mars`
+- `--preset solar-system`: `AsteroidBelt, Jupiter, Saturn, Uranus, Neptune, KuiperBelt, Voyager1, Sol, Mercury, Venus, Earth, Mars`
 
 Use `--playlist` or `--effects` for a comma-separated explicit playlist. Supplied order is preserved. Empty playlists, unknown names, duplicates, and non-auto-capable entries are rejected. `--shuffle --seed N` shuffles once at startup; the same seed produces the same playlist order.
 

@@ -1,8 +1,8 @@
 """Uranus: featureless pale cyan ice giant."""
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 SPACE_BODY = SpaceBody(
-    name="uranus",
+    name="Uranus",
     label="Uranus",
     description="featureless pale cyan ice giant",
     style="soft",

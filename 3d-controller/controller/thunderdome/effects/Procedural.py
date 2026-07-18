@@ -10,10 +10,10 @@ from typing import Iterable, Sequence
 
 from ..config import LOGICAL_LED_COUNT
 from ..frame import RGBFrame, validate_rgb
-from . import (asteroid_belt, earth, jupiter, kuiper_belt, mars, mercury,
-               neptune, saturn, sol, uranus, venus, voyager_1)
+from . import (AsteroidBelt, Earth, Jupiter, KuiperBelt, Mars, Mercury,
+               Neptune, Saturn, Sol, Uranus, Venus, Voyager1)
 from .Common import SpatialContext, distance3, selected_xyz, smoothstep
-from ._space_body import SpaceBody
+from .SpaceBody import SpaceBody
 
 TAU = math.tau
 Vector = tuple[float, float, float]
@@ -548,8 +548,8 @@ class TwinkleOverlay:
 # One shared renderer, twelve per-file presets. Each body's colour + style
 # (its identity) lives in its own module; import order is the operator's tour.
 _SPACE_BODY_MODULES = (
-    asteroid_belt, jupiter, saturn, uranus, neptune, kuiper_belt,
-    voyager_1, sol, mercury, venus, earth, mars,
+    AsteroidBelt, Jupiter, Saturn, Uranus, Neptune, KuiperBelt,
+    Voyager1, Sol, Mercury, Venus, Earth, Mars,
 )
 SPACE_BODIES: dict[str, SpaceBody] = {module.SPACE_BODY.name: module.SPACE_BODY for module in _SPACE_BODY_MODULES}
 
