@@ -45,6 +45,17 @@ class ControlFrontendTests(unittest.TestCase):
         self.assertIn("list.options.length>1", self.js)
         self.assertIn("[...node.options].map(option=>option.value)", self.js)
 
+    def test_saved_defaults_payload_excludes_runtime_fields_and_refreshes_state(self):
+        self.assertIn("parameter.classification==='effect'", self.js)
+        self.assertIn("parameters:effectParameters()", self.js)
+        self.assertIn("schema.saved_defaults=response.saved", self.js)
+        self.assertIn("schema.resolved_defaults=response.resolved", self.js)
+        self.assertIn("'Defaults saved'", self.js)
+
+    def test_reset_to_builtin_deletes_persisted_defaults(self):
+        self.assertIn("method:'DELETE'", self.js)
+        self.assertIn("'Built-in defaults restored'", self.js)
+
 
 if __name__ == "__main__":
     unittest.main()
