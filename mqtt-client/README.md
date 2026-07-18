@@ -1,31 +1,37 @@
 # MQTT Client
 
-MQTT-to-shell bridge for the dome: publishes on `open/dogsbody/dome/<name>` run the
-matching `scripts/tildagon_<name>.py`.
+MQTT bridge for the thunderdomedome.
+
+Listens to messages on `open/dogsbody/thunderdome/+` and enacts them on the dome.
+
+Effects: A message on `open/dogsbody/thunderdome/effect` with the effect name as the payload.
 
 ## Run
 
-Requires Python 3.10+.
+Requires Python 3.10+ and the `thunderdome` CLI on `PATH`.
 
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-cp .env.example .env        # then set WLED_HOST
+cp .env.example .env        # optional; defaults work
 .venv/bin/python mqtt_client.py
 ```
 
-On connect you'll see `connected to <host>:<port>`.
+On connect you'll see `connected to <host>:<port>`. Trigger an effect with e.g.
+`mosquitto_pub -h mqtt.emf.camp -t open/dogsbody/thunderdome/effect -m fire`.
 
 ## Config
 
-From `.env` or real env vars (env wins).
+From `.env` or real env vars (env wins). All optional.
 
 | Variable | Default | Notes |
 |-----------|-----------|-------|
-| `WLED_HOST` | *(required)* | WLED host/IP the scripts target |
 | `MQTT_HOST` | `mqtt.emf.camp` | Broker hostname |
 | `MQTT_PORT` | `1883` | |
 | `MQTT_USER` | *(unset)* | Optional; enables auth |
 | `MQTT_PASS` | *(unset)* | Only used if `MQTT_USER` set |
+| `EFFECT_OUTPUT` | `ddp` | `ddp` = real dome, `simulator` = local test |
+| `THUNDERDOME_CONTROLLERS` | *(unset)* | Override the CLI's `controllers.json` path |
 
-Handler scripts live in `scripts/` (`tildagon_<name>.py`, case-sensitive).
+Dome targeting lives in the thunderdome CLI's `controllers.json` (see the
+`3d-controller` repo), not here.

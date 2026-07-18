@@ -1,30 +1,48 @@
 #!/usr/bin/env python3
-"""MQTT -> shell bridge: message on open/dogsbody/dome/<name> runs scripts/tildagon_<name>.sh <payload>."""
+"""MQTT -> thunderdome effect bridge.
+
+A message on `open/dogsbody/thunderdome/effect` whose payload is an effect name
+runs `thunderdome effect <name>` against the dome. Each new effect replaces the
+one currently running, so only one process drives DDP at a time.
+"""
 import os
-import re
 import subprocess
 import sys
-from pathlib import Path
 
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 
-load_dotenv()  # .env -> os.environ; handlers inherit these via Popen
+load_dotenv()
 
 HOST = os.environ.get("MQTT_HOST", "mqtt.emf.camp")
 PORT = int(os.environ.get("MQTT_PORT", "1883"))
-TOPIC = "open/dogsbody/dome/+"
-SCRIPTS_DIR = Path(__file__).resolve().parent / "scripts"
+TOPIC = "open/dogsbody/thunderdome/effect"
+OUTPUT = os.environ.get("EFFECT_OUTPUT", "ddp")  # ddp = real dome; simulator = local test
+CONTROLLERS = os.environ.get("THUNDERDOME_CONTROLLERS")  # optional controllers.json override
 
-# Network input feeds an exec path: allowlist the script name strictly.
-NAME_RE = re.compile(r"[A-Za-z0-9_-]+")
+# Allowlist of effect names -> `thunderdome effect <name>`. The payload comes
+# off the network and is passed as an argv positional, so we never forward an
+# unvetted string (an allowlist also blocks flag injection like "--output").
+# ponytail: hardcoded to avoid importing the heavy thunderdome package here;
+# keep in sync with the CLI's `effect` subcommands (thunderdome/effects/_registry.py).
+EFFECTS = {
+    "clock-hand", "expanding-rings", "height-wave", "fire",
+    "rotating-plane", "radar", "aurora", "fireflies",
+}
+
+_current: subprocess.Popen | None = None
 
 
-def script_for(topic: str) -> Path | None:
-    name = topic.rsplit("/", 1)[-1]
-    if not NAME_RE.fullmatch(name):
-        return None
-    return SCRIPTS_DIR / f"tildagon_{name}.py"
+def run_effect(name: str) -> subprocess.Popen:
+    """Stop the running effect (if any) and start `name`. Returns the new process."""
+    global _current
+    if _current and _current.poll() is None:
+        _current.terminate()  # one effect at a time; SIGTERM stops its DDP stream
+    cmd = ["thunderdome", "effect", name, "--output", OUTPUT, "--hold"]
+    if CONTROLLERS:
+        cmd += ["--controllers", CONTROLLERS]
+    _current = subprocess.Popen(cmd)  # non-blocking so the network loop keeps its keepalive
+    return _current
 
 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -33,19 +51,15 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 
 def on_message(client, userdata, msg):
-    script = script_for(msg.topic)
-    if script is None or not script.is_file():
-        print(f"ignored {msg.topic}: no matching script", flush=True)
+    name = msg.payload.decode("utf-8", errors="replace").strip()
+    if name not in EFFECTS:
+        print(f"ignored {msg.topic}: unknown effect {name!r}", flush=True)
         return
-    payload = msg.payload.decode("utf-8", errors="replace")
-    print(f"{msg.topic} -> {script.name}", flush=True)
+    print(f"{msg.topic} -> thunderdome effect {name}", flush=True)
     try:
-        # argv form, payload never shell-interpolated; Popen so a slow script
-        # can't block the network loop and time out the keepalive.
-        # sys.executable = this venv's python, so handlers get dotenv etc.
-        subprocess.Popen([sys.executable, str(script), payload])
+        run_effect(name)
     except OSError as e:
-        print(f"failed to run {script.name}: {e}", file=sys.stderr, flush=True)
+        print(f"failed to run effect {name}: {e}", file=sys.stderr, flush=True)
 
 
 def main():
@@ -59,11 +73,10 @@ def main():
 
 
 def self_test():
-    assert script_for("open/dogsbody/dome/rainbow").name == "tildagon_rainbow.py"
-    assert script_for("open/dogsbody/dome/A-1_x").name == "tildagon_A-1_x.py"
-    assert script_for("open/dogsbody/dome/..") is None
-    assert script_for("open/dogsbody/dome/a b") is None
-    assert script_for("open/dogsbody/dome/") is None
+    assert "height-wave" in EFFECTS
+    assert "auto" not in EFFECTS       # meta-playlist, not a single effect
+    assert "--output" not in EFFECTS   # allowlist blocks flag injection
+    assert "" not in EFFECTS           # empty payload ignored
     print("self-test ok")
 
 
