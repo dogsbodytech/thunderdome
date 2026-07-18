@@ -43,6 +43,7 @@ Then run an effect directly, without preparation.
 | `radar` | Angular XYZ/XY sweep around dome centre | `--rotation-seconds`, `--beam-width-degrees`, `--trail-degrees`, `--range-m`, `--vertical-falloff`, `--color`, `--background`, `--direction`, `--loops` | One beam rotation | `thunderdome effect radar --loops 1 --brightness 24` |
 | `aurora` | Height/angle/direction waves in XYZ | `--direction X,Y,Z`, `--speed`, `--scale`, `--band-width`, `--intensity`, `--palette`, `--seed` | 10 seconds | `thunderdome effect aurora --duration 20 --brightness 24` |
 | `fireflies` | Deterministic moving 3D particles and distance falloff | `--count`, `--speed`, `--glow-radius-mm`, `--lifetime-seconds`, `--color`, `--color-variation`, `--seed` | 8 seconds | `thunderdome effect fireflies --count 30 --duration 12` |
+| solar-system bodies | XYZ colour wash; palette and style fixed per body | `--speed`, `--seed` | 12 seconds | `thunderdome effect sol --brightness 24` |
 | `auto` | Registry playlist of production effects | `--playlist`/`--effects`, `--preset`, `--interval`, `--crossfade`/`--transition`, `--cycles`, `--duration`, `--shuffle`, `--seed` | Continuous until Ctrl+C | `thunderdome effect auto --preset calm` |
 
 ## Shared controls
@@ -96,6 +97,32 @@ Common individual-effect runtime controls are `--output simulator|ddp|both|null`
 
 `fireflies` uses a deterministic reusable particle system. Particles have stable seeded position/velocity/lifecycle templates retained for the whole effect run; each frame computes moving 3D particle positions and lights nearby LEDs by true 3D distance.
 
+## Solar system bodies
+
+Twelve ambient effects, one per body, so someone standing in the dome and looking around sees the colours of that object. Each is the same colour-wash renderer with a fixed palette and rendering style; only `--speed` (animation rate) and `--seed` are tunable. All are auto-capable; the `solar-system` auto preset tours them in order.
+
+| Effect | Style | Colours the viewer sees |
+| --- | --- | --- |
+| `asteroid-belt` | belt | sparse drifting grey/brown rocks on black |
+| `jupiter` | bands | cream, tan, rust and orange horizontal bands |
+| `saturn` | bands | soft pale-gold and butterscotch bands |
+| `uranus` | soft | featureless pale cyan |
+| `neptune` | soft | deep vivid blue with lighter azure streaks |
+| `kuiper-belt` | belt | cold, sparse icy blue-white debris on black |
+| `voyager-1` | belt | near-black with a lonely faint gold glint |
+| `sol` | sun | full roiling yellow, orange-to-white shimmer |
+| `mercury` | mottled | scorched grey rock with faint warm patches |
+| `venus` | soft | thick creamy pale-yellow cloud |
+| `earth` | mottled | blue oceans, green land, white cloud |
+| `mars` | mottled | rusty red dust, all reds and orange |
+
+Styles: `bands` maps the palette repeatedly up the dome's Z height with slow drift; `mottled` mixes palette colours by 3D noise blobs; `soft` is a near-uniform wash with gentle cloud movement; `sun` is a bright turbulent warm field; `belt` lights only a sparse, drifting fraction of LEDs and leaves the rest dark.
+
+```bash
+thunderdome effect mars --brightness 24 --duration 20
+thunderdome effect auto --preset solar-system --interval 20 --brightness 24
+```
+
 ## Auto showcase
 
 `thunderdome effect auto` cycles through the registry playlist with optional linear RGB crossfade. Crossfade blends full-brightness source frames first and applies global `--brightness` exactly once to the blended frame.
@@ -118,6 +145,7 @@ Presets:
 
 - `--preset calm`: `height-wave, aurora, fireflies, expanding-rings`
 - `--preset energetic`: `clock-hand, fire, rotating-plane, radar, aurora, fireflies`
+- `--preset solar-system`: `asteroid-belt, jupiter, saturn, uranus, neptune, kuiper-belt, voyager-1, sol, mercury, venus, earth, mars`
 
 Use `--playlist` or `--effects` for a comma-separated explicit playlist. Supplied order is preserved. Empty playlists, unknown names, duplicates, and non-auto-capable entries are rejected. `--shuffle --seed N` shuffles once at startup; the same seed produces the same playlist order.
 

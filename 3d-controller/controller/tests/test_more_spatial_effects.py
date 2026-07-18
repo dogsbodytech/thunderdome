@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from thunderdome.cli import main, parse_args
 from thunderdome.effects._common import SpatialContext
 from thunderdome.effects.procedural import (
-    ParticleSystem, angular_delta, blend, finite_vector, palette_color, render,
+    SPACE_BODIES, ParticleSystem, angular_delta, blend, finite_vector, palette_color, render,
     render_fire, render_fireflies, signed_plane_distance,
 )
 from thunderdome.effects._registry import BY_NAME, REGISTRY
@@ -46,9 +46,31 @@ class MoreSpatialEffectsTests(unittest.TestCase):
 
     def test_registry_has_unique_expected_auto_effects(self):
         names = [r.name for r in REGISTRY]
-        self.assertEqual(names, ["clock-hand", "expanding-rings", "height-wave", "fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle"])
+        self.assertEqual(names, ["clock-hand", "expanding-rings", "height-wave", "fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle",
+                                 "asteroid-belt", "jupiter", "saturn", "uranus", "neptune", "kuiper-belt", "voyager-1", "sol", "mercury", "venus", "earth", "mars"])
         self.assertEqual(len(names), len(set(names)))
         self.assertTrue(all(BY_NAME[name].supports_auto and BY_NAME[name].auto_options for name in names))
+
+    def test_space_bodies_render_representative_dominant_colours_and_animate(self):
+        def avg(frame):
+            data, n = frame.data, frame.led_count
+            return tuple(sum(data[c::3]) / n for c in range(3))
+
+        # every space_body renders a full 15k-byte frame; continuous styles animate.
+        # (sparse "belt" styles can stay dark on this degenerate test geometry.)
+        for name, space_body in SPACE_BODIES.items():
+            a = render(name, self.ctx, 0.0, brightness=255, seed=3)
+            b = render(name, self.ctx, 3.0, brightness=255, seed=3)
+            self.assertEqual(len(a.data), 15000)
+            if space_body.style != "belt":
+                self.assertNotEqual(a.data, b.data, name)
+
+        r, g, b = avg(render("sol", self.ctx, 1.0, brightness=255))
+        self.assertGreater(r, 150); self.assertGreater(g, 120); self.assertLess(b, r)  # bright yellow
+        r, g, b = avg(render("mars", self.ctx, 1.0, brightness=255))
+        self.assertGreater(r, g); self.assertGreater(r, b)  # red dominant
+        r, g, b = avg(render("earth", self.ctx, 1.0, brightness=255))
+        self.assertGreater(b + g, r * 2)  # blue+green over red
 
     def test_fire_is_xyz_turbulent_seeded_time_varying_and_tail_aware(self):
         a = render_fire(self.ctx, 0, brightness=255, seed=7, flame_height_m=2.5)

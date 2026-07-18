@@ -19,7 +19,7 @@ from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects._common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
 from .effects.expanding_rings import render_expanding_rings
 from .effects.height_wave import render_height_wave
-from .effects.procedural import blend, create_renderer, render as render_procedural
+from .effects.procedural import SPACE_BODIES, blend, create_renderer, render as render_procedural
 from .effects._registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
 from .frame import RGBFrame
 from .geometry import load_geometry
@@ -291,6 +291,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     twinkle.set_defaults(brightness=255)
     twinkle.add_argument("--density", type=float, default=.08); twinkle.add_argument("--spawn-rate", type=float, default=12); twinkle.add_argument("--fade-in", type=float, default=.25); twinkle.add_argument("--hold-time", dest="twinkle_hold", type=float, default=.25); twinkle.add_argument("--fade-out", type=float, default=.7); twinkle.add_argument("--minimum-brightness", type=float, default=.05); twinkle.add_argument("--maximum-brightness", type=float, default=1); twinkle.add_argument("--color", default="FFFFFF"); twinkle.add_argument("--mode", choices=("fixed", "random"), default="fixed"); twinkle.add_argument("--background", default="000000"); twinkle.add_argument("--color-change-speed", type=float, default=0); twinkle.add_argument("--seed", type=int, default=1)
 
+    for _name, _space_body in SPACE_BODIES.items():
+        _space_body_parser = effect_sub.add_parser(_name, help=f"render {_space_body.description}")
+        _add_effect_runtime_options(_space_body_parser)
+        _space_body_parser.add_argument("--speed", type=float, default=_space_body.speed, help="animation speed")
+        _space_body_parser.add_argument("--seed", type=int, default=1)
+
     all_ddp = groups.add_parser(
         "ddp-all",
         help=f"Fan one logical {LOGICAL_LED_COUNT:,}-pixel frame out to all controllers",
@@ -557,8 +563,9 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
     return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
 
 
-PROCEDURAL_DURATION_DEFAULTS = {"fire": 5.0, "aurora": 10.0, "fireflies": 8.0, "twinkle": 10.0}
+PROCEDURAL_DURATION_DEFAULTS = {"fire": 5.0, "aurora": 10.0, "fireflies": 8.0, "twinkle": 10.0, **{name: 12.0 for name in SPACE_BODIES}}
 PROCEDURAL_LOOP_EFFECTS = {"rotating-plane", "radar"}
+PROCEDURAL_EFFECTS = {"fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle", *SPACE_BODIES}
 
 
 def _procedural_options(args: argparse.Namespace) -> dict[str, object]:
@@ -625,10 +632,12 @@ def _validate_procedural_options(args: argparse.Namespace) -> None:
         _validate_range("fade-out", args.fade_out, minimum=0, inclusive_minimum=False)
         _validate_range("minimum-brightness", args.minimum_brightness, minimum=0, maximum=1)
         _validate_range("maximum-brightness", args.maximum_brightness, minimum=0, maximum=1)
+    elif args.command in SPACE_BODIES:
+        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
 
 
 def _run_procedural_effect(args: argparse.Namespace) -> int:
-    if args.command not in {"fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle"}:
+    if args.command not in PROCEDURAL_EFFECTS:
         raise ValueError(f"unknown procedural effect command: {args.command}")
     if not 1 <= args.fps <= 60:
         raise ValueError("fps must be in range 1..60")
@@ -888,7 +897,7 @@ def _main(args: argparse.Namespace) -> int:
         if args.command == "clock-hand": return _run_clock_hand(args)
         if args.command == "auto": return _run_auto(args)
         if args.command in {"expanding-rings", "height-wave"}: return _run_spatial_effect(args)
-        if args.command in {"fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle"}: return _run_procedural_effect(args)
+        if args.command in PROCEDURAL_EFFECTS: return _run_procedural_effect(args)
         raise ValueError(f"unknown effect command: {args.command}")
 
     return _run_single_ddp(args)

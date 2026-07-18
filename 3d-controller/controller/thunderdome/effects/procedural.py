@@ -10,7 +10,10 @@ from typing import Iterable, Sequence
 
 from ..config import LOGICAL_LED_COUNT
 from ..frame import RGBFrame, validate_rgb
+from . import (asteroid_belt, earth, jupiter, kuiper_belt, mars, mercury,
+               neptune, saturn, sol, uranus, venus, voyager_1)
 from ._common import SpatialContext, distance3, selected_xyz, smoothstep
+from ._space_body import SpaceBody
 
 TAU = math.tau
 Vector = tuple[float, float, float]
@@ -223,6 +226,18 @@ def palette_color(name: str, value: float) -> tuple[int, int, int]:
         t = (value - 0.5) * 2
         a, b = mid, high
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+
+
+def _ramp(stops: Sequence[tuple[int, int, int]], value: float) -> tuple[int, int, int]:
+    """Piecewise-linear colour ramp across an arbitrary list of RGB stops."""
+    value = _clamp(value)
+    if len(stops) == 1:
+        return stops[0]
+    scaled = value * (len(stops) - 1)
+    index = min(int(scaled), len(stops) - 2)
+    fraction = scaled - index
+    low, high = stops[index], stops[index + 1]
+    return tuple(int(low[c] + (high[c] - low[c]) * fraction) for c in range(3))
 
 
 def blend(a: RGBFrame, b: RGBFrame, t: float) -> RGBFrame:
@@ -529,6 +544,54 @@ class TwinkleOverlay:
 
 
 
+# One shared renderer, twelve per-file presets. Each body's colour + style
+# (its identity) lives in its own module; import order is the operator's tour.
+_SPACE_BODY_MODULES = (
+    asteroid_belt, jupiter, saturn, uranus, neptune, kuiper_belt,
+    voyager_1, sol, mercury, venus, earth, mars,
+)
+SPACE_BODIES: dict[str, SpaceBody] = {module.SPACE_BODY.name: module.SPACE_BODY for module in _SPACE_BODY_MODULES}
+
+_SPACE_BODY_BAND_COUNT = 4
+
+
+def render_space_body(context: SpatialContext, elapsed: float, *, brightness=32, exclude_tail=False, seed=1, style="soft", palette=((255, 255, 255),), speed=0.3, coverage=1.0, **_) -> RGBFrame:
+    if speed <= 0:
+        raise ValueError(f"speed must be positive, got {speed!r}")
+    zmin, zmax = context.z_bounds
+    zspan = max(zmax - zmin, 1e-9)
+    frame = _frame(brightness=brightness)
+    for index, (x, y, z) in enumerate(context.xyz):
+        if exclude_tail and context.tails[index]:
+            continue
+        height = (z - zmin) / zspan
+        if style == "bands":
+            wobble = 0.06 * (_noise(x * 1.4, y * 1.4, z, elapsed * speed, seed) - 0.5)
+            triangle = abs(((height * _SPACE_BODY_BAND_COUNT + elapsed * speed * 0.15 + wobble) % 1.0) * 2 - 1)
+            color, level = _ramp(palette, triangle), 1.0
+        elif style == "mottled":
+            n1 = _noise(x * 2.1, y * 2.1, z * 2.1, elapsed * speed * 0.5, seed)
+            n2 = _noise(x * 4.3 + 5, y * 4.3, z * 4.3, elapsed * speed * 0.3, seed + 11)
+            color, level = _ramp(palette, _clamp(0.5 * n1 + 0.5 * n2)), 1.0
+        elif style == "sun":
+            n1 = _noise(x * 2.0, y * 2.0, z * 2.0, elapsed * speed, seed)
+            n2 = _noise(x * 5.0, y * 5.0, z * 5.0, elapsed * speed * 1.7, seed + 3)
+            color, level = _ramp(palette, _clamp(0.4 + 0.45 * n1 + 0.15 * n2)), 1.0
+        elif style == "belt":
+            threshold = 1.0 - coverage
+            n = _noise(x * 3.0, y * 3.0, z * 3.0, elapsed * speed, seed)
+            if n <= threshold:
+                continue
+            above = (n - threshold) / max(coverage, 1e-9)
+            color, level = _ramp(palette, above), _clamp(above)
+        else:  # soft
+            n = _noise(x, y, z, elapsed * speed, seed)
+            color, level = _ramp(palette, _clamp(0.35 + 0.45 * n)), 1.0
+        rgb = tuple(int(component * level) for component in color)
+        frame.set_pixel(index, _scale(rgb, brightness))
+    return frame
+
+
 class ProceduralRenderer:
     """Stateful renderer wrapper that keeps reusable per-run objects alive."""
 
@@ -595,6 +658,11 @@ def create_renderer(kind: str, context: SpatialContext, *, brightness=32, exclud
 
 
 def render(kind: str, context: SpatialContext, elapsed: float, *, brightness=32, exclude_tail=False, seed=1, **options) -> RGBFrame:
+    if kind in SPACE_BODIES:
+        space_body = SPACE_BODIES[kind]
+        return render_space_body(context, elapsed, brightness=brightness, exclude_tail=exclude_tail, seed=seed,
+                             style=space_body.style, palette=space_body.palette, coverage=space_body.coverage,
+                             speed=float(options.get("speed", space_body.speed)))
     renderers = {
         "fire": render_fire,
         "rotating-plane": render_rotating_plane,
