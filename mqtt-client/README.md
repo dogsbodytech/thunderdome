@@ -1,24 +1,41 @@
 # MQTT Client
 
-MQTT bridge for the thunderdomedome.
+MQTT bridge for the thunderdome dome.
 
-Listens to messages on `open/dogsbody/thunderdome/+` and enacts them on the dome.
-
-Effects: A message on `open/dogsbody/thunderdome/effect` with the effect name as the payload.
+Listens on `open/dogsbody/thunderdome/effect` and forwards each message to the
+`thunderdome control serve` REST API as a runtime baseline. The control service
+owns the single render loop, so each new effect replaces the running one. See
+`3d-controller/docs/api-rest.md` for the API.
 
 ## Run
 
-Requires Python 3.10+ and the `thunderdome` CLI on `PATH`.
+1. Start the control service (in the `3d-controller` repo). Simulator-only:
 
-```sh
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-cp .env.example .env        # optional; defaults work
-.venv/bin/python mqtt_client.py
-```
+   ```sh
+   thunderdome control serve --port 8080
+   ```
 
-On connect you'll see `connected to <host>:<port>`. Trigger an effect with e.g.
-`mosquitto_pub -h mqtt.emf.camp -t open/dogsbody/thunderdome/effect -m fire`.
+   Or driving the physical dome:
+
+   ```sh
+   thunderdome control serve --controllers config/controllers.json \
+     --allow-live-control --default-output ddp
+   ```
+
+2. Start this bridge:
+
+   ```sh
+   python3 -m venv .venv
+   .venv/bin/pip install -r requirements.txt
+   cp .env.example .env        # optional; defaults work
+   .venv/bin/python mqtt_client.py
+   ```
+
+On connect you'll see `connected to <host>:<port>`. The payload is JSON with a
+`name` key, e.g. `mosquitto_pub -h mqtt.emf.camp -t
+open/dogsbody/thunderdome/effect -m '{"name": "fire"}'`.
+Valid names come from `GET /api/effects`: `clock-hand`, `expanding-rings`,
+`height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, `auto`.
 
 ## Config
 
@@ -30,8 +47,8 @@ From `.env` or real env vars (env wins). All optional.
 | `MQTT_PORT` | `1883` | |
 | `MQTT_USER` | *(unset)* | Optional; enables auth |
 | `MQTT_PASS` | *(unset)* | Only used if `MQTT_USER` set |
-| `EFFECT_OUTPUT` | `ddp` | `ddp` = real dome, `simulator` = local test |
-| `THUNDERDOME_CONTROLLERS` | *(unset)* | Override the CLI's `controllers.json` path |
+| `CONTROL_URL` | `http://127.0.0.1:8080` | `thunderdome control serve` base URL |
+| `EFFECT_OUTPUT` | *(unset)* | Force `simulator`/`ddp`/`both`; unset inherits the service's `--default-output` |
 
-Dome targeting lives in the thunderdome CLI's `controllers.json` (see the
-`3d-controller` repo), not here.
+Output policy (simulator vs live dome) and dome targeting live in the control
+service (`--controllers`, `--allow-live-control`, `--default-output`), not here.
