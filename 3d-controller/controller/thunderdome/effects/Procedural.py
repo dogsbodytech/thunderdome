@@ -10,10 +10,12 @@ from typing import Iterable, Sequence
 
 from ..config import LOGICAL_LED_COUNT
 from ..frame import RGBFrame, validate_rgb
-from ._common import SpatialContext, distance3, selected_xyz, smoothstep
+from .Common import SpatialContext, distance3, selected_xyz, smoothstep
+
 
 TAU = math.tau
 Vector = tuple[float, float, float]
+LEGACY_NAMES = {"fire": "Fire", "rotating-plane": "RotatingPlane", "radar": "Radar", "aurora": "Aurora", "fireflies": "Fireflies", "twinkle": "Twinkle"}
 MAX_ROTATING_PLANE_TRAIL_DEGREES = 180.0
 MAX_ROTATING_PLANE_TRAIL_SAMPLES = 12
 
@@ -541,7 +543,7 @@ class ProceduralRenderer:
         self.options = options
         self._particle_system = None
         self._twinkle_overlay = None
-        if kind == "fireflies":
+        if kind == "Fireflies":
             bounds = _selected_bounds(context, exclude_tail)
             self._particle_system = ParticleSystem(
                 int(options.get("count", 25)),
@@ -550,16 +552,16 @@ class ProceduralRenderer:
                 color=options.get("color", "FFFFB0"),
                 color_variation=float(options.get("color_variation", 0.25)),
             )
-        if kind == "twinkle":
+        if kind == "Twinkle":
             self._twinkle_overlay = TwinkleOverlay(context, seed=seed, exclude_tail=exclude_tail, **options)
 
     def render(self, elapsed: float) -> RGBFrame:
-        if self.kind == "twinkle":
+        if self.kind == "Twinkle":
             if self._twinkle_overlay is None:
                 raise RuntimeError("twinkle overlay was not initialized")
             base = _frame(self._twinkle_overlay.background, brightness=self.brightness)
             return self._twinkle_overlay.apply(base, elapsed, brightness=self.brightness)
-        if self.kind != "fireflies":
+        if self.kind != "Fireflies":
             return render(self.kind, self.context, elapsed, brightness=self.brightness, exclude_tail=self.exclude_tail, seed=self.seed, **self.options)
         options = self.options
         system = self._particle_system
@@ -591,17 +593,19 @@ class ProceduralRenderer:
 
 
 def create_renderer(kind: str, context: SpatialContext, *, brightness=32, exclude_tail=False, seed=1, **options) -> ProceduralRenderer:
+    kind = LEGACY_NAMES.get(kind, kind)
     return ProceduralRenderer(kind, context, brightness=brightness, exclude_tail=exclude_tail, seed=seed, **options)
 
 
 def render(kind: str, context: SpatialContext, elapsed: float, *, brightness=32, exclude_tail=False, seed=1, **options) -> RGBFrame:
+    kind = LEGACY_NAMES.get(kind, kind)
     renderers = {
-        "fire": render_fire,
-        "rotating-plane": render_rotating_plane,
-        "radar": render_radar,
-        "aurora": render_aurora,
-        "fireflies": render_fireflies,
-        "twinkle": lambda context, elapsed, **options: create_renderer("twinkle", context, **options).render(elapsed),
+        "Fire": render_fire,
+        "RotatingPlane": render_rotating_plane,
+        "Radar": render_radar,
+        "Aurora": render_aurora,
+        "Fireflies": render_fireflies,
+        "Twinkle": lambda context, elapsed, **options: create_renderer("Twinkle", context, **options).render(elapsed),
     }
     if kind not in renderers:
         raise ValueError(f"unknown procedural effect {kind!r}")

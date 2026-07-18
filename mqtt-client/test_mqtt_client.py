@@ -119,18 +119,18 @@ class ApplyEffectStatusTests(unittest.TestCase):
 class ValidateNameTests(unittest.TestCase):
     def test_wellformed_names_pass_without_allowlist(self):
         with mock.patch.object(mqtt_client, "ALLOWLIST", None):
-            for name in ("fire", "expanding-rings", "auto"):
+            for name in ("Fire", "ExpandingRings", "Auto"):
                 self.assertEqual(mqtt_client.validate_name(name), name)
 
     def test_malformed_names_are_rejected(self):
         with mock.patch.object(mqtt_client, "ALLOWLIST", None):
-            for bad in (None, 7, "", "Fire", "fire effect", "fire\n", "-fire", "a" * 65, {"n": 1}):
+            for bad in (None, 7, "", "fire", "expanding-rings", "Fire Effect", "Fire\n", "_Fire", "Fire_9not_title", "A" * 65, {"n": 1}):
                 self.assertIsNone(mqtt_client.validate_name(bad))
 
     def test_allowlist_restricts_names(self):
-        with mock.patch.object(mqtt_client, "ALLOWLIST", frozenset({"fire"})):
-            self.assertEqual(mqtt_client.validate_name("fire"), "fire")
-            self.assertIsNone(mqtt_client.validate_name("aurora"))
+        with mock.patch.object(mqtt_client, "ALLOWLIST", frozenset({"Fire"})):
+            self.assertEqual(mqtt_client.validate_name("Fire"), "Fire")
+            self.assertIsNone(mqtt_client.validate_name("Aurora"))
 
 
 class FakeDispatcher:
@@ -146,8 +146,8 @@ class OnMessageTests(unittest.TestCase):
         dispatcher = FakeDispatcher()
         out, err = quiet()
         with out, err:
-            mqtt_client.on_message(None, dispatcher, FakeMessage('{"name": "fire", "x": 1}'))
-        self.assertEqual(dispatcher.submitted, ["fire"])
+            mqtt_client.on_message(None, dispatcher, FakeMessage('{"name": "ExpandingRings", "x": 1}'))
+        self.assertEqual(dispatcher.submitted, ["ExpandingRings"])
 
     def test_payloads_without_an_effect_name_are_ignored(self):
         dispatcher = FakeDispatcher()

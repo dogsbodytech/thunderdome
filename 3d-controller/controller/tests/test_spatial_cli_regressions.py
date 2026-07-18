@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome.cli import main, parse_args
-from thunderdome.effects._common import SpatialContext
+from thunderdome.effects.Common import SpatialContext
 from thunderdome.frame import RGBFrame
 from thunderdome.transport.multi_ddp import SendResult
 
@@ -40,7 +40,7 @@ class Session:
 
 class SpatialCLIRegressionTests(unittest.TestCase):
     def test_spatial_commands_use_loops_not_rotations_and_prepare_removed(self):
-        for command in ("expanding-rings", "height-wave"):
+        for command in ("ExpandingRings", "HeightWave"):
             args = parse_args(["effect", command, "--loops", "2"])
             self.assertEqual(args.loops, 2)
             self.assertFalse(hasattr(args, "prepare_ddp"))
@@ -48,13 +48,13 @@ class SpatialCLIRegressionTests(unittest.TestCase):
                 parse_args(["effect", command, "--prepare" "-ddp"])
             with self.assertRaises(SystemExit):
                 parse_args(["effect", command, "--rotations", "2"])
-        self.assertEqual(parse_args(["effect", "clock-hand", "--rotations", "2"]).rotations, 2)
+        self.assertEqual(parse_args(["effect", "ClockHand", "--rotations", "2"]).rotations, 2)
         with self.assertRaises(SystemExit):
-            parse_args(["effect", "height-wave", "--loops", "0"])
+            parse_args(["effect", "HeightWave", "--loops", "0"])
 
     def test_spatial_loop_modes_are_mutually_exclusive(self):
         with self.assertRaises(SystemExit):
-            parse_args(["effect", "expanding-rings", "--hold", "--duration", "1"])
+            parse_args(["effect", "ExpandingRings", "--hold", "--duration", "1"])
 
     def test_effect_runners_do_not_call_prepare_operation(self):
         context = Mock(spec=SpatialContext)
@@ -73,7 +73,7 @@ class SpatialCLIRegressionTests(unittest.TestCase):
         ) as prepare, patch("thunderdome.cli.render_height_wave", return_value=RGBFrame.allocate(5_000)), patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
             "thunderdome.cli.run_frame_loop", side_effect=loop
         ):
-            self.assertEqual(main(["effect", "height-wave", "--output", "null", "--controllers", str(CONTROLLERS), "--loops", "1"]), 0)
+            self.assertEqual(main(["effect", "HeightWave", "--output", "null", "--controllers", str(CONTROLLERS), "--loops", "1"]), 0)
         prepare.assert_not_called()
         self.assertEqual(calls, ["stream"])
 
@@ -89,7 +89,7 @@ class SpatialCLIRegressionTests(unittest.TestCase):
         ) as prepare, patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
             "thunderdome.cli.run_frame_loop", side_effect=lambda producer, sender, **_: (sender(producer(0, 0.0)) or Mock(frames_sent=1, elapsed_seconds=0.0, interrupted=False))
         ):
-            self.assertEqual(main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS), "--dry-run", "--loops", "1"]), 0)
+            self.assertEqual(main(["effect", "ExpandingRings", "--controllers", str(CONTROLLERS), "--dry-run", "--loops", "1"]), 0)
         prepare.assert_not_called()
         self.assertEqual(session.frames, [])
 

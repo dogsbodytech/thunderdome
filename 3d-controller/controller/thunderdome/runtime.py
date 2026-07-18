@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Callable, Mapping, Protocol
 
 from .schemas import validate_effect_parameters
+from .effects.Registry import LEGACY_NAMES
 
 
 class CommandSource(enum.StrEnum):
@@ -100,9 +101,10 @@ class RuntimeCoordinator:
         output = command.output or inherited_output or self.default_output
         if output is None:
             raise ValueError("output is required")
-        parameters = validate_effect_parameters(command.effect, command.parameters)
+        effect = LEGACY_NAMES.get(command.effect, command.effect)
+        parameters = validate_effect_parameters(effect, command.parameters)
         now = self._monotonic()
-        return DisplayDefinition(command.effect, parameters, output, command.source, command.request_id, now, command.priority, now + command.duration_seconds if command.duration_seconds else None)
+        return DisplayDefinition(effect, parameters, output, command.source, command.request_id, now, command.priority, now + command.duration_seconds if command.duration_seconds else None)
 
     def _start(self, display: DisplayDefinition | None) -> None:
         if display is None:
