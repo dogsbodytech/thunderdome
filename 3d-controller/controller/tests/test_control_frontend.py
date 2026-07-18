@@ -56,6 +56,11 @@ class ControlFrontendTests(unittest.TestCase):
         self.assertIn("method:'DELETE'", self.js)
         self.assertIn("'Built-in defaults restored'", self.js)
 
+    def test_saved_default_state_and_values_are_visible_after_page_load(self):
+        self.assertIn('id="defaults-values"', self.html)
+        self.assertIn("Saved default active", self.js)
+        self.assertIn("JSON.stringify(saved", self.js)
+
 
 if __name__ == "__main__":
     unittest.main()
