@@ -7,29 +7,21 @@ Listens on `open/dogsbody/thunderdome/effect` and forwards each message to the
 owns the single render loop, so each new effect replaces the running one. See
 `3d-controller/docs/api-rest.md` for the API.
 
-## Run
+## Getting Started
 
-1. Start the control service (in the `3d-controller` repo). Simulator-only:
+Ensure the `thunderdome control serve` service is running.
 
-   ```sh
-   thunderdome control serve --port 8080
-   ```
-
-   Or driving the physical dome:
-
-   ```sh
-   thunderdome control serve --controllers config/controllers.json \
-     --allow-live-control --default-output ddp
-   ```
-
-2. Start this bridge:
-
-   ```sh
+### Installation
+```sh
    python3 -m venv .venv
    .venv/bin/pip install -r requirements.txt
-   cp .env.example .env        # optional; defaults work
-   .venv/bin/python mqtt_client.py
-   ```
+   cp .env.example .env
+```
+
+### Start the Bridge
+```sh
+.venv/bin/python mqtt_client.py
+```
 
 On connect you'll see `connected to <host>:<port>`. The payload is JSON with a
 `name` key, e.g. `mosquitto_pub -h mqtt.emf.camp -t
