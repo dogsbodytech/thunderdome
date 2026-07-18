@@ -12,7 +12,7 @@ from typing import Callable
 from aiohttp import web
 
 from .animation.loop import run_frame_loop
-from .auto_scheduler import AutoScheduler
+from .auto_scheduler import AutoScheduler, auto_duration
 from .effects.common import SpatialContext, parse_spatial_origin
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.expanding_rings import render_expanding_rings
@@ -73,7 +73,9 @@ class FrameRuntime:
 
     def _run(self, display: DisplayDefinition, cancel: threading.Event) -> None:
         try:
-            producer, fps = self.producer_factory(display)
+            produced = self.producer_factory(display)
+            producer, fps = produced[:2]
+            duration = produced[2] if len(produced) == 3 else None
             with self._sink(display.output) as sink:
                 def send(frame: RGBFrame) -> None:
                     result = sink.send_frame(frame)
@@ -81,7 +83,7 @@ class FrameRuntime:
                         raise OSError(f"{result.name}: {result.error or 'delivery failed'}")
                     with self._lock:
                         self.frames += 1
-                run_frame_loop(producer, send, fps=fps, cancel_event=cancel)
+                run_frame_loop(producer, send, fps=fps, duration=duration, cancel_event=cancel)
         except (OSError, ValueError) as exc:
             with self._lock:
                 self.error = str(exc)
@@ -106,7 +108,7 @@ class FrameRuntime:
         self.stop()
 
 
-def make_effect_producer(display: DisplayDefinition) -> tuple[Callable[[int, float], RGBFrame], int]:
+def make_effect_producer(display: DisplayDefinition) -> tuple[Callable[[int, float], RGBFrame], int, float | None]:
     values = dict(display.parameters)
     context = SpatialContext.load(values.pop("positions", None) or Path(__file__).resolve().parents[2] / "geometry/generated/led_positions_3d.json", values.pop("geometry", None) or Path(__file__).resolve().parents[2] / "geometry/thunderdome_geometry.json")
     brightness = int(values.pop("brightness", 255)); fps = int(values.pop("fps", 30)); exclude_tail = bool(values.pop("exclude_tail", False))
@@ -120,11 +122,11 @@ def make_effect_producer(display: DisplayDefinition) -> tuple[Callable[[int, flo
                     return renderers[name].render(effect_elapsed)
                 return _spatial_frame(name, context, effect_elapsed, brightness=255, exclude_tail=exclude_tail, values=validate_effect_parameters(name))
             return scheduler.frame(elapsed, renderer_for, brightness=brightness)
-        return auto, fps
+        return auto, fps, auto_duration(names, interval=scheduler.interval, duration=None, cycles=values["cycles"])
     if BY_NAME[display.effect].category == "procedural":
         renderer = create_renderer(display.effect, context, brightness=brightness, exclude_tail=exclude_tail, seed=int(values.pop("seed", 1)), **values)
-        return lambda _number, elapsed: renderer.render(elapsed), fps
-    return lambda _number, elapsed: _spatial_frame(display.effect, context, elapsed, brightness=brightness, exclude_tail=exclude_tail, values=values), fps
+        return lambda _number, elapsed: renderer.render(elapsed), fps, None
+    return lambda _number, elapsed: _spatial_frame(display.effect, context, elapsed, brightness=brightness, exclude_tail=exclude_tail, values=values), fps, None
 
 
 def _spatial_frame(effect: str, context: SpatialContext, elapsed: float, *, brightness: int, exclude_tail: bool, values: dict[str, object]) -> RGBFrame:
