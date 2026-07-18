@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from thunderdome.cli import main, parse_args
 from thunderdome.animation.loop import FrameLoopStats
 from thunderdome.frame import RGBFrame
+from thunderdome.sinks import CompositeFrameSink, FrameSink, SinkResult
 from thunderdome.transport.ddp import packets_for_frame
 from thunderdome.transport.multi_ddp import SendResult
 
@@ -47,7 +48,108 @@ class FakeMultiSession:
         return next(self.result_sets)
 
 
+class FailingFrameSink(FrameSink):
+    def __init__(self, name="simulator", *, fail_on=2):
+        self.name = name
+        self.fail_on = fail_on
+        self.opened = 0
+        self.closed = 0
+        self.frames = []
+
+    def open(self):
+        self.opened += 1
+
+    def send_frame(self, frame, *, timestamp=None, sequence=None):
+        self.frames.append(frame)
+        failed = len(self.frames) >= self.fail_on
+        return SinkResult(self.name, not failed, "simulated delivery failure" if failed else None)
+
+    def close(self):
+        self.closed += 1
+
 class CLILoopTests(unittest.TestCase):
+    def test_individual_effect_stops_after_first_sink_failure(self):
+        sink = FailingFrameSink(fail_on=2)
+        renderer = Mock()
+        renderer.render.return_value = RGBFrame.allocate(5_000)
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+
+        with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()), patch(
+            "thunderdome.cli.create_renderer", return_value=renderer
+        ), patch("thunderdome.cli._effect_sink", return_value=sink), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            result = main(["effect", "fire", "--output", "simulator", "--duration", "1", "--fps", "60"])
+
+        self.assertEqual(result, 1)
+        self.assertEqual(len(sink.frames), 2)
+        self.assertEqual(sink.closed, 1)
+        self.assertIn("output delivery failed: simulator: simulated delivery failure", stderr.getvalue())
+        self.assertNotIn("Traceback", stderr.getvalue())
+
+    def test_hold_effect_stops_promptly_after_sink_failure(self):
+        sink = FailingFrameSink(fail_on=2)
+        renderer = Mock()
+        renderer.render.return_value = RGBFrame.allocate(5_000)
+
+        with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()), patch(
+            "thunderdome.cli.create_renderer", return_value=renderer
+        ), patch("thunderdome.cli._effect_sink", return_value=sink):
+            result = main(["effect", "fire", "--output", "simulator", "--hold", "--fps", "60"])
+
+        self.assertEqual(result, 1)
+        self.assertEqual(len(sink.frames), 2)
+        self.assertEqual(renderer.render.call_count, 2)
+        self.assertEqual(sink.closed, 1)
+
+    def test_auto_stops_after_sink_failure_without_rendering_later_effects(self):
+        sink = FailingFrameSink(fail_on=2)
+        fire = Mock()
+        fire.render.return_value = RGBFrame.allocate(5_000)
+        aurora = Mock()
+        aurora.render.return_value = RGBFrame.allocate(5_000)
+        stderr = io.StringIO()
+
+        def renderer_for(name, *_args, **_kwargs):
+            return {"fire": fire, "aurora": aurora}[name]
+
+        with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()), patch(
+            "thunderdome.cli.BY_NAME", {
+                "fire": Mock(category="procedural", create_renderer=lambda *args, **kwargs: renderer_for("fire")),
+                "aurora": Mock(category="procedural", create_renderer=lambda *args, **kwargs: renderer_for("aurora")),
+            }
+        ), patch("thunderdome.cli.DEFAULT_PLAYLIST", ("fire", "aurora")), patch(
+            "thunderdome.cli._effect_sink", return_value=sink
+        ), contextlib.redirect_stderr(stderr):
+            result = main([
+                "effect", "auto", "--output", "simulator", "--effects", "fire,aurora", "--duration", "1",
+                "--interval", "100", "--transition", "0", "--fps", "60",
+            ])
+
+        self.assertEqual(result, 1)
+        self.assertEqual(len(sink.frames), 2)
+        self.assertEqual(fire.render.call_count, 2)
+        aurora.render.assert_not_called()
+        self.assertEqual(sink.closed, 1)
+        self.assertNotIn("Traceback", stderr.getvalue())
+
+    def test_composite_sink_attempts_all_destinations_then_closes_every_sink(self):
+        first = FailingFrameSink("simulator", fail_on=99)
+        second = FailingFrameSink("ddp", fail_on=2)
+        sink = CompositeFrameSink([first, second])
+        renderer = Mock()
+        renderer.render.return_value = RGBFrame.allocate(5_000)
+        stderr = io.StringIO()
+
+        with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()), patch(
+            "thunderdome.cli.create_renderer", return_value=renderer
+        ), patch("thunderdome.cli._effect_sink", return_value=sink), contextlib.redirect_stderr(stderr):
+            result = main(["effect", "fire", "--output", "both", "--duration", "1", "--fps", "60"])
+
+        self.assertEqual(result, 1)
+        self.assertEqual((len(first.frames), len(second.frames)), (2, 2))
+        self.assertEqual((first.opened, second.opened, first.closed, second.closed), (1, 1, 1, 1))
+        self.assertIn("ddp: simulated delivery failure", stderr.getvalue())
+
     def test_procedural_null_output_does_not_load_controllers_or_pass_transport_options_to_renderer(self):
         renderer = Mock()
         renderer.render.return_value = RGBFrame.allocate(5_000)

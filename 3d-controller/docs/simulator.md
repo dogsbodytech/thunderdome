@@ -248,14 +248,14 @@ Start the local-only server:
 thunderdome simulator serve --host 127.0.0.1 --port 8080 --open-browser
 ```
 
-The server retains all Stage A HTTP endpoints and static assets. It accepts one producer at `/ws/producer` and any number of browser viewers at `/ws/viewer`; a second producer receives HTTP 409. Frames use network-byte-order `TDFR` protocol version 1: a 32-byte header (magic, version, flags, header length, unsigned 64-bit sequence, float64 timestamp, pixel count, payload length) followed by exactly 15,000 RGB8 bytes for 5,000 LEDs. Invalid, duplicate, and out-of-order frames are rejected. Metadata exposes the protocol version, encoding, expected sizes, and endpoint paths; `/api/simulator/status` exposes non-sensitive connection and frame counters.
+The server retains all Stage A HTTP endpoints and static assets. It accepts one producer at `/ws/producer` and any number of browser viewers at `/ws/viewer`; a second producer receives HTTP 409. Frames use network-byte-order `TDFR` protocol version 1: a 32-byte header (magic, version, flags, header length, unsigned 64-bit sequence, float64 timestamp, pixel count, payload length) followed by exactly 15,000 RGB8 bytes for 5,000 LEDs. Invalid frames are rejected. Sequence ordering is enforced only for the active producer connection: its frames must strictly increase, but after it disconnects a later producer may restart at sequence zero. Metadata exposes the protocol version, encoding, expected sizes, and endpoint paths; `/api/simulator/status` exposes non-sensitive connection and frame counters.
 
 Viewers retain the latest complete frame and each has a queue of one: stale preview frames are discarded so latency stays low. The browser keeps the existing Stage A `THREE.Points` geometry, updates only its colour buffer, displays connection state, sequence, FPS, and skipped frames, and reconnects using bounded exponential backoff. Diagnostic string colours remain until the first live frame and can be restored with the button.
 
 ## Limitations
 
 - The simulator is a local preview, not a guaranteed-delivery recorder or replay system.
-- The producer does not queue frames while disconnected; initial connection failure and streaming loss are reported to the effect command.
+- The producer does not queue frames while disconnected; initial connection failure or streaming loss terminates the active effect or auto run and returns nonzero. There is no fallback from simulator output to DDP.
 - No browser authentication, MQTT, recording/replay, timeline controls, or effect-debug overlays are included.
 - No browser automation test framework is introduced; source-level asset tests and local protocol integration tests cover the live path.
 - Cylindrical spars and physically calibrated hub offsets are future enhancements.

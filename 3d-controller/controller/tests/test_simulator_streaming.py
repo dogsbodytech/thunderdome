@@ -110,6 +110,44 @@ class SimulatorLiveStreamingTests(unittest.IsolatedAsyncioTestCase):
         await producer.close()
         await viewer.close()
 
+    async def test_new_producer_can_restart_sequence_at_zero_and_replace_retained_frame(self):
+        base_url = f"http://127.0.0.1:{self.port}"
+        viewer = await self.session.ws_connect(f"{base_url}/ws/viewer")
+        first_producer = await self.session.ws_connect(f"{base_url}/ws/producer")
+        await first_producer.send_bytes(encode_frame(RGBFrame.allocate(5_000, (1, 2, 3)), sequence=50, timestamp=1.0))
+        self.assertEqual(decode_frame((await viewer.receive(timeout=2)).data).sequence, 50)
+        await first_producer.close()
+
+        second_producer = await self.session.ws_connect(f"{base_url}/ws/producer")
+        await second_producer.send_bytes(encode_frame(RGBFrame.allocate(5_000, (4, 5, 6)), sequence=0, timestamp=2.0))
+        received = await viewer.receive(timeout=2)
+        self.assertEqual(received.type, WSMsgType.BINARY)
+        self.assertEqual(decode_frame(received.data).sequence, 0)
+
+        async with self.session.get(f"{base_url}/api/simulator/status") as response:
+            status = await response.json()
+        self.assertEqual(status["last_frame"]["sequence"], 0)
+        self.assertEqual(status["received_frames"], 2)
+        self.assertEqual(status["rejected_frames"], 0)
+
+        await second_producer.close()
+        await viewer.close()
+
+    async def test_sequence_ordering_is_enforced_within_one_producer_connection(self):
+        base_url = f"http://127.0.0.1:{self.port}"
+        producer = await self.session.ws_connect(f"{base_url}/ws/producer")
+        frame = RGBFrame.allocate(5_000, (1, 2, 3))
+        for sequence in (0, 1, 1, 0, 2):
+            await producer.send_bytes(encode_frame(frame, sequence=sequence, timestamp=float(sequence)))
+
+        async with self.session.get(f"{base_url}/api/simulator/status") as response:
+            status = await response.json()
+        self.assertEqual(status["received_frames"], 3)
+        self.assertEqual(status["rejected_frames"], 2)
+        self.assertEqual(status["last_frame"]["sequence"], 2)
+
+        await producer.close()
+
 
 class RecordingSink(FrameSink):
     def __init__(self, name: str, *, fail: bool = False):

@@ -29,6 +29,10 @@ from .wled.client import WLEDApiError, WLEDClient
 from .wled.multi import WLEDOperationResult, run_wled_operation
 
 
+class FrameDeliveryError(RuntimeError):
+    """Raised when an output sink cannot deliver an animation frame."""
+
+
 @dataclass(frozen=True)
 class LoopOptions:
     hold: bool
@@ -460,15 +464,15 @@ def _print_output_mode(args: argparse.Namespace) -> None:
 
 def _send_effect_frames(args, frame_for, *, fps: int, duration: float | None, dry_run: bool, label: str) -> int:
     _print_output_mode(args)
-    failures: list[str] = []
     with _effect_sink(args) as sink:
         def send(frame: RGBFrame) -> None:
             result = sink.send_frame(frame)
-            if not result.ok: failures.append(result.error or result.name)
+            if not result.ok:
+                raise FrameDeliveryError(f"output delivery failed: {result.name}: {result.error or 'delivery failed'}")
         stats = run_frame_loop(frame_for, send, fps=fps, duration=duration)
     _report_loop(stats)
     if dry_run: print(f"Dry run complete for {label}: {stats.frames_sent} frames")
-    return 1 if failures else 0
+    return 0
 
 
 def _run_spatial_effect(args: argparse.Namespace) -> int:
@@ -817,7 +821,7 @@ def _main(args: argparse.Namespace) -> int:
 def main(argv: Sequence[str] | None = None) -> int:
     try:
         return _main(parse_args(argv))
-    except (OSError, ValueError, SimulatorDataError, WLEDApiError) as exc:
+    except (FrameDeliveryError, OSError, ValueError, SimulatorDataError, WLEDApiError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 

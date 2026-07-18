@@ -322,6 +322,7 @@ class SimulatorHTTPServer:
         websocket = web.WebSocketResponse(max_msg_size=FRAME_PAYLOAD_LENGTH + 64)
         await websocket.prepare(request)
         self._producer = websocket
+        producer_last_sequence: int | None = None
         try:
             async for message in websocket:
                 if message.type != WSMsgType.BINARY:
@@ -334,9 +335,10 @@ class SimulatorHTTPServer:
                     self._rejected_frames += 1
                     await websocket.close(code=WSCloseCode.UNSUPPORTED_DATA, message=str(exc).encode("utf-8"))
                     break
-                if self._last_frame is not None and decoded.sequence <= self._last_frame["sequence"]:
+                if producer_last_sequence is not None and decoded.sequence <= producer_last_sequence:
                     self._rejected_frames += 1
                     continue
+                producer_last_sequence = decoded.sequence
                 wire_frame = bytes(message.data)
                 self._latest_frame = wire_frame
                 self._last_frame = {
