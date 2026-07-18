@@ -21,6 +21,7 @@ from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
 from .routes import generate_route_document, load_routes, write_route_document
+from .simulator import SimulatorDataError, resolve_user_path, serve_simulator
 from .transport.ddp import DirectDDPSession, parse_hex_color, send_frame
 from .transport.multi_ddp import MultiControllerDDPSession, SendResult
 from .wled.client import WLEDApiError, WLEDClient
@@ -188,6 +189,18 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         elif name in {"color"}: item.add_argument("color")
         elif name in {"effect", "palette"}: item.add_argument("value", type=int)
         elif name == "preset": item.add_argument("preset_id", type=int)
+
+    simulator = groups.add_parser("simulator", help="Offline local dome simulator")
+    simulator_sub = simulator.add_subparsers(dest="command", required=True)
+    serve = simulator_sub.add_parser("serve", help="serve the static offline dome simulator")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8080)
+    serve.add_argument("--geometry", default=None)
+    serve.add_argument("--positions", default=None)
+    browser = serve.add_mutually_exclusive_group()
+    browser.add_argument("--open-browser", dest="open_browser", action="store_true")
+    browser.add_argument("--no-open-browser", dest="open_browser", action="store_false")
+    serve.set_defaults(open_browser=False)
 
     effect = groups.add_parser("effect", help="Application-rendered spatial DDP effects")
     effect_sub = effect.add_subparsers(dest="command", required=True)
@@ -773,6 +786,15 @@ def _main(args: argparse.Namespace) -> int:
                 )
         return 0
 
+    if args.area == "simulator":
+        geometry_path = resolve_user_path(args.geometry, GEOMETRY_PATH)
+        positions_path = resolve_user_path(args.positions, LED_POSITIONS_PATH)
+        if not geometry_path.is_file():
+            raise SimulatorDataError(f"geometry file not found: {geometry_path}")
+        if not positions_path.is_file():
+            raise SimulatorDataError(f"positions file not found: {positions_path}; run `thunderdome positions generate`")
+        return serve_simulator(host=args.host, port=args.port, geometry_path=geometry_path, positions_path=positions_path, open_browser=args.open_browser)
+
     if args.area == "ddp-all":
         return _run_multi_ddp(args)
 
@@ -789,7 +811,7 @@ def _main(args: argparse.Namespace) -> int:
 def main(argv: Sequence[str] | None = None) -> int:
     try:
         return _main(parse_args(argv))
-    except (OSError, ValueError, WLEDApiError) as exc:
+    except (OSError, ValueError, SimulatorDataError, WLEDApiError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 

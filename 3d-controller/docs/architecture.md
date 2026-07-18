@@ -4,6 +4,14 @@ The authoritative flow is **geometry -> routes -> generated XYZ -> effects -> RG
 
 Effects render a logical 5,000-pixel linear `RGBFrame`, which DDP sends in physical order after fan-out to the five controllers. WLED HTTP support is secondary controller management/fallback functionality. WLED 2D ledmaps, old SVG coordinate experiments, and related archives are not the active mapping authority.
 
+## Stage A simulator
+
+`thunderdome simulator serve` is a separate local development server for static inspection of the same authoritative data. It loads `geometry/thunderdome_geometry.json`, `geometry/reference_string_route.md`, and `geometry/generated/led_positions_3d.json` through the existing Python validators, normalizes them into fixed JSON APIs, and serves a browser viewer from `simulator/static/`.
+
+The server uses Python's standard-library `ThreadingHTTPServer` instead of a web framework because Stage A only needs static files and JSON endpoints. It validates exactly 5,000 ordered LED records, finite XYZ coordinates, H061, controller/string allocation, and tail metadata before binding. It sends no WLED HTTP requests and no UDP/DDP packets.
+
+The frontend is plain offline HTML/CSS/JavaScript with local Three.js r160 / 0.160.0 and OrbitControls vendor files. It renders hubs, spars, H061, tails, and all LED points using true XYZ coordinates with equal X/Y/Z scale. It is diagnostic only: live effect-frame streaming, WebSockets, simulator output selection, and frame-sink abstractions are intentionally deferred. See [simulator.md](simulator.md).
+
 ## Animation scheduling
 
 `thunderdome.animation.run_frame_loop` is the generic scheduling layer between a frame producer and either single-controller or multi-controller DDP transport. It uses a monotonic clock and can repeatedly send a static frame, invoke a callback with the frame number and elapsed time, or consume a frame generator. The same layer implements held static DDP frames today and consumes frames derived from the generated positional data for future spatial effects.

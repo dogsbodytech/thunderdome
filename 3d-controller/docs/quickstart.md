@@ -9,6 +9,17 @@ python3 -m unittest discover -s controller/tests -v
 thunderdome geometry validate
 ```
 
+## Open the offline simulator
+
+Stage A of the simulator is a local static geometry viewer. It shows the authoritative hubs, spars, H061 apex, tails, and all 5,000 generated XYZ LEDs with five diagnostic string colours. It does not stream effects, contact WLED, send DDP, or change output defaults.
+
+```bash
+thunderdome positions validate
+thunderdome simulator serve --host 127.0.0.1 --port 8080
+```
+
+Open `http://127.0.0.1:8080/`. The viewer is fully offline at runtime; Three.js r160 / 0.160.0, OrbitControls, and the Three.js licence are vendored under `simulator/static/vendor/`. Use `--open-browser` to ask Python to open the browser automatically, or `--no-open-browser` for terminal-only startup. See [simulator.md](simulator.md) for API endpoints, controls, LED lookup, and binding notes for `0.0.0.0`.
+
 ## Realtime live mode
 
 WLED's HTTP live-mode setting is separate from DDP frame transmission. Use it to explicitly enable or disable realtime live mode on one controller or every enabled controller in the local configuration:

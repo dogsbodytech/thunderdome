@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thunderdome Simulator</title>
+  <link rel="stylesheet" href="/simulator.css">
+</head>
+<body>
+  <main id="app">
+    <aside id="panel">
+      <h1>Thunderdome Simulator</h1>
+      <p class="stage">Stage A: static offline geometry and LED layout viewer</p>
+      <section id="status" class="card">Loading simulator data…</section>
+      <section class="card controls">
+        <h2>Visibility</h2>
+        <label><input id="show-leds" type="checkbox" checked> LEDs</label>
+        <label><input id="show-spars" type="checkbox" checked> Spars</label>
+        <label><input id="show-hubs" type="checkbox" checked> Hubs</label>
+        <label><input id="show-tails" type="checkbox" checked> Tails</label>
+        <label><input id="highlight-tails" type="checkbox"> Highlight only tails</label>
+        <label><input id="show-ground" type="checkbox" checked> Ground</label>
+        <label><input id="show-axes" type="checkbox" checked> XYZ axes</label>
+        <label><input id="show-labels" type="checkbox"> Hub labels</label>
+      </section>
+      <section class="card controls">
+        <h2>Strings</h2>
+        <label>Highlight string/controller
+          <select id="string-filter">
+            <option value="all">All strings</option>
+            <option value="1">Controller 1</option>
+            <option value="2">Controller 2</option>
+            <option value="3">Controller 3</option>
+            <option value="4">Controller 4</option>
+            <option value="5">Controller 5</option>
+          </select>
+        </label>
+      </section>
+      <section class="card controls">
+        <h2>Camera</h2>
+        <button data-view="perspective">Perspective</button>
+        <button data-view="top">Top</button>
+        <button data-view="front">Front</button>
+        <button data-view="side">Side</button>
+        <button data-view="opposite">Opposite side</button>
+        <button id="toggle-camera">Perspective / Orthographic</button>
+        <button id="fit-view">Fit dome</button>
+        <button id="reset-view">Reset view</button>
+      </section>
+      <section class="card controls">
+        <h2>LED lookup</h2>
+        <form id="lookup-form">
+          <input id="led-index" type="number" min="0" max="4999" placeholder="Global LED index 0–4999">
+          <button type="submit">Find</button>
+        </form>
+        <p id="lookup-error" class="error"></p>
+      </section>
+      <section id="inspection" class="card"><h2>Inspection</h2><p>Select an LED or hub.</p></section>
+    </aside>
+    <section id="viewer-wrap">
+      <div id="viewer"></div>
+      <div id="overlay-error" class="hidden"></div>
+    </section>
+  </main>
+  <script>
+    window.addEventListener('error', event => {
+      const overlay = document.getElementById('overlay-error');
+      if (!overlay || overlay.textContent) return;
+      overlay.textContent = `Simulator frontend failed to load: ${event.message || 'a required local module is missing.'}`;
+      overlay.classList.remove('hidden');
+    });
+    window.addEventListener('unhandledrejection', event => {
+      const overlay = document.getElementById('overlay-error');
+      if (!overlay || overlay.textContent) return;
+      overlay.textContent = `Simulator frontend failed to load: ${event.reason?.message || 'a required local module is missing.'}`;
+      overlay.classList.remove('hidden');
+    });
+  </script>
+  <script type="module" src="/simulator.js"></script>
+</body>
+</html>

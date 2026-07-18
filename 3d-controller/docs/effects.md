@@ -2,6 +2,8 @@
 
 Thunderdome renders application effects from `geometry/generated/led_positions_3d.json`, builds one logical 5,000-pixel linear RGB frame, and fans that exact 15,000-byte frame out to the five direct-DDP WLED controllers. WLED is the transport endpoint; XYZ mapping lives in Python.
 
+The Stage A simulator is a separate static geometry/LED-layout viewer. Effects are not streamed to it yet, and `thunderdome effect ...` commands continue to use their existing DDP/dry-run output behavior. See [simulator.md](simulator.md).
+
 Generate/validate positions before effects:
 
 ```bash

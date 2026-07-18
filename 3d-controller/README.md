@@ -22,6 +22,7 @@ Python owns spatial rendering and converts effects into the one logical 5,000-pi
 - Confirmed reference route: `geometry/reference_string_route.md`
 - Generated positions: `geometry/generated/led_positions_3d.json`
 - Active Python package: `controller/thunderdome/`
+- Offline Stage A simulator: `simulator/static/` and `docs/simulator.md`
 - Tests: `controller/tests/`
 - Historical experiments: `archive/`
 
@@ -85,6 +86,17 @@ thunderdome route validate
 thunderdome positions generate
 thunderdome positions validate
 ```
+
+## Offline static simulator
+
+Stage A of the simulator is a local browser viewer for authoritative dome geometry and generated LED positions. It renders hubs, spars, H061, tails, and all 5,000 generated XYZ LED records with diagnostic string/controller colours. It does **not** stream live effect frames, change default output, contact WLED, or send DDP packets.
+
+```bash
+thunderdome simulator serve
+# then open http://127.0.0.1:8080/
+```
+
+The simulator is fully offline at runtime. Three.js r160 / 0.160.0, OrbitControls, and the Three.js licence notice are vendored under `simulator/static/vendor/`; no npm install or remote CDN is required. Use `--host`, `--port`, `--geometry`, `--positions`, and `--open-browser`/`--no-open-browser` to customize serving. See `docs/simulator.md` for API endpoints, controls, path rules, and the implications of binding to `0.0.0.0`.
 
 ## Safe DDP dry run
 
