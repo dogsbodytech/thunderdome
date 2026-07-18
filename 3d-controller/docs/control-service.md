@@ -15,7 +15,7 @@ thunderdome control serve --host 127.0.0.1 --port 8080 \
 
 ## Runtime model
 
-Browser/API commands and future MQTT integration use the same command model and coordinator. Stage C1 does **not** connect to MQTT.
+Browser/API commands and future MQTT integration use the same command model and coordinator. Stage C1 does **not** connect to MQTT. Contributors must follow the [control architecture](control-architecture.md), [runtime command contract](runtime-command-contract.md), and [MQTT integration specification](mqtt-integration-spec.md).
 
 - A **baseline** is the normal effect or auto display and replaces the prior baseline.
 - An **override** temporarily pre-empts it. Higher priority wins; equal priority newer overrides replace; lower priority requests are rejected and never queued.

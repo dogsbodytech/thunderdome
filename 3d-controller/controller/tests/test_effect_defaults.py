@@ -1,10 +1,14 @@
+import asyncio
 import json
 import tempfile
 import time
 import unittest
 from pathlib import Path
+from typing import cast
 
-from thunderdome.control import make_effect_producer
+from aiohttp import web
+
+from thunderdome.control import ControlAPI, ControlSettings, make_effect_producer
 from thunderdome.effect_defaults import EffectDefaults
 from thunderdome.runtime import CommandSource, DisplayDefinition, OutputMode
 from thunderdome.schemas import validate_effect_parameters
@@ -37,6 +41,15 @@ class EffectDefaultsTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.defaults.save("aurora", {"speed": 0})
         self.path.write_text("{")
         with self.assertRaises(ValueError): self.defaults.saved("aurora")
+
+    def test_effect_catalogue_exposes_saved_and_resolved_defaults(self):
+        self.defaults.save("aurora", {"speed": .5})
+        api = ControlAPI(ControlSettings("ws://127.0.0.1:8080/ws/producer", effect_defaults_path=str(self.path)))
+        response = asyncio.run(api.effects(cast(web.Request, None)))
+        payload = json.loads(cast(bytes, response.body))
+        aurora = next(effect for effect in payload["effects"] if effect["name"] == "aurora")
+        self.assertEqual(aurora["saved_defaults"], {"speed": .5})
+        self.assertEqual(aurora["resolved_defaults"]["speed"], .5)
 
     def test_auto_refreshes_saved_procedural_defaults_while_running(self):
         self.defaults.save("twinkle", {"density": 0, "background": "100000"})

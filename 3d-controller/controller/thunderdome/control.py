@@ -202,7 +202,9 @@ class ControlAPI:
         effects = []
         for schema in EFFECT_SCHEMAS.values():
             payload = schema.as_dict()
-            if schema.name != "auto": payload["resolved_defaults"] = self.defaults.resolved(schema.name)
+            if schema.name != "auto":
+                payload["saved_defaults"] = self.defaults.saved(schema.name)
+                payload["resolved_defaults"] = self.defaults.resolved(schema.name)
             effects.append(payload)
         return web.json_response({"effects": effects})
 
