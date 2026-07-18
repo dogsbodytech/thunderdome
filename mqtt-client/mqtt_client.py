@@ -163,6 +163,10 @@ def on_connect(client, userdata, flags, reason_code, properties):
     client.subscribe(TOPIC)  # subscribe here so it re-applies after reconnect
 
 
+def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+    print(f"disconnected from {HOST}:{PORT} ({reason_code}); reconnecting with backoff", file=sys.stderr, flush=True)
+
+
 def on_message(client, userdata, msg):
     if len(msg.payload) > MAX_PAYLOAD_BYTES:
         print(f"ignored {msg.topic}: payload over {MAX_PAYLOAD_BYTES} bytes", file=sys.stderr, flush=True)
@@ -194,6 +198,7 @@ def main():
     if os.environ.get("MQTT_USER"):
         client.username_pw_set(os.environ["MQTT_USER"], os.environ.get("MQTT_PASS"))
     client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
     client.on_message = on_message
     client.connect_async(HOST, PORT, keepalive=60)
     try:

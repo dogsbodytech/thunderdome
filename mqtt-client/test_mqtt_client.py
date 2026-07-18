@@ -74,6 +74,15 @@ class RunEffectTests(unittest.TestCase):
             self.post({"accepted": False, "reason": "lower priority override rejected"})
 
 
+class ConnectionLoggingTests(unittest.TestCase):
+    def test_disconnects_are_logged_with_the_reason(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            mqtt_client.on_disconnect(None, None, None, "Keep alive timeout", None)
+        self.assertIn("disconnected", err.getvalue())
+        self.assertIn("Keep alive timeout", err.getvalue())
+
+
 class ApplyEffectStatusTests(unittest.TestCase):
     def run_apply(self, urlopen):
         published = []
