@@ -58,6 +58,15 @@ class RuntimeCoordinatorTests(unittest.TestCase):
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="radar", priority=1, duration=5, output=None)).accepted)
         self.assertEqual(self.coordinator.status()["effective"]["effect"], "radar")
 
+    def test_baseline_uses_configured_default_without_restarting_on_invalid_replacement(self):
+        self.coordinator.default_output = OutputMode.SIMULATOR
+        self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE, output=None)).accepted)
+        starts = len(self.runtime.started)
+        malformed = RuntimeCommand(CommandSource.BROWSER, CommandAction.SET_BASELINE, "bad", "fire", {"brightness": float("nan")}, None)
+        self.assertFalse(self.coordinator.execute(malformed).accepted)
+        self.assertEqual(len(self.runtime.started), starts)
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "fire")
+
 
 if __name__ == "__main__":
     unittest.main()

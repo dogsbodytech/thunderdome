@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
+import re
 from typing import Any, Mapping
 
 from .effects.registry import BY_NAME, DEFAULT_PLAYLIST
@@ -114,8 +116,28 @@ def validate_effect_parameters(effect: str, values: Mapping[str, Any] | None = N
             raise ValueError(f"parameter {name!r} must be boolean")
         if parameter.type == "integer" and (not isinstance(value, int) or isinstance(value, bool)):
             raise ValueError(f"parameter {name!r} must be integer")
-        if parameter.type == "float" and (not isinstance(value, (int, float)) or isinstance(value, bool)):
+        if parameter.type == "float" and (not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value)):
             raise ValueError(f"parameter {name!r} must be numeric")
+        if parameter.type == "integer" and not math.isfinite(value):
+            raise ValueError(f"parameter {name!r} must be finite")
+        if parameter.type == "colour":
+            if not isinstance(value, str) or re.fullmatch(r"#?[0-9A-Fa-f]{6}", value) is None:
+                raise ValueError(f"parameter {name!r} must be #RRGGBB")
+            value = value.upper().removeprefix("#")
+        if parameter.type == "string" and not isinstance(value, str):
+            raise ValueError(f"parameter {name!r} must be string")
+        if parameter.type == "vector":
+            if isinstance(value, str):
+                if value in {"vertical", "horizontal", "tilted"}:
+                    pass
+                else:
+                    try: value = [float(part) for part in value.split(",")]
+                    except ValueError: raise ValueError(f"parameter {name!r} must be a named or numeric 3-vector")
+            if isinstance(value, list):
+                if len(value) != 3 or any(isinstance(part, bool) or not isinstance(part, (int, float)) or not math.isfinite(part) for part in value) or not any(value):
+                    raise ValueError(f"parameter {name!r} must be a non-zero finite 3-vector")
+            elif not isinstance(value, str):
+                raise ValueError(f"parameter {name!r} must be a named or numeric 3-vector")
         if parameter.type == "choice" and value not in parameter.choices:
             raise ValueError(f"parameter {name!r} must be a supported choice")
         if parameter.type == "effect-list":

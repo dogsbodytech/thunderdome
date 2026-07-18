@@ -84,7 +84,7 @@ class DisplayRuntime(Protocol):
 class RuntimeCoordinator:
     """Serializes command arbitration; callers own no rendering loops or sinks."""
 
-    def __init__(self, runtime: DisplayRuntime, *, monotonic: Callable[[], float] = time.monotonic) -> None:
+    def __init__(self, runtime: DisplayRuntime, *, monotonic: Callable[[], float] = time.monotonic, default_output: OutputMode | None = None) -> None:
         self._runtime = runtime
         self._monotonic = monotonic
         self._lock = threading.RLock()
@@ -92,11 +92,12 @@ class RuntimeCoordinator:
         self._override: DisplayDefinition | None = None
         self._state = "idle"
         self._latest_error: str | None = None
+        self.default_output = default_output
 
     def _definition(self, command: RuntimeCommand, *, inherited_output: OutputMode | None = None) -> DisplayDefinition:
         if command.effect is None:
             raise ValueError("effect is required")
-        output = command.output or inherited_output
+        output = command.output or inherited_output or (self.default_output if command.action == CommandAction.SET_BASELINE else None)
         if output is None:
             raise ValueError("output is required")
         parameters = validate_effect_parameters(command.effect, command.parameters)
@@ -123,8 +124,9 @@ class RuntimeCoordinator:
             self._expire_locked()
             try:
                 if command.action == CommandAction.SET_BASELINE:
-                    self._baseline = self._definition(command)
-                    self._replace_effective(self._override or self._baseline)
+                    candidate = self._definition(command)
+                    self._baseline = candidate
+                    self._replace_effective(self._override or candidate)
                 elif command.action == CommandAction.APPLY_OVERRIDE:
                     inherited = self._baseline.output if self._baseline else None
                     candidate = self._definition(command, inherited_output=inherited)

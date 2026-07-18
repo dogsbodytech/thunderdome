@@ -11,6 +11,7 @@ from typing import Sequence
 from .animation.loop import FrameLoopStats, run_frame_loop
 from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, REFERENCE_ROUTE_PATH
 from .control import ControlAPI, ControlSettings
+from .runtime import OutputMode
 from .controllers import load_controllers
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
@@ -832,7 +833,7 @@ def _main(args: argparse.Namespace) -> int:
             raise ValueError("--allow-live-control requires --controllers FILE")
         if args.default_output in {"ddp", "both"} and not (args.allow_live_control and args.controllers):
             raise ValueError("DDP default output requires --controllers FILE and --allow-live-control")
-        settings = ControlSettings(f"ws://{args.host}:{args.port}/ws/producer", args.controllers, args.allow_live_control)
+        settings = ControlSettings(f"ws://{args.host}:{args.port}/ws/producer", args.controllers, args.allow_live_control, OutputMode(args.default_output))
         api = ControlAPI(settings)
         server = create_http_server(args.host, args.port, geometry_path, routes_path, positions_path, api)
         print("Control service mode: local simulator and runtime APIs")

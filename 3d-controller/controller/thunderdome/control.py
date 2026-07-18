@@ -29,6 +29,7 @@ class ControlSettings:
     simulator_url: str
     controllers_path: str | None = None
     live_control_enabled: bool = False
+    default_output: OutputMode = OutputMode.SIMULATOR
 
     @property
     def live_available(self) -> bool:
@@ -135,7 +136,9 @@ class ControlAPI:
     def __init__(self, settings: ControlSettings, runtime: FrameRuntime | None = None) -> None:
         self.settings = settings
         self.runtime = runtime or FrameRuntime(settings)
-        self.coordinator = RuntimeCoordinator(self.runtime)
+        self.coordinator = RuntimeCoordinator(self.runtime, default_output=settings.default_output)
+        self._timers: list[threading.Timer] = []
+        self._shutdown = False
 
     def register_routes(self, app: web.Application) -> None:
         app.router.add_get("/api/control/capabilities", self.capabilities)
@@ -149,7 +152,7 @@ class ControlAPI:
         app.router.add_post("/api/runtime/stop", self.command)
 
     def capabilities_payload(self) -> dict[str, object]:
-        return {"service_mode": "control", "simulator_available": True, "live_ddp_available": self.settings.live_available, "both_available": self.settings.live_available, "controller_config_loaded": self.settings.controllers_path is not None, "live_control_enabled": self.settings.live_control_enabled, "supported_outputs": ["simulator"] + (["ddp", "both"] if self.settings.live_available else []), "brightness_default": 255, "effect_count": len(EFFECT_SCHEMAS), "auto_mode_available": True, "mqtt_configured": False}
+        return {"service_mode": "control", "simulator_available": True, "live_ddp_available": self.settings.live_available, "both_available": self.settings.live_available, "controller_config_loaded": self.settings.controllers_path is not None, "live_control_enabled": self.settings.live_control_enabled, "default_output": self.settings.default_output.value, "supported_outputs": ["simulator"] + (["ddp", "both"] if self.settings.live_available else []), "brightness_default": 255, "effect_count": len(EFFECT_SCHEMAS), "auto_mode_available": True, "mqtt_configured": False}
 
     async def capabilities(self, request: web.Request) -> web.Response:
         return web.json_response(self.capabilities_payload())
@@ -180,10 +183,17 @@ class ControlAPI:
             if result.accepted and action == CommandAction.APPLY_OVERRIDE and command.duration_seconds is not None:
                 timer = threading.Timer(command.duration_seconds, self.coordinator.expire_overrides)
                 timer.daemon = True
+                self._timers.append(timer)
                 timer.start()
             return web.json_response({"accepted": result.accepted, "reason": result.reason, "status": result.status}, status=200 if result.accepted else 409)
         except (TypeError, ValueError) as exc:
             return web.json_response({"accepted": False, "error": str(exc)}, status=400)
 
     def shutdown(self) -> None:
+        if self._shutdown:
+            return
+        self._shutdown = True
+        for timer in self._timers:
+            timer.cancel()
+        self._timers.clear()
         self.runtime.shutdown()
