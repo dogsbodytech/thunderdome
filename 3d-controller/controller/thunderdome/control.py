@@ -17,7 +17,7 @@ from .effects._common import SpatialContext, parse_spatial_origin
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.expanding_rings import render_expanding_rings
 from .effects.height_wave import render_height_wave
-from .effects.procedural import create_renderer
+from .effects.procedural import ProceduralRenderer, create_renderer
 from .effects._registry import BY_NAME
 from .effect_defaults import EffectDefaults
 from .frame import RGBFrame
@@ -127,11 +127,27 @@ def make_effect_producer(display: DisplayDefinition, defaults: EffectDefaults | 
             resolved = defaults.resolved(name) if defaults is not None else validate_effect_parameters(name)
             resolved.update({key: values[key] for key in ("brightness", "fps", "exclude_tail") if key in values})
             return resolved
-        renderers = {name: create_renderer(name, context, brightness=255, exclude_tail=exclude_tail, seed=int(effect_values(name).pop("seed", 1)), **{k: v for k, v in effect_values(name).items() if k not in {"brightness", "fps", "exclude_tail", "seed"}}) for name in names if BY_NAME[name].category == "procedural"}
+        renderers: dict[str, tuple[int, dict[str, object], ProceduralRenderer]] = {}
+
+        def procedural_values(name: str) -> tuple[int, dict[str, object]]:
+            options = effect_values(name)
+            seed_value = options.pop("seed", 1)
+            if not isinstance(seed_value, int):
+                raise ValueError("effect seed must be an integer")
+            seed = seed_value
+            for key in ("brightness", "fps", "exclude_tail"):
+                options.pop(key, None)
+            return seed, options
+
         def auto(_number: int, elapsed: float) -> RGBFrame:
             def renderer_for(name: str, effect_elapsed: float) -> RGBFrame:
-                if name in renderers:
-                    return renderers[name].render(effect_elapsed)
+                if BY_NAME[name].category == "procedural":
+                    seed, options = procedural_values(name)
+                    cached = renderers.get(name)
+                    if cached is None or cached[:2] != (seed, options):
+                        renderer = create_renderer(name, context, brightness=255, exclude_tail=exclude_tail, seed=seed, **options)
+                        renderers[name] = (seed, options, renderer)
+                    return renderers[name][2].render(effect_elapsed)
                 return _spatial_frame(name, context, effect_elapsed, brightness=brightness, exclude_tail=exclude_tail, values=effect_values(name))
             return scheduler.frame(elapsed, renderer_for, brightness=brightness)
         return auto, fps, auto_duration(names, interval=scheduler.interval, duration=None, cycles=values["cycles"])

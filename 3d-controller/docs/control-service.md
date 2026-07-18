@@ -28,7 +28,7 @@ One cancellable worker thread owns one renderer and its selected sink set. Cance
 
 The default bind host is `127.0.0.1`; simulator output is the default and DDP never falls back from it. Live DDP capability exists only when both `--controllers FILE` and `--allow-live-control` are supplied at service startup. Browser requests cannot submit controller addresses, and controller addresses are not returned by APIs.
 
-Do not bind a live-enabled service to `0.0.0.0` on an untrusted network. Live controls affect the physical dome. No WLED preparation or power-management command is sent by this service.
+Do not bind a live-enabled service to `0.0.0.0` on an untrusted network. Live controls affect the physical dome. Before a DDP sink opens, the service sets each enabled controller's global WLED brightness to `255`; it does not change controller power, realtime mode, or current-limit settings.
 
 Brightness defaults to **255** in schemas and control requests.
 

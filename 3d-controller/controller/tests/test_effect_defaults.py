@@ -1,9 +1,13 @@
 import json
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
+from thunderdome.control import make_effect_producer
 from thunderdome.effect_defaults import EffectDefaults
+from thunderdome.runtime import CommandSource, DisplayDefinition, OutputMode
+from thunderdome.schemas import validate_effect_parameters
 
 
 class EffectDefaultsTests(unittest.TestCase):
@@ -33,6 +37,15 @@ class EffectDefaultsTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.defaults.save("aurora", {"speed": 0})
         self.path.write_text("{")
         with self.assertRaises(ValueError): self.defaults.saved("aurora")
+
+    def test_auto_refreshes_saved_procedural_defaults_while_running(self):
+        self.defaults.save("twinkle", {"density": 0, "background": "100000"})
+        parameters = validate_effect_parameters("auto", {"effects": ["twinkle"], "interval": 30, "transition": 0})
+        display = DisplayDefinition("auto", parameters, OutputMode.NULL, CommandSource.BROWSER, "auto-defaults", time.monotonic())
+        producer, _, _ = make_effect_producer(display, self.defaults)
+        self.assertEqual(tuple(producer(0, .2).data[:3]), (16, 0, 0))
+        self.defaults.save("twinkle", {"density": 0, "background": "001000"})
+        self.assertEqual(tuple(producer(1, .4).data[:3]), (0, 16, 0))
 
 
 if __name__ == "__main__": unittest.main()

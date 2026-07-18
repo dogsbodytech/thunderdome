@@ -46,7 +46,7 @@ class MoreSpatialEffectsTests(unittest.TestCase):
 
     def test_registry_has_unique_expected_auto_effects(self):
         names = [r.name for r in REGISTRY]
-        self.assertEqual(names, ["clock-hand", "expanding-rings", "height-wave", "fire", "rotating-plane", "radar", "aurora", "fireflies"])
+        self.assertEqual(names, ["clock-hand", "expanding-rings", "height-wave", "fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle"])
         self.assertEqual(len(names), len(set(names)))
         self.assertTrue(all(BY_NAME[name].supports_auto and BY_NAME[name].auto_options for name in names))
 
@@ -142,7 +142,7 @@ class AutoCliTests(unittest.TestCase):
         self.assertIn("Output mode: null", stdout.getvalue())
 
     def test_new_effect_help_commands_parse(self):
-        for name in ("fire", "rotating-plane", "radar", "aurora", "fireflies", "auto"):
+        for name in ("fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle", "auto"):
             with self.subTest(name=name), self.assertRaises(SystemExit) as ctx:
                 parse_args(["effect", name, "--help"])
             self.assertEqual(ctx.exception.code, 0)

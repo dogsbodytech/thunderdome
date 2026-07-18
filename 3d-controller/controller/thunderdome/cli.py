@@ -10,8 +10,9 @@ from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
 from .auto_scheduler import AutoScheduler
-from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, REFERENCE_ROUTE_PATH
+from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, PROJECT_ROOT, REFERENCE_ROUTE_PATH
 from .control import ControlAPI, ControlSettings
+from .effect_defaults import EffectDefaults
 from .runtime import OutputMode
 from .controllers import load_controllers
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
@@ -285,6 +286,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     _add_effect_runtime_options(flies)
     flies.add_argument("--count", type=_positive_int, default=25); flies.add_argument("--speed", type=float, default=.35); flies.add_argument("--glow-radius-mm", type=float, default=300); flies.add_argument("--lifetime-seconds", type=float, default=8); flies.add_argument("--color", default="FFFFB0"); flies.add_argument("--color-variation", type=float, default=.25); flies.add_argument("--seed", type=int, default=1)
 
+    twinkle = effect_sub.add_parser("twinkle", help="render stateful LED twinkles")
+    _add_effect_runtime_options(twinkle)
+    twinkle.set_defaults(brightness=255)
+    twinkle.add_argument("--density", type=float, default=.08); twinkle.add_argument("--spawn-rate", type=float, default=12); twinkle.add_argument("--fade-in", type=float, default=.25); twinkle.add_argument("--hold-time", dest="twinkle_hold", type=float, default=.25); twinkle.add_argument("--fade-out", type=float, default=.7); twinkle.add_argument("--minimum-brightness", type=float, default=.05); twinkle.add_argument("--maximum-brightness", type=float, default=1); twinkle.add_argument("--color", default="FFFFFF"); twinkle.add_argument("--mode", choices=("fixed", "random"), default="fixed"); twinkle.add_argument("--background", default="000000"); twinkle.add_argument("--color-change-speed", type=float, default=0); twinkle.add_argument("--seed", type=int, default=1)
+
     all_ddp = groups.add_parser(
         "ddp-all",
         help=f"Fan one logical {LOGICAL_LED_COUNT:,}-pixel frame out to all controllers",
@@ -551,13 +557,16 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
     return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
 
 
-PROCEDURAL_DURATION_DEFAULTS = {"fire": 5.0, "aurora": 10.0, "fireflies": 8.0}
+PROCEDURAL_DURATION_DEFAULTS = {"fire": 5.0, "aurora": 10.0, "fireflies": 8.0, "twinkle": 10.0}
 PROCEDURAL_LOOP_EFFECTS = {"rotating-plane", "radar"}
 
 
 def _procedural_options(args: argparse.Namespace) -> dict[str, object]:
     shared = {"command", "controllers", "output", "simulator_url", "positions", "geometry", "brightness", "exclude_tail", "dry_run", "hold", "duration", "loops", "fps", "area"}
-    return {key: value for key, value in vars(args).items() if key not in shared and value is not None}
+    options = {key: value for key, value in vars(args).items() if key not in shared and value is not None}
+    if "twinkle_hold" in options:
+        options["hold"] = options.pop("twinkle_hold")
+    return options
 
 
 def _procedural_duration(args: argparse.Namespace) -> float | None:
@@ -608,10 +617,18 @@ def _validate_procedural_options(args: argparse.Namespace) -> None:
         _validate_range("glow-radius-mm", args.glow_radius_mm, minimum=0, inclusive_minimum=False)
         _validate_range("lifetime-seconds", args.lifetime_seconds, minimum=0, inclusive_minimum=False)
         _validate_range("color-variation", args.color_variation, minimum=0, maximum=1)
+    elif args.command == "twinkle":
+        _validate_range("density", args.density, minimum=0, maximum=1)
+        _validate_range("spawn-rate", args.spawn_rate, minimum=0)
+        _validate_range("fade-in", args.fade_in, minimum=0)
+        _validate_range("hold-time", args.twinkle_hold, minimum=0)
+        _validate_range("fade-out", args.fade_out, minimum=0, inclusive_minimum=False)
+        _validate_range("minimum-brightness", args.minimum_brightness, minimum=0, maximum=1)
+        _validate_range("maximum-brightness", args.maximum_brightness, minimum=0, maximum=1)
 
 
 def _run_procedural_effect(args: argparse.Namespace) -> int:
-    if args.command not in {"fire", "rotating-plane", "radar", "aurora", "fireflies"}:
+    if args.command not in {"fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle"}:
         raise ValueError(f"unknown procedural effect command: {args.command}")
     if not 1 <= args.fps <= 60:
         raise ValueError("fps must be in range 1..60")
@@ -717,14 +734,22 @@ def _run_auto(args: argparse.Namespace) -> int:
     names = _resolve_auto_playlist(args.effects, args.preset, args.shuffle, args.seed)
     scheduler = AutoScheduler(names, interval=args.interval, transition=args.transition)
     context = SpatialContext.load(args.positions, args.geometry)
-    procedural_renderers = {
-        name: BY_NAME[name].create_renderer(context, brightness=255, exclude_tail=args.exclude_tail, seed=args.seed)
-        for name in names
-        if BY_NAME[name].category == "procedural"
-    }
+    defaults = EffectDefaults(PROJECT_ROOT / "config" / "effect-defaults.json")
+
+    def effect_values(name: str) -> dict[str, object]:
+        return defaults.resolved(name)
+
+    procedural_renderers = {}
+    for name in names:
+        if BY_NAME[name].category != "procedural":
+            continue
+        values = effect_values(name)
+        seed = int(values.pop("seed", args.seed))
+        values.pop("brightness", None); values.pop("fps", None); values.pop("exclude_tail", None)
+        procedural_renderers[name] = BY_NAME[name].create_renderer(context, brightness=255, exclude_tail=args.exclude_tail, seed=seed, **values)
 
     def renderer_for(name: str, elapsed: float) -> RGBFrame:
-        preset = BY_NAME[name].auto_options
+        preset = effect_values(name)
         if name == "clock-hand":
             return render_clock_hand(context.positions, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=preset["rotation_seconds"]), width_m=preset["width_mm"] / 1000, center_xy=context.apex[:2], brightness=255, exclude_tail=args.exclude_tail)
         if name == "expanding-rings":
@@ -863,7 +888,7 @@ def _main(args: argparse.Namespace) -> int:
         if args.command == "clock-hand": return _run_clock_hand(args)
         if args.command == "auto": return _run_auto(args)
         if args.command in {"expanding-rings", "height-wave"}: return _run_spatial_effect(args)
-        if args.command in {"fire", "rotating-plane", "radar", "aurora", "fireflies"}: return _run_procedural_effect(args)
+        if args.command in {"fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle"}: return _run_procedural_effect(args)
         raise ValueError(f"unknown effect command: {args.command}")
 
     return _run_single_ddp(args)
