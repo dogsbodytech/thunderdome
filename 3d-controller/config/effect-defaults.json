@@ -1,0 +1,90 @@
+{
+  "Aurora": {
+    "band_width": 0.891,
+    "direction": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "intensity": 1,
+    "palette": "mixed",
+    "scale": 13.401,
+    "seed": 1,
+    "speed": 7.291
+  },
+  "ClockHand": {
+    "angle_offset_degrees": 0,
+    "background": "040072",
+    "color": "FFFFFF",
+    "direction": "clockwise",
+    "rotation_seconds": 5,
+    "width_mm": 300
+  },
+  "ExpandingRings": {
+    "background": "F8E45C",
+    "color": "700000",
+    "origin": "centre",
+    "speed_mps": 5,
+    "thickness_mm": 300
+  },
+  "Fire": {
+    "cooling": 0.35,
+    "flame_height_m": 2.5,
+    "palette": "fire",
+    "scale": 5.001,
+    "seed": 1,
+    "speed": 10.351,
+    "turbulence": 0.89
+  },
+  "Fireflies": {
+    "color": "A51D2D",
+    "color_variation": 0.7,
+    "count": 100,
+    "glow_radius_mm": 300,
+    "lifetime_seconds": 15.301,
+    "seed": 1,
+    "speed": 0.941
+  },
+  "HeightWave": {
+    "background": "4A0172",
+    "color": "FFFFFF",
+    "direction": "bounce",
+    "height_mm": 400,
+    "speed_mps": 3
+  },
+  "Radar": {
+    "background": "A75A00",
+    "beam_width_degrees": 14.001,
+    "color": "00FF80",
+    "direction": "clockwise",
+    "range_m": 9999,
+    "rotation_seconds": 8,
+    "seed": 1,
+    "trail_degrees": 55,
+    "vertical_falloff": 0.21
+  },
+  "RotatingPlane": {
+    "axis": "horizontal",
+    "background": "01430F",
+    "color": "C061CB",
+    "direction": "clockwise",
+    "rotation_seconds": 4,
+    "seed": 1,
+    "thickness_mm": 600,
+    "trail_degrees": 20
+  },
+  "Twinkle": {
+    "background": "000000",
+    "color": "FFFFFF",
+    "color_change_speed": 0.25,
+    "density": 0.96,
+    "fade_in": 0.25,
+    "fade_out": 0.7,
+    "hold": 0.25,
+    "maximum_brightness": 1,
+    "minimum_brightness": 0.05,
+    "mode": "random",
+    "seed": 1,
+    "spawn_rate": 4500
+  }
+}
