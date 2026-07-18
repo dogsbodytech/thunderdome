@@ -9,6 +9,7 @@ import json
 import threading
 import time
 import unittest
+import urllib.error
 from unittest import mock
 
 import mqtt_client
@@ -71,6 +72,39 @@ class RunEffectTests(unittest.TestCase):
     def test_rejection_raises_with_reason(self):
         with self.assertRaisesRegex(ValueError, "lower priority"):
             self.post({"accepted": False, "reason": "lower priority override rejected"})
+
+
+class ApplyEffectStatusTests(unittest.TestCase):
+    def run_apply(self, urlopen):
+        published = []
+        out, err = quiet()
+        with mock.patch.object(mqtt_client.urllib.request, "urlopen", urlopen), out, err:
+            mqtt_client.apply_effect("fire", published.append)
+        return published
+
+    def test_ack_is_published_on_success(self):
+        published = self.run_apply(lambda request, timeout: FakeResponse(b'{"accepted": true}'))
+        self.assertEqual(published, [{"effect": "fire", "accepted": True}])
+
+    def test_server_rejection_reason_is_published(self):
+        def reject(request, timeout):
+            body = io.BytesIO(b'{"accepted": false, "error": "unknown effect"}')
+            raise urllib.error.HTTPError(request.full_url, 400, "Bad Request", None, body)
+
+        published = self.run_apply(reject)
+        self.assertEqual(published, [{"effect": "fire", "accepted": False, "error": "unknown effect"}])
+
+    def test_connection_failures_do_not_leak_internals(self):
+        def down(request, timeout):
+            raise urllib.error.URLError("connection refused for http://127.0.0.1:8080")
+
+        published = self.run_apply(down)
+        self.assertEqual(published, [{"effect": "fire", "accepted": False, "error": "control service unavailable"}])
+
+    def test_publish_is_optional(self):
+        out, err = quiet()
+        with mock.patch.object(mqtt_client, "run_effect"), out, err:
+            mqtt_client.apply_effect("fire")  # no publisher wired: just logs
 
 
 class ValidateNameTests(unittest.TestCase):

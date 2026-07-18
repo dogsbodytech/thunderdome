@@ -9,6 +9,10 @@ restored — a public MQTT message can never leave the dome permanently on an
 effect. Operators can pre-empt MQTT by applying a browser override with a
 higher `priority`. See `3d-controller/docs/api-rest.md` for the API.
 
+Each processed request is acknowledged on
+`open/dogsbody/thunderdome/effect/status` as JSON:
+`{"effect": "fire", "accepted": true}`, with an `error` field when rejected.
+
 ## Getting Started
 
 Ensure the `thunderdome control serve` service is running.

@@ -30,6 +30,7 @@ load_dotenv()
 HOST = os.environ.get("MQTT_HOST", "mqtt.emf.camp")
 PORT = int(os.environ.get("MQTT_PORT", "1883"))
 TOPIC = "open/dogsbody/thunderdome/effect"
+STATUS_TOPIC = TOPIC + "/status"
 CONTROL_URL = os.environ.get("CONTROL_URL", "http://127.0.0.1:8080").rstrip("/")
 # Optional output override. Unset = inherit the baseline output or the control
 # service's --default-output, which is where live-vs-simulator safety already
@@ -78,17 +79,33 @@ def run_effect(name: str) -> None:
         raise ValueError(body.get("error") or body.get("reason") or "rejected")
 
 
-def apply_effect(name: str) -> None:
-    """run_effect plus operator-facing error reporting; runs off the MQTT loop."""
+def apply_effect(name: str, publish=None) -> None:
+    """run_effect plus operator logging and an MQTT ack; runs off the MQTT loop."""
+    accepted, error = False, None
     try:
         run_effect(name)
+        accepted = True
         print(f"override {name} accepted for {DURATION_SECONDS:g}s", flush=True)
     except urllib.error.HTTPError as e:
         # 400/409 carry a JSON reason; surface it instead of a bare status.
-        reason = e.read().decode("utf-8", errors="replace")
-        print(f"effect {name} rejected: {e.code} {reason}", file=sys.stderr, flush=True)
-    except (urllib.error.URLError, ValueError, OSError) as e:
+        body = e.read().decode("utf-8", errors="replace")
+        print(f"effect {name} rejected: {e.code} {body}", file=sys.stderr, flush=True)
+        try:
+            details = json.loads(body)
+            error = details.get("error") or details.get("reason") or f"rejected (HTTP {e.code})"
+        except ValueError:
+            error = f"rejected (HTTP {e.code})"
+    except ValueError as e:
+        print(f"effect {name} rejected: {e}", file=sys.stderr, flush=True)
+        error = str(e)
+    except (urllib.error.URLError, OSError) as e:
         print(f"failed to run effect {name}: {e}", file=sys.stderr, flush=True)
+        error = "control service unavailable"  # keep internals off the public topic
+    if publish is not None:
+        payload = {"effect": name, "accepted": accepted}
+        if error is not None:
+            payload["error"] = error
+        publish(payload)
 
 
 class EffectDispatcher:
@@ -166,9 +183,14 @@ def on_message(client, userdata, msg):
 
 
 def main():
-    dispatcher = EffectDispatcher(apply_effect, DEBOUNCE_SECONDS)
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+
+    def publish_status(payload: dict) -> None:
+        client.publish(STATUS_TOPIC, json.dumps(payload))
+
+    dispatcher = EffectDispatcher(lambda name: apply_effect(name, publish_status), DEBOUNCE_SECONDS)
     dispatcher.start()
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, userdata=dispatcher)
+    client.user_data_set(dispatcher)
     if os.environ.get("MQTT_USER"):
         client.username_pw_set(os.environ["MQTT_USER"], os.environ.get("MQTT_PASS"))
     client.on_connect = on_connect
