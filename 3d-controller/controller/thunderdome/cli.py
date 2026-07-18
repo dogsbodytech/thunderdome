@@ -10,6 +10,7 @@ from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
 from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, REFERENCE_ROUTE_PATH
+from .control import ControlAPI, ControlSettings
 from .controllers import load_controllers
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
@@ -21,7 +22,7 @@ from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
 from .routes import generate_route_document, load_routes, write_route_document
-from .simulator import SimulatorDataError, resolve_user_path, serve_simulator
+from .simulator import SimulatorDataError, create_http_server, resolve_user_path, serve_simulator
 from .sinks import CompositeFrameSink, DDPFrameSink, FrameSink, NullFrameSink, SimulatorFrameSink
 from .transport.ddp import DirectDDPSession, parse_hex_color, send_frame
 from .transport.multi_ddp import MultiControllerDDPSession, SendResult
@@ -214,6 +215,22 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     browser.add_argument("--open-browser", dest="open_browser", action="store_true")
     browser.add_argument("--no-open-browser", dest="open_browser", action="store_false")
     serve.set_defaults(open_browser=False)
+
+    control = groups.add_parser("control", help="Local operator control service")
+    control_sub = control.add_subparsers(dest="command", required=True)
+    control_serve = control_sub.add_parser("serve", help="serve simulator plus local control APIs")
+    control_serve.add_argument("--host", default="127.0.0.1")
+    control_serve.add_argument("--port", type=int, default=8080)
+    control_serve.add_argument("--controllers")
+    control_serve.add_argument("--allow-live-control", action="store_true")
+    control_serve.add_argument("--default-output", choices=("simulator", "ddp", "both"), default="simulator")
+    control_serve.add_argument("--geometry", default=None)
+    control_serve.add_argument("--routes", default=None)
+    control_serve.add_argument("--positions", default=None)
+    control_browser = control_serve.add_mutually_exclusive_group()
+    control_browser.add_argument("--open-browser", dest="open_browser", action="store_true")
+    control_browser.add_argument("--no-open-browser", dest="open_browser", action="store_false")
+    control_serve.set_defaults(open_browser=False)
 
     effect = groups.add_parser("effect", help="Application-rendered spatial DDP effects")
     effect_sub = effect.add_subparsers(dest="command", required=True)
@@ -804,6 +821,33 @@ def _main(args: argparse.Namespace) -> int:
         if not positions_path.is_file():
             raise SimulatorDataError(f"positions file not found: {positions_path}; run `thunderdome positions generate`")
         return serve_simulator(host=args.host, port=args.port, geometry_path=geometry_path, routes_path=routes_path, positions_path=positions_path, open_browser=args.open_browser)
+
+    if args.area == "control":
+        geometry_path = resolve_user_path(args.geometry, GEOMETRY_PATH)
+        routes_path = resolve_user_path(args.routes, REFERENCE_ROUTE_PATH)
+        positions_path = resolve_user_path(args.positions, LED_POSITIONS_PATH)
+        if not geometry_path.is_file() or not routes_path.is_file() or not positions_path.is_file():
+            raise SimulatorDataError("control service requires valid geometry, routes, and positions files")
+        if args.allow_live_control and not args.controllers:
+            raise ValueError("--allow-live-control requires --controllers FILE")
+        if args.default_output in {"ddp", "both"} and not (args.allow_live_control and args.controllers):
+            raise ValueError("DDP default output requires --controllers FILE and --allow-live-control")
+        settings = ControlSettings(f"ws://{args.host}:{args.port}/ws/producer", args.controllers, args.allow_live_control)
+        api = ControlAPI(settings)
+        server = create_http_server(args.host, args.port, geometry_path, routes_path, positions_path, api)
+        print("Control service mode: local simulator and runtime APIs")
+        print(f"Control service available at http://{args.host}:{server.server_address[1]}/")
+        if settings.live_available:
+            print("WARNING: live DDP output is enabled with server-owned controller configuration.")
+        else:
+            print("Live DDP output is disabled; simulator output is the only available destination.")
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            return 130
+        finally:
+            server.shutdown()
+        return 0
 
     if args.area == "ddp-all":
         return _run_multi_ddp(args)

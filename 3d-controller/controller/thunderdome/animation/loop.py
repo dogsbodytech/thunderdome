@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from threading import Event
 from typing import TypeVar
 
 
@@ -31,6 +32,7 @@ def run_frame_loop(
     loops: int | None = None,
     clock: Callable[[], float] = time.monotonic,
     sleep: Callable[[float], object] = time.sleep,
+    cancel_event: Event | None = None,
 ) -> FrameLoopStats:
     """Send frames at a monotonic, drift-resistant cadence.
 
@@ -54,6 +56,9 @@ def run_frame_loop(
 
     try:
         while True:
+            if cancel_event is not None and cancel_event.is_set():
+                interrupted = True
+                break
             now = clock()
             elapsed = now - started_at
             if duration is not None and elapsed >= duration:
@@ -76,7 +81,10 @@ def run_frame_loop(
             next_frame_at = started_at + (frames_sent / fps)
             delay = next_frame_at - clock()
             if delay > 0:
-                sleep(delay)
+                if cancel_event is None:
+                    sleep(delay)
+                else:
+                    cancel_event.wait(delay)
     except KeyboardInterrupt:
         interrupted = True
 

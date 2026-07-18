@@ -243,3 +243,7 @@ To restore native fallback output, address every controller (for example `contro
 ## Stage B live simulator output
 
 Spatial effects now preview to the local simulator by default. Start `thunderdome simulator serve`, then run an effect normally. Use `--output ddp --controllers config/controllers.json` only for deliberate physical output, `--output both` for both destinations, and `--output null` for a no-network render. The simulator uses local binary WebSockets and never contacts WLED.
+
+## Stage C1 control service
+
+`thunderdome control serve` hosts the simulator plus local-only control APIs. It uses one shared runtime coordinator for browser/API commands and future MQTT integration, with baseline and temporary-override arbitration. Simulator output and brightness `255` are the defaults. Physical DDP is unavailable unless the service is started with both `--controllers FILE` and `--allow-live-control`; browser clients cannot provide controller addresses and no simulator-to-DDP fallback exists. See [`docs/control-service.md`](docs/control-service.md).
