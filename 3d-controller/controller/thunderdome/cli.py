@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 import sys
 from dataclasses import dataclass
 from typing import Sequence
@@ -10,6 +11,7 @@ from typing import Sequence
 from .animation.loop import FrameLoopStats, run_frame_loop
 from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LOGICAL_LED_COUNT
 from .controllers import load_controllers
+from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
@@ -17,6 +19,7 @@ from .routes import generate_route_document, load_routes, write_route_document
 from .transport.ddp import DirectDDPSession, parse_hex_color, send_frame
 from .transport.multi_ddp import MultiControllerDDPSession, SendResult
 from .wled.client import WLEDApiError, WLEDClient
+from .wled.multi import WLEDOperationResult, run_wled_operation
 
 
 @dataclass(frozen=True)
@@ -80,12 +83,18 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     for command in ("info", "state"):
         item = controller_sub.add_parser(command)
         _host(item)
-    brightness = controller_sub.add_parser("brightness")
-    _host(brightness)
-    brightness.add_argument("value", type=int)
-    live = controller_sub.add_parser("live", help="enable or disable WLED realtime live mode")
-    _host(live)
-    live.add_argument("state", choices=("on", "off"))
+    for name in ("power", "live"):
+        item = controller_sub.add_parser(name)
+        _host(item); item.add_argument("state", choices=("on", "off"))
+    brightness = controller_sub.add_parser("brightness"); _host(brightness); brightness.add_argument("value", type=int)
+    color = controller_sub.add_parser("color"); _host(color); color.add_argument("color")
+    for plural in ("effects", "palettes"):
+        item = controller_sub.add_parser(plural); _host(item)
+    for name in ("effect", "palette"):
+        item = controller_sub.add_parser(name); _host(item); item.add_argument("value", type=int)
+    preset = controller_sub.add_parser("preset"); _host(preset); preset.add_argument("preset_id", type=int)
+    prepare = controller_sub.add_parser("prepare-ddp"); _host(prepare)
+
 
     ddp = groups.add_parser("ddp", help="Primary direct RGB frame transport")
     ddp_sub = ddp.add_subparsers(dest="command", required=True)
@@ -125,9 +134,25 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     for name in ("validate", "summary"):
         item = controllers_sub.add_parser(name)
         _controllers_option(item)
-    controllers_live = controllers_sub.add_parser("live", help="set WLED realtime live mode on enabled controllers")
-    _controllers_option(controllers_live)
-    controllers_live.add_argument("state", choices=("on", "off"))
+    for name in ("state", "power", "live", "brightness", "color", "effect", "palette", "preset", "prepare-ddp"):
+        item = controllers_sub.add_parser(name); _controllers_option(item)
+        if name in {"power", "live"}: item.add_argument("state", choices=("on", "off"))
+        elif name == "brightness": item.add_argument("value", type=int)
+        elif name in {"color"}: item.add_argument("color")
+        elif name in {"effect", "palette"}: item.add_argument("value", type=int)
+        elif name == "preset": item.add_argument("preset_id", type=int)
+
+    effect = groups.add_parser("effect", help="Application-rendered spatial DDP effects")
+    effect_sub = effect.add_subparsers(dest="command", required=True)
+    clock = effect_sub.add_parser("clock-hand", help="render a rotating radial hand through DDP")
+    _controllers_option(clock)
+    clock.add_argument("--positions", default="geometry/generated/led_positions_3d.json"); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
+    clock.add_argument("--color", default="FFFFFF"); clock.add_argument("--background", default="000000")
+    clock.add_argument("--brightness", type=int, default=32); clock.add_argument("--width-mm", type=float, default=300)
+    clock.add_argument("--rotation-seconds", type=float, default=3); clock.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise")
+    clock.add_argument("--angle-offset-degrees", type=float, default=0); clock.add_argument("--exclude-tail", action="store_true"); clock.add_argument("--dry-run", action="store_true")
+    mode=clock.add_mutually_exclusive_group(); mode.add_argument("--hold", action="store_true"); mode.add_argument("--duration", type=float); mode.add_argument("--rotations", type=int)
+    clock.add_argument("--fps", type=int, default=30)
 
     all_ddp = groups.add_parser(
         "ddp-all",
@@ -266,21 +291,54 @@ def _run_multi_ddp(args: argparse.Namespace) -> int:
     return 1 if failed_controllers else 0
 
 
-def _run_controllers_live(args: argparse.Namespace) -> int:
-    controllers = load_controllers(args.controllers)
-    enabled = args.state == "on"
-    failed = False
-    for controller in controllers.controllers:
-        if not controller.enabled:
-            continue
-        try:
-            WLEDClient(controller.host).set_live(enabled)
-        except Exception as exc:
-            failed = True
-            print(f"controller {controller.controller_number} {controller.host}: live {args.state} failed: {exc}", file=sys.stderr)
-        else:
-            print(f"controller {controller.controller_number} {controller.host}: live {args.state}")
-    return 1 if failed else 0
+def _wled_operation(args: argparse.Namespace, client: WLEDClient):
+    if args.command == "state": return client.get_state()
+    if args.command == "power": return client.set_power(args.state == "on")
+    if args.command == "brightness": return client.set_brightness(args.value)
+    if args.command == "color": return client.set_color(parse_hex_color(args.color))
+    if args.command == "effect": return client.set_effect(args.value)
+    if args.command == "palette": return client.set_palette(args.value)
+    if args.command == "preset": return client.set_preset(args.preset_id)
+    if args.command == "live": return client.set_live(args.state == "on")
+    if args.command == "prepare-ddp": return client.prepare_ddp()
+    raise ValueError(f"unsupported WLED operation {args.command}")
+
+def _run_multi_wled(args: argparse.Namespace) -> int:
+    results=run_wled_operation(load_controllers(args.controllers), lambda client: _wled_operation(args, client), client_factory=WLEDClient)
+    for result in results:
+        if result.error: print(f"controller {result.controller_number} {result.host}: {args.command} failed: {result.error}", file=sys.stderr)
+        else: print(f"controller {result.controller_number} {result.host}: {args.command} ok" + (f" {json.dumps(result.value, sort_keys=True)}" if args.command == "state" else ""))
+    return 1 if any(result.error for result in results) else 0
+
+def _run_clock_hand(args: argparse.Namespace) -> int:
+    if not 1 <= args.fps <= 60: raise ValueError("fps must be in range 1..60")
+    if args.width_mm <= 0: raise ValueError("width-mm must be greater than zero")
+    if args.rotation_seconds <= 0: raise ValueError("rotation-seconds must be greater than zero")
+    if args.duration is not None and args.duration <= 0: raise ValueError("duration must be greater than zero")
+    if args.rotations is not None and args.rotations <= 0: raise ValueError("rotations must be a positive integer")
+    path=Path(args.positions)
+    if not path.exists(): raise ValueError(f"positions file not found: {path}; run 'thunderdome positions generate'")
+    rows=load_led_positions(path); controllers=load_controllers(args.controllers)
+    geometry=load_geometry(args.geometry)
+    if "H061" not in geometry.hubs: raise ValueError("geometry is missing apex hub H061")
+    apex=geometry.hubs["H061"]; center_xy=(apex.x, apex.y)
+    duration=None if args.hold else (args.duration if args.duration is not None else (args.rotations or 1) * args.rotation_seconds)
+    color=parse_hex_color(args.color); background=parse_hex_color(args.background)
+    def frame_for(_number: int, elapsed: float) -> RGBFrame:
+        return render_clock_hand(rows, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=args.rotation_seconds, direction=args.direction, offset_degrees=args.angle_offset_degrees), width_m=args.width_mm / 1000, color=color, background=background, brightness=args.brightness, center_xy=center_xy, exclude_tail=args.exclude_tail)
+    if args.dry_run:
+        with MultiControllerDDPSession(controllers) as session: results=session.send_frame(frame_for(0, 0), dry_run=True)
+        _report_results(results); return 1 if any(r.error for r in results) else 0
+    print(f"Starting clock-hand: {args.direction}, width {args.width_mm:g}mm, rotation {args.rotation_seconds:g}s, {args.fps} FPS")
+    failures: dict[int, SendResult]={}; last=[]
+    def send(frame: RGBFrame):
+        nonlocal last
+        last=session.send_frame(frame); _record_controller_failures(failures,last)
+    with MultiControllerDDPSession(controllers) as session:
+        stats=run_frame_loop(frame_for, send, fps=args.fps, duration=duration)
+    _report_results(last); _report_persistent_failures(failures); _report_loop(stats)
+    print(f"Completed rotations: {stats.elapsed_seconds / args.rotation_seconds:.2f}")
+    return 1 if failures else 0
 
 
 def _main(args: argparse.Namespace) -> int:
@@ -290,11 +348,11 @@ def _main(args: argparse.Namespace) -> int:
             print(json.dumps(client.get_info(), indent=2, sort_keys=True))
         elif args.command == "state":
             print(json.dumps(client.get_state(), indent=2, sort_keys=True))
-        elif args.command == "brightness":
-            print(json.dumps(client.set_brightness(args.value), indent=2, sort_keys=True))
+        elif args.command == "effects": print(json.dumps(client.get_effects(), indent=2))
+        elif args.command == "palettes": print(json.dumps(client.get_palettes(), indent=2))
         else:
-            client.set_live(args.state == "on")
-            print(f"{args.host}: live {args.state}")
+            _wled_operation(args, client)
+            print(f"{args.host}: {args.command} ok")
         return 0
 
     if args.area == "geometry":
@@ -343,8 +401,8 @@ def _main(args: argparse.Namespace) -> int:
         return 0
 
     if args.area == "controllers":
-        if args.command == "live":
-            return _run_controllers_live(args)
+        if args.command in {"state", "power", "live", "brightness", "color", "effect", "palette", "preset", "prepare-ddp"}:
+            return _run_multi_wled(args)
         controllers = load_controllers(args.controllers)
         if args.command == "validate":
             print("Validated five direct-DDP controllers")
@@ -359,6 +417,8 @@ def _main(args: argparse.Namespace) -> int:
 
     if args.area == "ddp-all":
         return _run_multi_ddp(args)
+
+    if args.area == "effect": return _run_clock_hand(args)
 
     return _run_single_ddp(args)
 

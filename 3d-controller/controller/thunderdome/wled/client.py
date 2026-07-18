@@ -135,6 +135,20 @@ class WLEDClient:
         """Enable or disable WLED realtime/live mode."""
         return self.post_state({"live": bool(enabled)}, return_state=return_state)
 
+    def set_preset(self, preset_id: int, *, return_state: bool = False) -> Any:
+        """Activate a positive WLED preset ID."""
+        if not isinstance(preset_id, int) or preset_id <= 0:
+            raise ValueError("preset_id must be a positive integer")
+        return self.post_state({"ps": preset_id}, return_state=return_state)
+
+    def prepare_ddp(self, *, return_state: bool = False) -> Any:
+        """Set a safe persistent fallback state for application DDP output.
+
+        WLED can turn on when brightness is posted separately, so all baseline
+        fields intentionally travel in one state update.
+        """
+        return self.post_state({"on": False, "bri": 255, "live": False}, return_state=return_state)
+
     def set_transition(self, value: int, *, temporary: bool = False, return_state: bool = False) -> Any:
         self._validate_u16(value, "transition")
         # transition persists in state; tt applies only to this API call.
@@ -143,7 +157,7 @@ class WLEDClient:
 
     def set_color(self, rgb: RGB, segment_id: int | None = None, *, return_state: bool = False) -> Any:
         r, g, b = self._validate_rgb(rgb)
-        segment: JsonDict = {"col": [[r, g, b]]}
+        segment: JsonDict = {"fx": 0, "col": [[r, g, b]]}
         if segment_id is not None:
             self._validate_nonnegative_int(segment_id, "segment_id")
             segment["id"] = segment_id
