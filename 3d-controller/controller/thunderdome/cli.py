@@ -15,12 +15,12 @@ from .control import ControlAPI, ControlSettings
 from .effect_defaults import EffectDefaults
 from .runtime import OutputMode
 from .controllers import load_controllers
-from .effects.clock_hand import angle_for_elapsed, render_clock_hand
-from .effects._common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
-from .effects.expanding_rings import render_expanding_rings
-from .effects.height_wave import render_height_wave
-from .effects.procedural import SPACE_BODIES, blend, create_renderer, render as render_procedural
-from .effects._registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
+from .effects.ClockHand import angle_for_elapsed, render_clock_hand
+from .effects.Common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
+from .effects.ExpandingRings import render_expanding_rings
+from .effects.HeightWave import render_height_wave
+from .effects.Procedural import SPACE_BODIES, blend, create_renderer, render as render_procedural
+from .effects.Registry import BY_NAME, DEFAULT_PLAYLIST, LEGACY_NAMES, PRESETS
 from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
@@ -238,7 +238,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
     effect = groups.add_parser("effect", help="Application-rendered spatial DDP effects")
     effect_sub = effect.add_subparsers(dest="command", required=True)
-    clock = effect_sub.add_parser("clock-hand", help="render a rotating radial hand through DDP")
+    clock = effect_sub.add_parser("ClockHand", aliases=("clock-hand",), help="render a rotating radial hand through DDP")
     _controllers_option(clock)
     _output_options(clock)
     clock.add_argument("--positions", default=str(LED_POSITIONS_PATH)); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
@@ -248,15 +248,15 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     clock.add_argument("--angle-offset-degrees", type=float, default=0); clock.add_argument("--exclude-tail", action="store_true"); clock.add_argument("--dry-run", action="store_true")
     mode=clock.add_mutually_exclusive_group(); mode.add_argument("--hold", action="store_true"); mode.add_argument("--duration", type=float); mode.add_argument("--rotations", type=int)
     clock.add_argument("--fps", type=int, default=30)
-    rings = effect_sub.add_parser("expanding-rings", help="render an expanding XYZ spherical shell through DDP")
+    rings = effect_sub.add_parser("ExpandingRings", aliases=("expanding-rings",), help="render an expanding XYZ spherical shell through DDP")
     _add_spatial_effect_options(rings)
     rings.add_argument("--origin", default="apex", metavar="apex|centre|base|X,Y,Z")
     rings.add_argument("--thickness-mm", type=float, default=200)
-    wave = effect_sub.add_parser("height-wave", help="render a moving horizontal height band through DDP")
+    wave = effect_sub.add_parser("HeightWave", aliases=("height-wave",), help="render a moving horizontal height band through DDP")
     _add_spatial_effect_options(wave)
     wave.add_argument("--direction", choices=("up", "down", "bounce"), default="up")
     wave.add_argument("--height-mm", type=float, default=200)
-    auto = effect_sub.add_parser("auto", help="cycle the registry playlist with crossfades")
+    auto = effect_sub.add_parser("Auto", aliases=("auto",), help="cycle the registry playlist with crossfades")
     _controllers_option(auto)
     _output_options(auto)
     auto.add_argument("--positions", default=str(LED_POSITIONS_PATH)); auto.add_argument("--geometry", default=str(GEOMETRY_PATH))
@@ -266,27 +266,27 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     mode=auto.add_mutually_exclusive_group(); mode.add_argument("--duration", type=float); mode.add_argument("--loops", "--cycles", dest="cycles", type=_positive_int)
     auto.add_argument("--brightness", type=int, default=32); auto.add_argument("--fps", type=int, default=30); auto.add_argument("--exclude-tail", action="store_true"); auto.add_argument("--dry-run", action="store_true")
 
-    fire = effect_sub.add_parser("fire", help="render rising turbulent XYZ flames")
+    fire = effect_sub.add_parser("Fire", aliases=("fire",), help="render rising turbulent XYZ flames")
     _add_effect_runtime_options(fire)
     fire.add_argument("--speed", type=float, default=1.0); fire.add_argument("--flame-height-m", type=float, default=2.5); fire.add_argument("--turbulence", type=float, default=.65); fire.add_argument("--cooling", type=float, default=.35); fire.add_argument("--scale", type=float, default=1.0); fire.add_argument("--palette", default="fire"); fire.add_argument("--seed", type=int, default=1)
 
-    plane = effect_sub.add_parser("rotating-plane", help="render a rotating signed-distance plane")
+    plane = effect_sub.add_parser("RotatingPlane", aliases=("rotating-plane",), help="render a rotating signed-distance plane")
     _add_effect_runtime_options(plane, loops=True)
     plane.add_argument("--axis", default="vertical", metavar="vertical|horizontal|tilted|X,Y,Z", help="rotation axis: vertical=(0,0,1), horizontal=(1,0,0), tilted=normalize(1,1,1), or explicit X,Y,Z"); plane.add_argument("--rotation-seconds", type=float, default=10); plane.add_argument("--thickness-mm", type=float, default=220); plane.add_argument("--color", default="FFFFFF"); plane.add_argument("--background", default="000000"); plane.add_argument("--trail-degrees", type=float, default=20, metavar="0..180", help="directional fading trail in degrees; 0 disables, 180 covers all unique plane orientations"); plane.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); plane.add_argument("--seed", type=int, default=1)
 
-    radar = effect_sub.add_parser("radar", help="render a rotating XY radar beam")
+    radar = effect_sub.add_parser("Radar", aliases=("radar",), help="render a rotating XY radar beam")
     _add_effect_runtime_options(radar, loops=True)
     radar.add_argument("--rotation-seconds", type=float, default=8); radar.add_argument("--beam-width-degrees", type=float, default=12); radar.add_argument("--trail-degrees", type=float, default=35); radar.add_argument("--range-m", type=float, default=9999); radar.add_argument("--vertical-falloff", type=float, default=0); radar.add_argument("--color", default="00FF80"); radar.add_argument("--background", default="000000"); radar.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); radar.add_argument("--seed", type=int, default=1)
 
-    aurora = effect_sub.add_parser("aurora", help="render flowing luminous XYZ bands")
+    aurora = effect_sub.add_parser("Aurora", aliases=("aurora",), help="render flowing luminous XYZ bands")
     _add_effect_runtime_options(aurora)
     aurora.add_argument("--speed", type=float, default=.25); aurora.add_argument("--scale", type=float, default=1.2); aurora.add_argument("--band-width", type=float, default=.45); aurora.add_argument("--intensity", type=float, default=1); aurora.add_argument("--palette", default="mixed"); aurora.add_argument("--direction", default="1,0,0"); aurora.add_argument("--seed", type=int, default=1)
 
-    flies = effect_sub.add_parser("fireflies", help="render deterministic 3D glowing particles")
+    flies = effect_sub.add_parser("Fireflies", aliases=("fireflies",), help="render deterministic 3D glowing particles")
     _add_effect_runtime_options(flies)
     flies.add_argument("--count", type=_positive_int, default=25); flies.add_argument("--speed", type=float, default=.35); flies.add_argument("--glow-radius-mm", type=float, default=300); flies.add_argument("--lifetime-seconds", type=float, default=8); flies.add_argument("--color", default="FFFFB0"); flies.add_argument("--color-variation", type=float, default=.25); flies.add_argument("--seed", type=int, default=1)
 
-    twinkle = effect_sub.add_parser("twinkle", help="render stateful LED twinkles")
+    twinkle = effect_sub.add_parser("Twinkle", aliases=("twinkle",), help="render stateful LED twinkles")
     _add_effect_runtime_options(twinkle)
     twinkle.set_defaults(brightness=255)
     twinkle.add_argument("--density", type=float, default=.08); twinkle.add_argument("--spawn-rate", type=float, default=12); twinkle.add_argument("--fade-in", type=float, default=.25); twinkle.add_argument("--hold-time", dest="twinkle_hold", type=float, default=.25); twinkle.add_argument("--fade-out", type=float, default=.7); twinkle.add_argument("--minimum-brightness", type=float, default=.05); twinkle.add_argument("--maximum-brightness", type=float, default=1); twinkle.add_argument("--color", default="FFFFFF"); twinkle.add_argument("--mode", choices=("fixed", "random"), default="fixed"); twinkle.add_argument("--background", default="000000"); twinkle.add_argument("--color-change-speed", type=float, default=0); twinkle.add_argument("--seed", type=int, default=1)
@@ -310,7 +310,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         item.add_argument("--color", default="FFFFFF")
         _add_loop_options(item)
 
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    aliases = {"clock-hand": "ClockHand", "expanding-rings": "ExpandingRings", "height-wave": "HeightWave", "auto": "Auto", "fire": "Fire", "rotating-plane": "RotatingPlane", "radar": "Radar", "aurora": "Aurora", "fireflies": "Fireflies", "twinkle": "Twinkle"}
+    args.command = aliases.get(args.command, args.command)
+    return args
 
 
 def _colour(args: argparse.Namespace) -> tuple[int, int, int]:
@@ -470,7 +473,7 @@ def _run_clock_hand(args: argparse.Namespace) -> int:
     def frame_for(_number: int, elapsed: float) -> RGBFrame:
         return render_clock_hand(rows, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=args.rotation_seconds, direction=args.direction, offset_degrees=args.angle_offset_degrees), width_m=args.width_mm / 1000, color=color, background=background, brightness=args.brightness, center_xy=center_xy, exclude_tail=args.exclude_tail)
     print(f"Starting clock-hand: {args.direction}, width {args.width_mm:g}mm, rotation {args.rotation_seconds:g}s, {args.fps} FPS")
-    result = _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="clock-hand")
+    result = _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="ClockHand")
     return result
 
 
@@ -514,7 +517,7 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
         raise ValueError("speed-mps must be greater than zero")
     if args.duration is not None and args.duration <= 0:
         raise ValueError("duration must be greater than zero")
-    if args.command == "expanding-rings":
+    if args.command == "ExpandingRings":
         thickness_mm = args.thickness_mm
         if thickness_mm <= 0:
             raise ValueError("thickness-mm must be greater than zero")
@@ -530,7 +533,7 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
     background = parse_hex_color(args.background)
     thickness_m = thickness_mm / 1000
     selected = selected_xyz(context, exclude_tail=args.exclude_tail)
-    if args.command == "expanding-rings":
+    if args.command == "ExpandingRings":
         origin = parse_spatial_origin(args.origin, context)
         cycle_distance = max(distance3(point, origin) for point in selected)
         if cycle_distance <= 0:
@@ -554,7 +557,7 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
             brightness=args.brightness,
             exclude_tail=args.exclude_tail,
         )
-        if args.command == "expanding-rings":
+        if args.command == "ExpandingRings":
             return render_expanding_rings(context, thickness_m=thickness_m, origin=origin, **kwargs)
         return render_height_wave(context, height_m=thickness_m, direction=args.direction, **kwargs)
 
@@ -563,9 +566,9 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
     return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
 
 
-PROCEDURAL_DURATION_DEFAULTS = {"fire": 5.0, "aurora": 10.0, "fireflies": 8.0, "twinkle": 10.0, **{name: 12.0 for name in SPACE_BODIES}}
-PROCEDURAL_LOOP_EFFECTS = {"rotating-plane", "radar"}
-PROCEDURAL_EFFECTS = {"fire", "rotating-plane", "radar", "aurora", "fireflies", "twinkle", *SPACE_BODIES}
+PROCEDURAL_DURATION_DEFAULTS = {"Fire": 5.0, "Aurora": 10.0, "Fireflies": 8.0, "Twinkle": 10.0, **{name: 12.0 for name in SPACE_BODIES}}
+PROCEDURAL_LOOP_EFFECTS = {"RotatingPlane", "Radar"}
+PROCEDURAL_EFFECTS = {"Fire", "RotatingPlane", "Radar", "Aurora", "Fireflies", "Twinkle", *SPACE_BODIES}
 
 
 def _procedural_options(args: argparse.Namespace) -> dict[str, object]:
@@ -597,34 +600,34 @@ def _validate_range(option: str, value: float, *, minimum: float | None = None, 
 
 
 def _validate_procedural_options(args: argparse.Namespace) -> None:
-    if args.command == "fire":
+    if args.command == "Fire":
         _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
         _validate_range("flame-height-m", args.flame_height_m, minimum=0, inclusive_minimum=False)
         _validate_range("scale", args.scale, minimum=0, inclusive_minimum=False)
         _validate_range("turbulence", args.turbulence, minimum=0, maximum=1)
         _validate_range("cooling", args.cooling, minimum=0, maximum=1)
-    elif args.command == "rotating-plane":
+    elif args.command == "RotatingPlane":
         _validate_range("rotation-seconds", args.rotation_seconds, minimum=0, inclusive_minimum=False)
         _validate_range("thickness-mm", args.thickness_mm, minimum=0, inclusive_minimum=False)
         if args.trail_degrees < 0 or args.trail_degrees > 180:
             raise ValueError(f"trail-degrees={args.trail_degrees!r} must be in range 0..180")
-    elif args.command == "radar":
+    elif args.command == "Radar":
         _validate_range("rotation-seconds", args.rotation_seconds, minimum=0, inclusive_minimum=False)
         _validate_range("beam-width-degrees", args.beam_width_degrees, minimum=0, maximum=360, inclusive_minimum=False)
         _validate_range("trail-degrees", args.trail_degrees, minimum=0, maximum=360)
         _validate_range("range-m", args.range_m, minimum=0, inclusive_minimum=False)
         _validate_range("vertical-falloff", args.vertical_falloff, minimum=0, maximum=1)
-    elif args.command == "aurora":
+    elif args.command == "Aurora":
         _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
         _validate_range("scale", args.scale, minimum=0, inclusive_minimum=False)
         _validate_range("band-width", args.band_width, minimum=0, maximum=1, inclusive_minimum=False)
         _validate_range("intensity", args.intensity, minimum=0, maximum=1, inclusive_minimum=False)
-    elif args.command == "fireflies":
+    elif args.command == "Fireflies":
         _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
         _validate_range("glow-radius-mm", args.glow_radius_mm, minimum=0, inclusive_minimum=False)
         _validate_range("lifetime-seconds", args.lifetime_seconds, minimum=0, inclusive_minimum=False)
         _validate_range("color-variation", args.color_variation, minimum=0, maximum=1)
-    elif args.command == "twinkle":
+    elif args.command == "Twinkle":
         _validate_range("density", args.density, minimum=0, maximum=1)
         _validate_range("spawn-rate", args.spawn_rate, minimum=0)
         _validate_range("fade-in", args.fade_in, minimum=0)
@@ -661,7 +664,7 @@ def _run_procedural_effect(args: argparse.Namespace) -> int:
 
 def _resolve_auto_playlist(effects: str | None, preset: str | None, shuffle: bool, seed: int) -> list[str]:
     if effects is not None:
-        names = [part.strip() for part in effects.split(",")]
+        names = [LEGACY_NAMES.get(part.strip(), part.strip()) for part in effects.split(",")]
     elif preset:
         names = list(PRESETS[preset])
     else:
@@ -759,11 +762,11 @@ def _run_auto(args: argparse.Namespace) -> int:
 
     def renderer_for(name: str, elapsed: float) -> RGBFrame:
         preset = effect_values(name)
-        if name == "clock-hand":
+        if name == "ClockHand":
             return render_clock_hand(context.positions, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=preset["rotation_seconds"]), width_m=preset["width_mm"] / 1000, center_xy=context.apex[:2], brightness=255, exclude_tail=args.exclude_tail)
-        if name == "expanding-rings":
+        if name == "ExpandingRings":
             return render_expanding_rings(context, elapsed_seconds=elapsed, speed_m_per_s=preset["speed_mps"], thickness_m=preset["thickness_mm"] / 1000, origin=parse_spatial_origin(preset["origin"], context), brightness=255, exclude_tail=args.exclude_tail)
-        if name == "height-wave":
+        if name == "HeightWave":
             return render_height_wave(context, elapsed_seconds=elapsed, speed_m_per_s=preset["speed_mps"], height_m=preset["height_mm"] / 1000, direction=preset["direction"], brightness=255, exclude_tail=args.exclude_tail)
         return procedural_renderers[name].render(elapsed)
 
@@ -772,7 +775,7 @@ def _run_auto(args: argparse.Namespace) -> int:
 
     duration = _auto_duration(args, names)
     print(f"Starting auto playlist: {', '.join(names)}; interval {args.interval:g}s; transition {args.transition:g}s" + (" (dry run)" if args.dry_run else ""))
-    return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="auto")
+    return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="Auto")
 
 def _main(args: argparse.Namespace) -> int:
     if args.area == "controller":
@@ -894,9 +897,9 @@ def _main(args: argparse.Namespace) -> int:
         return _run_multi_ddp(args)
 
     if args.area == "effect":
-        if args.command == "clock-hand": return _run_clock_hand(args)
-        if args.command == "auto": return _run_auto(args)
-        if args.command in {"expanding-rings", "height-wave"}: return _run_spatial_effect(args)
+        if args.command == "ClockHand": return _run_clock_hand(args)
+        if args.command == "Auto": return _run_auto(args)
+        if args.command in {"ExpandingRings", "HeightWave"}: return _run_spatial_effect(args)
         if args.command in PROCEDURAL_EFFECTS: return _run_procedural_effect(args)
         raise ValueError(f"unknown effect command: {args.command}")
 

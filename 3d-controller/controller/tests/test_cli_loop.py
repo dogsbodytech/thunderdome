@@ -110,18 +110,18 @@ class CLILoopTests(unittest.TestCase):
         stderr = io.StringIO()
 
         def renderer_for(name, *_args, **_kwargs):
-            return {"fire": fire, "aurora": aurora}[name]
+            return {"Fire": fire, "Aurora": aurora}[name]
 
         with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()), patch(
             "thunderdome.cli.BY_NAME", {
-                "fire": Mock(category="procedural", create_renderer=lambda *args, **kwargs: renderer_for("fire")),
-                "aurora": Mock(category="procedural", create_renderer=lambda *args, **kwargs: renderer_for("aurora")),
+                "Fire": Mock(category="procedural", create_renderer=lambda *args, **kwargs: renderer_for("Fire")),
+                "Aurora": Mock(category="procedural", create_renderer=lambda *args, **kwargs: renderer_for("Aurora")),
             }
-        ), patch("thunderdome.cli.DEFAULT_PLAYLIST", ("fire", "aurora")), patch(
+        ), patch("thunderdome.cli.DEFAULT_PLAYLIST", ("Fire", "Aurora")), patch(
             "thunderdome.cli._effect_sink", return_value=sink
         ), contextlib.redirect_stderr(stderr):
             result = main([
-                "effect", "auto", "--output", "simulator", "--effects", "fire,aurora", "--duration", "1",
+                "effect", "Auto", "--output", "simulator", "--effects", "Fire,Aurora", "--duration", "1",
                 "--interval", "100", "--transition", "0", "--fps", "60",
             ])
 

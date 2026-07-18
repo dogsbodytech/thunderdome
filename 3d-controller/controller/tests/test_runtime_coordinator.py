@@ -26,46 +26,61 @@ class RuntimeCoordinatorTests(unittest.TestCase):
         self.runtime = FakeRuntime()
         self.coordinator = RuntimeCoordinator(self.runtime, monotonic=lambda: self.clock[0])
 
-    def command(self, action, *, effect="fire", priority=0, duration=None, output=OutputMode.SIMULATOR):
+    def command(self, action, *, effect="Fire", priority=0, duration=None, output=OutputMode.SIMULATOR):
         return RuntimeCommand(CommandSource.BROWSER, action, "request", effect, {"brightness": 255}, output, priority, duration)
 
     def test_baseline_replacement_and_stop_all(self):
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE)).accepted)
-        self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE, effect="aurora")).accepted)
+        self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE, effect="Aurora")).accepted)
         self.assertEqual(self.runtime.stopped, 1)
-        self.assertEqual(self.runtime.started[-1].effect, "aurora")
+        self.assertEqual(self.runtime.started[-1].effect, "Aurora")
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.STOP_ALL, effect=None, output=None)).accepted)
         self.assertIsNone(self.coordinator.status()["baseline"])
 
+    def test_legacy_effect_command_is_canonicalized_before_starting_runtime(self):
+        result = self.coordinator.execute(self.command(CommandAction.SET_BASELINE, effect="height-wave"))
+
+        self.assertTrue(result.accepted)
+        self.assertEqual(self.runtime.started[-1].effect, "HeightWave")
+
     def test_override_priority_expiry_and_cancellation_restart_baseline(self):
         self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
-        self.assertTrue(self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="aurora", priority=1, duration=5)).accepted)
-        rejected = self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="radar", priority=0, duration=5))
+        self.assertTrue(self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="Aurora", priority=1, duration=5)).accepted)
+        rejected = self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="Radar", priority=0, duration=5))
         self.assertFalse(rejected.accepted)
         self.assertIn("lower priority", rejected.reason)
         self.clock[0] = 16.0
         self.coordinator.expire_overrides()
-        self.assertEqual(self.coordinator.status()["effective"]["effect"], "fire")
-        self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="aurora", priority=1, duration=5))
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "Fire")
+        self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="Aurora", priority=1, duration=5))
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.CANCEL_OVERRIDE, effect=None, output=None)).accepted)
-        self.assertEqual(self.coordinator.status()["effective"]["effect"], "fire")
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "Fire")
 
     def test_equal_priority_newer_override_replaces_and_output_inherits(self):
         self.coordinator.execute(self.command(CommandAction.SET_BASELINE, output=OutputMode.BOTH))
-        first = self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="aurora", priority=1, duration=5, output=None))
+        first = self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="Aurora", priority=1, duration=5, output=None))
         self.assertTrue(first.accepted)
         self.assertEqual(self.coordinator.status()["override"]["output"], "both")
-        self.assertTrue(self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="radar", priority=1, duration=5, output=None)).accepted)
-        self.assertEqual(self.coordinator.status()["effective"]["effect"], "radar")
+        self.assertTrue(self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="Radar", priority=1, duration=5, output=None)).accepted)
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "Radar")
+
+    def test_override_without_baseline_uses_configured_default_output(self):
+        self.coordinator.default_output = OutputMode.SIMULATOR
+        result = self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="Aurora", duration=5, output=None))
+        self.assertTrue(result.accepted)
+        self.assertEqual(self.coordinator.status()["override"]["output"], "simulator")
+        self.clock[0] += 6
+        self.coordinator.expire_overrides()
+        self.assertIsNone(self.coordinator.status()["effective"])
 
     def test_baseline_uses_configured_default_without_restarting_on_invalid_replacement(self):
         self.coordinator.default_output = OutputMode.SIMULATOR
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE, output=None)).accepted)
         starts = len(self.runtime.started)
-        malformed = RuntimeCommand(CommandSource.BROWSER, CommandAction.SET_BASELINE, "bad", "fire", {"brightness": float("nan")}, None)
+        malformed = RuntimeCommand(CommandSource.BROWSER, CommandAction.SET_BASELINE, "bad", "Fire", {"brightness": float("nan")}, None)
         self.assertFalse(self.coordinator.execute(malformed).accepted)
         self.assertEqual(len(self.runtime.started), starts)
-        self.assertEqual(self.coordinator.status()["effective"]["effect"], "fire")
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "Fire")
 
     def test_completed_baseline_clears_only_its_own_request(self):
         self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
@@ -78,24 +93,24 @@ class RuntimeCoordinatorTests(unittest.TestCase):
     def test_old_completed_baseline_cannot_clear_replacement(self):
         self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
         old_id = self.coordinator.status()["baseline"]["request_id"]
-        self.coordinator.execute(RuntimeCommand(CommandSource.BROWSER, CommandAction.SET_BASELINE, "new", "aurora", {"brightness": 255}, OutputMode.SIMULATOR))
+        self.coordinator.execute(RuntimeCommand(CommandSource.BROWSER, CommandAction.SET_BASELINE, "new", "Aurora", {"brightness": 255}, OutputMode.SIMULATOR))
         self.assertFalse(self.coordinator.complete_baseline(old_id))
-        self.assertEqual(self.coordinator.status()["effective"]["effect"], "aurora")
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "Aurora")
 
     def test_continuous_baseline_remains_effective_without_completion(self):
         self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
         status = self.coordinator.status()
         self.assertEqual(status["service_state"], "running")
-        self.assertEqual(status["baseline"]["effect"], "fire")
-        self.assertEqual(status["effective"]["effect"], "fire")
+        self.assertEqual(status["baseline"]["effect"], "Fire")
+        self.assertEqual(status["effective"]["effect"], "Fire")
 
     def test_override_expiry_restores_baseline_before_baseline_completion(self):
         self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
         baseline_id = self.coordinator.status()["baseline"]["request_id"]
-        self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="aurora", priority=1, duration=1))
+        self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="Aurora", priority=1, duration=1))
         self.clock[0] += 2
         self.coordinator.expire_overrides()
-        self.assertEqual(self.coordinator.status()["effective"]["effect"], "fire")
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "Fire")
         self.assertTrue(self.coordinator.complete_baseline(baseline_id))
         self.assertEqual(self.coordinator.status()["service_state"], "idle")
 

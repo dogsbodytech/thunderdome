@@ -6,9 +6,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from thunderdome.effects._common import SpatialContext, parse_spatial_origin
-from thunderdome.effects.expanding_rings import render_expanding_rings
-from thunderdome.effects.height_wave import render_height_wave
+from thunderdome.effects.Common import SpatialContext, parse_spatial_origin
+from thunderdome.effects.ExpandingRings import render_expanding_rings
+from thunderdome.effects.HeightWave import render_height_wave
 
 
 COUNT = 5_000

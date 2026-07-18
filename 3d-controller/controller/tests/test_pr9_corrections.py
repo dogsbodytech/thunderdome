@@ -10,7 +10,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome import cli
-from thunderdome.effects._registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
+from thunderdome.effects.Registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
 from thunderdome.frame import RGBFrame
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -45,7 +45,7 @@ def fake_loop(times):
 
 class PR9CorrectionTests(unittest.TestCase):
     def test_effect_help_does_not_expose_prepare_ddp_and_options_are_relevant(self):
-        commands = ["clock-hand", "expanding-rings", "height-wave", "fire", "rotating-plane", "radar", "aurora", "fireflies", "auto"]
+        commands = ["ClockHand", "ExpandingRings", "HeightWave", "Fire", "RotatingPlane", "Radar", "Aurora", "Fireflies", "Auto"]
         for command in commands:
             with self.subTest(command=command):
                 stdout = io.StringIO()
@@ -53,21 +53,21 @@ class PR9CorrectionTests(unittest.TestCase):
                     cli.parse_args(["effect", command, "--help"])
                 help_text = stdout.getvalue()
                 self.assertNotIn("--prepare" "-ddp", help_text)
-        fire_help = self._help("fire")
+        fire_help = self._help("Fire")
         self.assertIn("--flame-height-m", fire_help)
         self.assertNotIn("--rotation-seconds", fire_help)
         self.assertNotIn("--count", fire_help)
-        plane_help = self._help("rotating-plane")
+        plane_help = self._help("RotatingPlane")
         self.assertIn("--axis", plane_help)
         self.assertIn("--loops", plane_help)
         self.assertNotIn("--flame-height-m", plane_help)
-        aurora_help = self._help("aurora")
+        aurora_help = self._help("Aurora")
         self.assertNotIn("--loops", aurora_help)
         self.assertIn("--band-width", aurora_help)
-        fireflies_help = self._help("fireflies")
+        fireflies_help = self._help("Fireflies")
         self.assertIn("--color-variation", fireflies_help)
         self.assertNotIn("--loops", fireflies_help)
-        auto_help = self._help("auto")
+        auto_help = self._help("Auto")
         self.assertNotIn("--hold", auto_help)
 
     def _help(self, command: str) -> str:
@@ -88,15 +88,15 @@ class PR9CorrectionTests(unittest.TestCase):
 
     def test_real_main_path_reaches_each_effect_handler_in_dry_run(self):
         commands = {
-            "clock-hand": ["--rotations", "1"],
-            "expanding-rings": ["--loops", "1"],
-            "height-wave": ["--loops", "1"],
-            "fire": ["--duration", "0.4"],
-            "rotating-plane": ["--loops", "1"],
-            "radar": ["--loops", "1"],
-            "aurora": ["--duration", "0.4"],
-            "fireflies": ["--duration", "0.4", "--count", "3"],
-            "twinkle": ["--duration", "0.4"],
+            "ClockHand": ["--rotations", "1"],
+            "ExpandingRings": ["--loops", "1"],
+            "HeightWave": ["--loops", "1"],
+            "Fire": ["--duration", "0.4"],
+            "RotatingPlane": ["--loops", "1"],
+            "Radar": ["--loops", "1"],
+            "Aurora": ["--duration", "0.4"],
+            "Fireflies": ["--duration", "0.4", "--count", "3"],
+            "Twinkle": ["--duration", "0.4"],
         }
         for command, extra in commands.items():
             with self.subTest(command=command):
@@ -108,26 +108,26 @@ class PR9CorrectionTests(unittest.TestCase):
                 wled.assert_not_called()
 
     def test_auto_defaults_continuous_and_finite_modes_validate(self):
-        args = cli.parse_args(["effect", "auto"])
+        args = cli.parse_args(["effect", "Auto"])
         self.assertIsNone(args.duration)
         self.assertIsNone(args.cycles)
         self.assertEqual(args.interval, 30)
         self.assertEqual(args.transition, 2)
         with self.assertRaises(SystemExit):
-            cli.parse_args(["effect", "auto", "--cycles", "1", "--duration", "1"])
-        self.assertEqual(cli._auto_duration(args, ["fire", "aurora"]), None)
-        args = cli.parse_args(["effect", "auto", "--cycles", "2", "--interval", "3"])
-        self.assertEqual(cli._auto_duration(args, ["fire", "aurora"]), 12)
-        args = cli.parse_args(["effect", "auto", "--duration", "5"])
-        self.assertEqual(cli._auto_duration(args, ["fire", "aurora"]), 5)
+            cli.parse_args(["effect", "Auto", "--cycles", "1", "--duration", "1"])
+        self.assertEqual(cli._auto_duration(args, ["Fire", "Aurora"]), None)
+        args = cli.parse_args(["effect", "Auto", "--cycles", "2", "--interval", "3"])
+        self.assertEqual(cli._auto_duration(args, ["Fire", "Aurora"]), 12)
+        args = cli.parse_args(["effect", "Auto", "--duration", "5"])
+        self.assertEqual(cli._auto_duration(args, ["Fire", "Aurora"]), 5)
 
     def test_auto_scheduler_advances_playlist_transitions_and_brightness_once(self):
-        names = ["fire", "aurora", "fireflies"]
+        names = ["Fire", "Aurora", "Fireflies"]
         calls = []
 
         def renderer(name, elapsed):
             calls.append((name, round(elapsed, 2)))
-            value = {"fire": 100, "aurora": 200, "fireflies": 50}[name]
+            value = {"Fire": 100, "Aurora": 200, "Fireflies": 50}[name]
             return RGBFrame.allocate(5000, (value, 0, 0))
 
         frame0 = cli._auto_frame_for_elapsed(names, renderer, elapsed=0.0, interval=0.4, transition=0.1, brightness=24)
@@ -138,14 +138,14 @@ class PR9CorrectionTests(unittest.TestCase):
         self.assertNotEqual(tuple(frame1.data[:3]), (100 * 24 // 255, 0, 0))
         self.assertEqual(tuple(frame2.data[:3]), (200 * 24 // 255, 0, 0))
         self.assertEqual(tuple(frame3.data[:3]), (50 * 24 // 255, 0, 0))
-        self.assertIn(("fire", 0.35), calls)
-        self.assertIn(("aurora", 0.05), calls)
+        self.assertIn(("Fire", 0.35), calls)
+        self.assertIn(("Aurora", 0.05), calls)
 
     def test_auto_dry_run_uses_scheduler_and_one_session(self):
         runner = fake_loop([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
         with patch("thunderdome.cli.run_frame_loop", runner), patch("thunderdome.cli.run_wled_operation") as wled:
             result = cli.main([
-                "effect", "auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora,fireflies",
+                "effect", "Auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora,fireflies",
                 "--cycles", "1", "--interval", "0.4", "--transition", "0.1", "--fps", "5", "--brightness", "24", "--dry-run",
             ])
         self.assertEqual(result, 0)
@@ -173,14 +173,14 @@ class PR9CorrectionTests(unittest.TestCase):
 
         with patch("thunderdome.cli.run_frame_loop", runner), patch("thunderdome.cli.MultiControllerDDPSession", FailingSession):
             result = cli.main([
-                "effect", "auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora",
+                "effect", "Auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora",
                 "--duration", "0.2", "--interval", "0.4", "--transition", "0", "--fps", "5", "--dry-run",
             ])
         self.assertEqual(result, 0)
         self.assertEqual(FailingSession.instances, 0)
 
     def test_playlist_validation_order_duplicates_and_shuffle(self):
-        self.assertEqual(cli._resolve_auto_playlist("fire,aurora,fireflies", None, False, 1), ["fire", "aurora", "fireflies"])
+        self.assertEqual(cli._resolve_auto_playlist("Fire,Aurora,Fireflies", None, False, 1), ["Fire", "Aurora", "Fireflies"])
         with self.assertRaises(ValueError):
             cli._resolve_auto_playlist("fire,fire", None, False, 1)
         with self.assertRaises(ValueError):

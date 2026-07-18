@@ -5,7 +5,7 @@ import random
 from dataclasses import dataclass
 from collections.abc import Callable, Sequence
 
-from .effects.procedural import blend
+from .effects.Procedural import blend
 from .frame import RGBFrame
 
 
