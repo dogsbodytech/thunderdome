@@ -166,6 +166,16 @@ class RuntimeCoordinator:
         with self._lock:
             return self._expire_locked()
 
+    def complete_baseline(self, request_id: str) -> bool:
+        """Clear a naturally completed finite baseline if it is still current."""
+        with self._lock:
+            if self._baseline is None or self._baseline.request_id != request_id:
+                return False
+            self._baseline = None
+            if self._override is None:
+                self._state = "idle"
+            return True
+
     def status(self) -> dict[str, object]:
         with self._lock:
             self._expire_locked()

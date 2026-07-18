@@ -21,3 +21,8 @@ input { width: 160px; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; word-break: break-word; }
 .hub-label { color: #fef08a; font-size: 11px; text-shadow: 0 1px 3px #000; }
+.parameter { display: grid; gap: 4px; margin: 10px 0; }
+.parameter small, .status-pre { color: var(--muted); font-size: .78rem; }
+.status-pre { white-space: pre-wrap; max-height: 260px; overflow: auto; }
+textarea { width: 100%; background: #0f172a; color: var(--fg); border: 1px solid #475569; border-radius: 6px; padding: 7px; }
+@media (max-width: 800px) { body { overflow: auto; } #app { grid-template-columns: 1fr; height: auto; } #viewer { height: 70vh; } }

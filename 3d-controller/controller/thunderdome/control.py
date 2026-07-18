@@ -48,6 +48,7 @@ class FrameRuntime:
         self.frames = 0
         self.active_since: float | None = None
         self.error: str | None = None
+        self.on_baseline_complete: Callable[[str], bool] | None = None
 
     def _sink(self, output: OutputMode) -> FrameSink:
         if output == OutputMode.NULL:
@@ -76,6 +77,9 @@ class FrameRuntime:
             produced = self.producer_factory(display)
             producer, fps = produced[:2]
             duration = produced[2] if len(produced) == 3 else None
+            if display.expires_at is not None:
+                requested_duration = display.expires_at - display.created_at
+                duration = requested_duration if duration is None else min(duration, requested_duration)
             with self._sink(display.output) as sink:
                 def send(frame: RGBFrame) -> None:
                     result = sink.send_frame(frame)
@@ -83,7 +87,9 @@ class FrameRuntime:
                         raise OSError(f"{result.name}: {result.error or 'delivery failed'}")
                     with self._lock:
                         self.frames += 1
-                run_frame_loop(producer, send, fps=fps, duration=duration, cancel_event=cancel)
+                stats = run_frame_loop(producer, send, fps=fps, duration=duration, cancel_event=cancel)
+                if display.expires_at is not None and not stats.interrupted and self.on_baseline_complete is not None:
+                    self.on_baseline_complete(display.request_id)
         except (OSError, ValueError) as exc:
             with self._lock:
                 self.error = str(exc)
@@ -142,6 +148,7 @@ class ControlAPI:
         self.settings = settings
         self.runtime = runtime or FrameRuntime(settings)
         self.coordinator = RuntimeCoordinator(self.runtime, default_output=settings.default_output)
+        self.runtime.on_baseline_complete = self.coordinator.complete_baseline
         self._timers: list[threading.Timer] = []
         self._shutdown = False
 
@@ -183,7 +190,8 @@ class ControlAPI:
             parsed_output = OutputMode(output) if output is not None else None
             if parsed_output in {OutputMode.DDP, OutputMode.BOTH} and not self.settings.live_available:
                 raise ValueError("live DDP output is not enabled")
-            command = RuntimeCommand(CommandSource.BROWSER, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), payload.get("duration_seconds"))
+            duration = payload.get("duration_seconds")
+            command = RuntimeCommand(CommandSource.BROWSER, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
             result = self.coordinator.execute(command)
             if result.accepted and action == CommandAction.APPLY_OVERRIDE and command.duration_seconds is not None:
                 timer = threading.Timer(command.duration_seconds, self.coordinator.expire_overrides)
