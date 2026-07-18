@@ -47,17 +47,22 @@ class EffectDefaultsTests(unittest.TestCase):
         api = ControlAPI(ControlSettings("ws://127.0.0.1:8080/ws/producer", effect_defaults_path=str(self.path)))
         response = asyncio.run(api.effects(cast(web.Request, None)))
         payload = json.loads(cast(bytes, response.body))
-        aurora = next(effect for effect in payload["effects"] if effect["name"] == "aurora")
+        aurora = next(effect for effect in payload["effects"] if effect["name"] == "Aurora")
         self.assertEqual(aurora["saved_defaults"], {"speed": .5})
         self.assertEqual(aurora["resolved_defaults"]["speed"], .5)
 
+    def test_legacy_effect_key_is_loaded_as_canonical_name(self):
+        self.path.write_text(json.dumps({"aurora": {"speed": .5}}))
+
+        self.assertEqual(self.defaults.saved("Aurora"), {"speed": .5})
+
     def test_auto_refreshes_saved_procedural_defaults_while_running(self):
-        self.defaults.save("twinkle", {"density": 0, "background": "100000"})
-        parameters = validate_effect_parameters("auto", {"effects": ["twinkle"], "interval": 30, "transition": 0})
-        display = DisplayDefinition("auto", parameters, OutputMode.NULL, CommandSource.BROWSER, "auto-defaults", time.monotonic())
+        self.defaults.save("Twinkle", {"density": 0, "background": "100000"})
+        parameters = validate_effect_parameters("Auto", {"effects": ["Twinkle"], "interval": 30, "transition": 0})
+        display = DisplayDefinition("Auto", parameters, OutputMode.NULL, CommandSource.BROWSER, "auto-defaults", time.monotonic())
         producer, _, _ = make_effect_producer(display, self.defaults)
         self.assertEqual(tuple(producer(0, .2).data[:3]), (16, 0, 0))
-        self.defaults.save("twinkle", {"density": 0, "background": "001000"})
+        self.defaults.save("Twinkle", {"density": 0, "background": "001000"})
         self.assertEqual(tuple(producer(1, .4).data[:3]), (0, 16, 0))
 
 

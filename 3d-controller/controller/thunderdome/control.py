@@ -13,12 +13,12 @@ from aiohttp import web
 
 from .animation.loop import run_frame_loop
 from .auto_scheduler import AutoScheduler, auto_duration
-from .effects._common import SpatialContext, parse_spatial_origin
-from .effects.clock_hand import angle_for_elapsed, render_clock_hand
-from .effects.expanding_rings import render_expanding_rings
-from .effects.height_wave import render_height_wave
-from .effects.procedural import ProceduralRenderer, create_renderer
-from .effects._registry import BY_NAME
+from .effects.Common import SpatialContext, parse_spatial_origin
+from .effects.ClockHand import angle_for_elapsed, render_clock_hand
+from .effects.ExpandingRings import render_expanding_rings
+from .effects.HeightWave import render_height_wave
+from .effects.Procedural import ProceduralRenderer, create_renderer
+from .effects.Registry import BY_NAME
 from .effect_defaults import EffectDefaults
 from .frame import RGBFrame
 from .runtime import CommandAction, CommandSource, DisplayDefinition, OutputMode, RuntimeCommand, RuntimeCoordinator
@@ -120,7 +120,7 @@ def make_effect_producer(display: DisplayDefinition, defaults: EffectDefaults | 
     values = dict(display.parameters)
     context = SpatialContext.load(values.pop("positions", None) or Path(__file__).resolve().parents[2] / "geometry/generated/led_positions_3d.json", values.pop("geometry", None) or Path(__file__).resolve().parents[2] / "geometry/thunderdome_geometry.json")
     brightness = int(values.pop("brightness", 255)); fps = int(values.pop("fps", 30)); exclude_tail = bool(values.pop("exclude_tail", False))
-    if display.effect == "auto":
+    if display.effect == "Auto":
         scheduler = AutoScheduler(list(values["effects"]), interval=float(values["interval"]), transition=float(values["transition"]), shuffle=bool(values["shuffle"]), seed=int(values["seed"]))
         names = scheduler.names; seed = int(values["seed"])
         def effect_values(name: str) -> dict[str, object]:
@@ -158,9 +158,9 @@ def make_effect_producer(display: DisplayDefinition, defaults: EffectDefaults | 
 
 
 def _spatial_frame(effect: str, context: SpatialContext, elapsed: float, *, brightness: int, exclude_tail: bool, values: dict[str, object]) -> RGBFrame:
-    if effect == "clock-hand":
+    if effect == "ClockHand":
         return render_clock_hand(context.positions, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=float(values["rotation_seconds"]), direction=str(values["direction"]), offset_degrees=float(values["angle_offset_degrees"])), width_m=float(values["width_mm"]) / 1000, color=tuple(int(values["color"][i:i+2], 16) for i in (0, 2, 4)), background=tuple(int(values["background"][i:i+2], 16) for i in (0, 2, 4)), brightness=brightness, center_xy=context.apex[:2], exclude_tail=exclude_tail)
-    if effect == "expanding-rings":
+    if effect == "ExpandingRings":
         return render_expanding_rings(context, elapsed_seconds=elapsed, speed_m_per_s=float(values["speed_mps"]), thickness_m=float(values["thickness_mm"]) / 1000, origin=parse_spatial_origin(str(values["origin"]), context), color=tuple(int(values["color"][i:i+2], 16) for i in (0, 2, 4)), background=tuple(int(values["background"][i:i+2], 16) for i in (0, 2, 4)), brightness=brightness, exclude_tail=exclude_tail)
     return render_height_wave(context, elapsed_seconds=elapsed, speed_m_per_s=float(values["speed_mps"]), height_m=float(values["height_mm"]) / 1000, direction=str(values["direction"]), color=tuple(int(values["color"][i:i+2], 16) for i in (0, 2, 4)), background=tuple(int(values["background"][i:i+2], 16) for i in (0, 2, 4)), brightness=brightness, exclude_tail=exclude_tail)
 
@@ -202,7 +202,7 @@ class ControlAPI:
         effects = []
         for schema in EFFECT_SCHEMAS.values():
             payload = schema.as_dict()
-            if schema.name != "auto":
+            if schema.name != "Auto":
                 payload["saved_defaults"] = self.defaults.saved(schema.name)
                 payload["resolved_defaults"] = self.defaults.resolved(schema.name)
             effects.append(payload)

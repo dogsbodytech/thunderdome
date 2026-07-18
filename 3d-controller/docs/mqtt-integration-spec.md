@@ -25,7 +25,7 @@ Validate the JSON envelope against `schemas/mqtt-override-v1.schema.json` before
 {
   "version": 1,
   "request_id": "visitor-123",
-  "effect": "twinkle",
+  "effect": "Twinkle",
   "parameters": {
     "mode": "random",
     "density": 0.05

@@ -11,8 +11,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome import cli
-from thunderdome.effects._common import SpatialContext
-from thunderdome.effects.procedural import (
+from thunderdome.effects.Common import SpatialContext
+from thunderdome.effects.Procedural import (
     build_rotating_plane_samples,
     finite_vector,
     plane_intensity_from_samples,
@@ -63,31 +63,31 @@ def fake_loop(producer, sender, **_kwargs):
 
 class AutoTimingFollowupTests(unittest.TestCase):
     def test_incoming_elapsed_is_monotonic_across_transition_boundary(self):
-        names = ["fire", "aurora", "fireflies"]
+        names = ["Fire", "Aurora", "Fireflies"]
         samples = [0.299, 0.300, 0.350, 0.399, 0.400, 0.401]
         calls_by_sample = {}
 
         def renderer(name, elapsed):
             calls_by_sample.setdefault(current[0], []).append((name, elapsed))
-            return RGBFrame.allocate(5000, (100 if name == "fire" else 200 if name == "aurora" else 50, 0, 0))
+            return RGBFrame.allocate(5000, (100 if name == "Fire" else 200 if name == "Aurora" else 50, 0, 0))
 
         current = [0.0]
         for sample in samples:
             current[0] = sample
             cli._auto_frame_for_elapsed(names, renderer, elapsed=sample, interval=0.4, transition=0.1, brightness=24)
 
-        self.assertEqual(calls_by_sample[0.299], [("fire", 0.299)])
+        self.assertEqual(calls_by_sample[0.299], [("Fire", 0.299)])
         self.assertAlmostEqual(calls_by_sample[0.300][1][1], 0.0, places=6)
         self.assertAlmostEqual(calls_by_sample[0.350][1][1], 0.050, places=6)
         self.assertAlmostEqual(calls_by_sample[0.399][1][1], 0.099, places=6)
-        self.assertEqual(calls_by_sample[0.400][0][0], "aurora")
+        self.assertEqual(calls_by_sample[0.400][0][0], "Aurora")
         self.assertAlmostEqual(calls_by_sample[0.400][0][1], 0.100, places=6)
         self.assertAlmostEqual(calls_by_sample[0.401][0][1], 0.101, places=6)
         incoming_times = [calls_by_sample[t][-1][1] for t in (0.300, 0.350, 0.399, 0.400, 0.401)]
         self.assertEqual(incoming_times, sorted(incoming_times))
 
     def test_zero_transition_and_playlist_wrap_have_expected_starts(self):
-        names = ["fire", "aurora", "fireflies"]
+        names = ["Fire", "Aurora", "Fireflies"]
         calls = []
 
         def renderer(name, elapsed):
@@ -95,13 +95,13 @@ class AutoTimingFollowupTests(unittest.TestCase):
             return RGBFrame.allocate(5000, (1, 0, 0))
 
         cli._auto_frame_for_elapsed(names, renderer, elapsed=0.0, interval=0.4, transition=0.1, brightness=255)
-        self.assertEqual(calls[-1], ("fire", 0.0))
+        self.assertEqual(calls[-1], ("Fire", 0.0))
         cli._auto_frame_for_elapsed(names, renderer, elapsed=0.4, interval=0.4, transition=0.0, brightness=255)
-        self.assertEqual(calls[-1], ("aurora", 0.0))
+        self.assertEqual(calls[-1], ("Aurora", 0.0))
         cli._auto_frame_for_elapsed(names, renderer, elapsed=1.2, interval=0.4, transition=0.1, brightness=255)
-        self.assertEqual(calls[-1], ("fire", 0.1))
+        self.assertEqual(calls[-1], ("Fire", 0.1))
         cli._auto_frame_for_elapsed(names, renderer, elapsed=1.6, interval=0.4, transition=0.1, brightness=255)
-        self.assertEqual(calls[-1], ("aurora", 0.1))
+        self.assertEqual(calls[-1], ("Aurora", 0.1))
 
 
 class RotatingPlaneGeometryFollowupTests(unittest.TestCase):
@@ -145,8 +145,8 @@ class RotatingPlaneGeometryFollowupTests(unittest.TestCase):
         self.assertTrue(all(0 <= byte <= 255 for byte in with_trail.data))
 
     def test_rotating_plane_builds_geometry_once_per_frame(self):
-        with patch("thunderdome.effects.procedural.build_rotating_plane_samples", wraps=build_rotating_plane_samples) as builder, patch(
-            "thunderdome.effects.procedural.plane_intensity_from_samples", wraps=plane_intensity_from_samples
+        with patch("thunderdome.effects.Procedural.build_rotating_plane_samples", wraps=build_rotating_plane_samples) as builder, patch(
+            "thunderdome.effects.Procedural.plane_intensity_from_samples", wraps=plane_intensity_from_samples
         ) as intensity:
             render_rotating_plane(self.ctx, 0.25, brightness=255, axis="tilted", rotation_seconds=1.0, thickness_mm=200, trail_degrees=45)
 
@@ -156,7 +156,7 @@ class RotatingPlaneGeometryFollowupTests(unittest.TestCase):
         self.assertTrue(all(call.args[2] is sample_arg for call in intensity.call_args_list))
 
     def test_rotation_helper_calls_are_sample_bounded_not_led_bounded(self):
-        with patch("thunderdome.effects.procedural.rotate_vector", wraps=rotate_vector) as rotate:
+        with patch("thunderdome.effects.Procedural.rotate_vector", wraps=rotate_vector) as rotate:
             render_rotating_plane(self.ctx, 0.25, brightness=255, axis="tilted", rotation_seconds=1.0, thickness_mm=200, trail_degrees=180)
         self.assertLessEqual(rotate.call_count, 13)
         self.assertLess(rotate.call_count, len(self.ctx.xyz) // 100)
@@ -213,10 +213,10 @@ class ProceduralValidationFollowupTests(unittest.TestCase):
 
     def test_valid_zero_values_are_accepted_through_main(self):
         cases = [
-            ["fire", "--turbulence", "0", "--cooling", "0"],
-            ["rotating-plane", "--trail-degrees", "0"],
-            ["radar", "--trail-degrees", "0", "--vertical-falloff", "0"],
-            ["fireflies", "--color-variation", "0", "--count", "3"],
+            ["Fire", "--turbulence", "0", "--cooling", "0"],
+            ["RotatingPlane", "--trail-degrees", "0"],
+            ["Radar", "--trail-degrees", "0", "--vertical-falloff", "0"],
+            ["Fireflies", "--color-variation", "0", "--count", "3"],
         ]
         for args in cases:
             with self.subTest(args=args):
@@ -224,12 +224,12 @@ class ProceduralValidationFollowupTests(unittest.TestCase):
 
     def test_invalid_negative_and_upper_bounds_fail_clearly(self):
         cases = [
-            ["fire", "--turbulence", "-0.1"],
-            ["fire", "--cooling", "1.1"],
-            ["rotating-plane", "--trail-degrees", "-1"],
-            ["rotating-plane", "--trail-degrees", "181"],
-            ["radar", "--beam-width-degrees", "361"],
-            ["fireflies", "--color-variation", "-0.1", "--count", "3"],
+            ["Fire", "--turbulence", "-0.1"],
+            ["Fire", "--cooling", "1.1"],
+            ["RotatingPlane", "--trail-degrees", "-1"],
+            ["RotatingPlane", "--trail-degrees", "181"],
+            ["Radar", "--beam-width-degrees", "361"],
+            ["Fireflies", "--color-variation", "-0.1", "--count", "3"],
         ]
         for args in cases:
             with self.subTest(args=args):
@@ -238,7 +238,7 @@ class ProceduralValidationFollowupTests(unittest.TestCase):
     def test_real_main_trail_181_error_names_valid_range(self):
         stderr = io.StringIO()
         with redirect_stderr(stderr):
-            result = self.run_command(["rotating-plane", "--trail-degrees", "181"])
+            result = self.run_command(["RotatingPlane", "--trail-degrees", "181"])
         self.assertEqual(result, 1)
         self.assertIn("trail-degrees", stderr.getvalue())
         self.assertIn("181", stderr.getvalue())

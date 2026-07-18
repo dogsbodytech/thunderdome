@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from thunderdome.effects.clock_hand import angle_for_elapsed, render_clock_hand
+from thunderdome.effects.ClockHand import angle_for_elapsed, render_clock_hand
 
 
 LOGICAL_LED_COUNT = 5_000

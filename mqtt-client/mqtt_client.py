@@ -45,7 +45,7 @@ ALLOWLIST = frozenset(filter(None, (n.strip() for n in os.environ.get("EFFECT_AL
 DEBOUNCE_SECONDS = float(os.environ.get("DEBOUNCE_SECONDS", "2"))
 # The topic is public, so bound what we parse and forward.
 MAX_PAYLOAD_BYTES = 4096
-NAME_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
+NAME_PATTERN = re.compile(r"[A-Z][A-Za-z0-9]{0,63}")
 
 
 def validate_name(name) -> str | None:

@@ -42,7 +42,7 @@ class CommandSourceTests(AioHTTPTestCase):
         await super().asyncTearDown()
 
     async def test_source_defaults_to_browser(self):
-        response = await self.client.post("/api/runtime/baseline", json={"effect": "fire"})
+        response = await self.client.post("/api/runtime/baseline", json={"effect": "Fire"})
         body = await response.json()
         self.assertEqual(response.status, 200)
         self.assertEqual(body["status"]["baseline"]["source"], "browser")
@@ -50,14 +50,14 @@ class CommandSourceTests(AioHTTPTestCase):
     async def test_declared_source_is_reported_in_status(self):
         response = await self.client.post(
             "/api/runtime/override",
-            json={"effect": "fire", "source": "mqtt", "output": "null", "duration_seconds": 5},
+            json={"effect": "Fire", "source": "mqtt", "output": "null", "duration_seconds": 5},
         )
         body = await response.json()
         self.assertEqual(response.status, 200)
         self.assertEqual(body["status"]["override"]["source"], "mqtt")
 
     async def test_unknown_source_is_rejected(self):
-        response = await self.client.post("/api/runtime/baseline", json={"effect": "fire", "source": "wizard"})
+        response = await self.client.post("/api/runtime/baseline", json={"effect": "Fire", "source": "wizard"})
         self.assertEqual(response.status, 400)
         self.assertFalse((await response.json())["accepted"])
 
