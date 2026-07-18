@@ -33,6 +33,7 @@ REGISTRY = (
     EffectRegistration("radar", "angular XY sweep", {"rotation_seconds": 8, "beam_width_degrees": 12, "trail_degrees": 35, "direction": "clockwise"}, "procedural"),
     EffectRegistration("aurora", "flowing multi-frequency luminous bands", {"speed": 0.25, "scale": 1.2, "band_width": 0.45, "intensity": 1.0, "palette": "mixed", "direction": "1,0,0"}, "procedural"),
     EffectRegistration("fireflies", "deterministic moving 3D glow particles", {"count": 25, "speed": 0.35, "glow_radius_mm": 300, "lifetime_seconds": 8, "color": "FFFFB0", "color_variation": 0.25}, "procedural"),
+    EffectRegistration("twinkle", "stateful per-LED fade-in hold fade-out sparkles", {"density": 0.08, "spawn_rate": 12.0, "fade_in": 0.25, "hold": 0.25, "fade_out": 0.7, "minimum_brightness": 0.05, "maximum_brightness": 1.0, "color": "FFFFFF", "mode": "fixed", "background": "000000", "color_change_speed": 0.0}, "procedural"),
 )
 
 BY_NAME = {registration.name: registration for registration in REGISTRY}

@@ -13,6 +13,7 @@ from .controllers import load_controllers
 from .frame import RGBFrame
 from .streaming import FrameProtocolError, encode_frame
 from .transport.multi_ddp import MultiControllerDDPSession
+from .wled.multi import run_wled_operation
 
 
 @dataclass(frozen=True)
@@ -129,7 +130,12 @@ class DDPFrameSink(FrameSink):
 
     def open(self) -> None:
         if self._session is None:
-            self._session = MultiControllerDDPSession(load_controllers(self.controllers_path))
+            controllers = load_controllers(self.controllers_path)
+            results = run_wled_operation(controllers, lambda client: client.set_brightness(255))
+            failures = [f"controller {result.controller_number}: {result.error}" for result in results if result.error]
+            if failures:
+                raise OSError(f"unable to set WLED brightness to 255 before DDP: {'; '.join(failures)}")
+            self._session = MultiControllerDDPSession(controllers)
 
     def send_frame(self, frame: RGBFrame, *, timestamp: float | None = None, sequence: int | None = None) -> SinkResult:
         if self._session is None:

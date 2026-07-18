@@ -1,6 +1,7 @@
 """Deterministic XYZ procedural spatial effects and shared frame blending."""
 from __future__ import annotations
 
+import colorsys
 import math
 import random
 from dataclasses import dataclass
@@ -432,6 +433,101 @@ def render_fireflies(context: SpatialContext, elapsed: float, *, brightness=32, 
     return frame
 
 
+@dataclass
+class Twinkle:
+    index: int
+    born: float
+    color: tuple[int, int, int]
+    hue: float | None = None
+
+
+class TwinkleOverlay:
+    """Reusable deterministic per-LED twinkle lifecycle overlay."""
+
+    def __init__(self, context: SpatialContext, *, seed=1, exclude_tail=False, density=.08, spawn_rate=12.0, fade_in=.25, hold=.25, fade_out=.7, minimum_brightness=0.05, maximum_brightness=1.0, color="FFFFFF", mode="fixed", background="000000", color_change_speed=0.0, **_):
+        if not 0 <= density <= 1 or spawn_rate < 0 or min(fade_in, hold, fade_out) < 0:
+            raise ValueError("twinkle density/rate/timing values are out of range")
+        if not 0 <= minimum_brightness <= maximum_brightness <= 1:
+            raise ValueError("twinkle brightness bounds must be 0..1 and ordered")
+        if mode not in {"fixed", "random"}:
+            raise ValueError("twinkle mode must be fixed or random")
+        self.context = context
+        self.exclude_tail = exclude_tail
+        self.density = float(density)
+        self.spawn_rate = float(spawn_rate)
+        self.fade_in = float(fade_in)
+        self.hold = float(hold)
+        self.fade_out = float(fade_out)
+        self.minimum = float(minimum_brightness)
+        self.maximum = float(maximum_brightness)
+        self.color = parse_rgb(color)
+        self.mode = mode
+        self.background = parse_rgb(background)
+        self.color_change_speed = float(color_change_speed)
+        self.random = random.Random(seed)
+        self.last_elapsed = 0.0
+        self.carry = 0.0
+        self.active: dict[int, Twinkle] = {}
+        self.indices = [index for index in range(LOGICAL_LED_COUNT) if not (exclude_tail and context.tails[index])]
+
+    def _color(self, twinkle: Twinkle, elapsed: float) -> tuple[int, int, int]:
+        if self.mode == "fixed":
+            return twinkle.color
+        hue = ((twinkle.hue or 0.0) + (elapsed - twinkle.born) * self.color_change_speed * 0.03) % 1.0
+        r, g, b = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
+        return (int(r * 255), int(g * 255), int(b * 255))
+
+    def _level(self, age: float) -> float | None:
+        total = self.fade_in + self.hold + self.fade_out
+        if age >= total:
+            return None
+        if self.fade_in > 0 and age < self.fade_in:
+            phase = smoothstep(age / self.fade_in)
+        elif age < self.fade_in + self.hold:
+            phase = 1.0
+        else:
+            phase = 1.0 - smoothstep((age - self.fade_in - self.hold) / max(self.fade_out, 1e-9))
+        return self.minimum + (self.maximum - self.minimum) * phase
+
+    def _spawn(self, elapsed: float) -> None:
+        if not self.indices:
+            return
+        capacity = int(len(self.indices) * self.density)
+        if len(self.active) >= capacity:
+            return
+        self.carry += max(0.0, elapsed - self.last_elapsed) * self.spawn_rate
+        count = min(capacity - len(self.active), int(self.carry))
+        self.carry -= count
+        for _ in range(count):
+            for _attempt in range(8):
+                index = self.random.choice(self.indices)
+                if index not in self.active:
+                    hue = self.random.random() if self.mode == "random" else None
+                    self.active[index] = Twinkle(index, elapsed, self.color, hue)
+                    break
+
+    def apply(self, base: RGBFrame, elapsed: float, *, brightness=255, mode="replace") -> RGBFrame:
+        frame = RGBFrame.allocate(base.led_count)
+        frame.data[:] = base.data
+        self._spawn(elapsed)
+        for index, twinkle in list(self.active.items()):
+            level = self._level(elapsed - twinkle.born)
+            if level is None:
+                del self.active[index]
+                continue
+            color = self._color(twinkle, elapsed)
+            rgb = tuple(int(channel * level) for channel in color)
+            if mode == "brighten":
+                offset = index * 3
+                rgb = tuple(max(rgb[channel], frame.data[offset + channel]) for channel in range(3))
+            elif mode == "blend":
+                offset = index * 3
+                rgb = tuple(int(frame.data[offset + channel] * (1 - level) + rgb[channel] * level) for channel in range(3))
+            frame.set_pixel(index, _scale((rgb[0], rgb[1], rgb[2]), brightness))
+        self.last_elapsed = elapsed
+        return frame
+
+
 
 class ProceduralRenderer:
     """Stateful renderer wrapper that keeps reusable per-run objects alive."""
@@ -444,6 +540,7 @@ class ProceduralRenderer:
         self.seed = seed
         self.options = options
         self._particle_system = None
+        self._twinkle_overlay = None
         if kind == "fireflies":
             bounds = _selected_bounds(context, exclude_tail)
             self._particle_system = ParticleSystem(
@@ -453,8 +550,15 @@ class ProceduralRenderer:
                 color=options.get("color", "FFFFB0"),
                 color_variation=float(options.get("color_variation", 0.25)),
             )
+        if kind == "twinkle":
+            self._twinkle_overlay = TwinkleOverlay(context, seed=seed, exclude_tail=exclude_tail, **options)
 
     def render(self, elapsed: float) -> RGBFrame:
+        if self.kind == "twinkle":
+            if self._twinkle_overlay is None:
+                raise RuntimeError("twinkle overlay was not initialized")
+            base = _frame(self._twinkle_overlay.background, brightness=self.brightness)
+            return self._twinkle_overlay.apply(base, elapsed, brightness=self.brightness)
         if self.kind != "fireflies":
             return render(self.kind, self.context, elapsed, brightness=self.brightness, exclude_tail=self.exclude_tail, seed=self.seed, **self.options)
         options = self.options
@@ -497,6 +601,7 @@ def render(kind: str, context: SpatialContext, elapsed: float, *, brightness=32,
         "radar": render_radar,
         "aurora": render_aurora,
         "fireflies": render_fireflies,
+        "twinkle": lambda context, elapsed, **options: create_renderer("twinkle", context, **options).render(elapsed),
     }
     if kind not in renderers:
         raise ValueError(f"unknown procedural effect {kind!r}")
