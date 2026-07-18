@@ -73,7 +73,7 @@ class SpatialCLIRegressionTests(unittest.TestCase):
         ) as prepare, patch("thunderdome.cli.render_height_wave", return_value=RGBFrame.allocate(5_000)), patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
             "thunderdome.cli.run_frame_loop", side_effect=loop
         ):
-            self.assertEqual(main(["effect", "height-wave", "--controllers", str(CONTROLLERS), "--loops", "1"]), 0)
+            self.assertEqual(main(["effect", "height-wave", "--output", "null", "--controllers", str(CONTROLLERS), "--loops", "1"]), 0)
         prepare.assert_not_called()
         self.assertEqual(calls, ["stream"])
 
@@ -91,7 +91,7 @@ class SpatialCLIRegressionTests(unittest.TestCase):
         ):
             self.assertEqual(main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS), "--dry-run", "--loops", "1"]), 0)
         prepare.assert_not_called()
-        self.assertEqual(session.frames[0][1], True)
+        self.assertEqual(session.frames, [])
 
 
 if __name__ == "__main__":

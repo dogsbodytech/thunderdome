@@ -139,7 +139,7 @@ class AutoCliTests(unittest.TestCase):
         self.assertEqual(result, 0)
         prepare.assert_not_called()
         self.assertIn("fire, aurora, fireflies", stdout.getvalue())
-        self.assertIn("controller 1", stdout.getvalue())
+        self.assertIn("Output mode: null", stdout.getvalue())
 
     def test_new_effect_help_commands_parse(self):
         for name in ("fire", "rotating-plane", "radar", "aurora", "fireflies", "auto"):

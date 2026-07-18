@@ -48,6 +48,26 @@ class FakeMultiSession:
 
 
 class CLILoopTests(unittest.TestCase):
+    def test_procedural_null_output_does_not_load_controllers_or_pass_transport_options_to_renderer(self):
+        renderer = Mock()
+        renderer.render.return_value = RGBFrame.allocate(5_000)
+
+        def one_frame(producer, sender, **_kwargs):
+            sender(producer(0, 0.0))
+            return FrameLoopStats(frames_sent=1, elapsed_seconds=0.0)
+
+        with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()), patch(
+            "thunderdome.cli.load_controllers", side_effect=ValueError("controller configuration must not be loaded")
+        ) as load_controllers, patch("thunderdome.cli.create_renderer", return_value=renderer) as create_renderer, patch(
+            "thunderdome.cli.run_frame_loop", side_effect=one_frame
+        ):
+            result = main(["effect", "fire", "--output", "null", "--duration", "1"])
+
+        self.assertEqual(result, 0)
+        load_controllers.assert_not_called()
+        self.assertNotIn("output", create_renderer.call_args.kwargs)
+        self.assertNotIn("simulator_url", create_renderer.call_args.kwargs)
+
     def test_single_controller_dispatches_each_persistent_operation(self):
         cases = [
             (["power", "on"], "set_power", (True,)),
@@ -97,8 +117,8 @@ class CLILoopTests(unittest.TestCase):
         self.assertEqual(result, 0)
         load_context.assert_called_once()
         self.assertGreaterEqual(render.call_count, 2)
-        self.assertTrue(all(frame == (rendered, True) for frame in session.frames))
-        self.assertIn("controller 1", stdout.getvalue())
+        self.assertEqual(session.frames, [])
+        self.assertIn("Output mode: null", stdout.getvalue())
     def test_multi_dry_run_rejects_loop_controls(self):
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):

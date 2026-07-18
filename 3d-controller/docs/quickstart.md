@@ -115,3 +115,7 @@ thunderdome effect height-wave \
 ```
 
 Run `thunderdome controllers power on --controllers config/controllers.json` and `thunderdome controllers brightness 255 --controllers config/controllers.json` when manual readiness is needed. Effects no longer prepare WLED automatically; `--dry-run` exercises rendering/scheduling without HTTP or UDP traffic. Start at low brightness; Ctrl+C cleanly ends a held or continuous stream.
+
+## Stage B safe preview
+
+Start the local server with `thunderdome simulator serve --open-browser`. `thunderdome effect height-wave --direction bounce --hold` streams only to the browser simulator by default. Use `--simulator-url ws://127.0.0.1:8080/ws/producer` to select a non-default local server. Physical output requires `--output ddp --controllers config/controllers.json`; `--output both` mirrors the same rendered frame to preview and physical DDP. `--output null` renders without sockets, and `--dry-run` is its compatibility alias. Simulator connection failure is an error; output never falls back to DDP.
