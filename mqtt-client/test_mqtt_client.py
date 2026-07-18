@@ -6,6 +6,8 @@ Run from this directory with:
 import contextlib
 import io
 import json
+import threading
+import time
 import unittest
 from unittest import mock
 
@@ -88,35 +90,117 @@ class ValidateNameTests(unittest.TestCase):
             self.assertIsNone(mqtt_client.validate_name("aurora"))
 
 
+class FakeDispatcher:
+    def __init__(self):
+        self.submitted = []
+
+    def submit(self, name):
+        self.submitted.append(name)
+
+
 class OnMessageTests(unittest.TestCase):
-    def test_named_effect_is_run(self):
+    def test_named_effect_is_queued(self):
+        dispatcher = FakeDispatcher()
         out, err = quiet()
-        with mock.patch.object(mqtt_client, "run_effect") as run, out, err:
-            mqtt_client.on_message(None, None, FakeMessage('{"name": "fire", "x": 1}'))
-        run.assert_called_once_with("fire")
+        with out, err:
+            mqtt_client.on_message(None, dispatcher, FakeMessage('{"name": "fire", "x": 1}'))
+        self.assertEqual(dispatcher.submitted, ["fire"])
 
     def test_payloads_without_an_effect_name_are_ignored(self):
+        dispatcher = FakeDispatcher()
         out, err = quiet()
-        with mock.patch.object(mqtt_client, "run_effect") as run, out, err:
-            mqtt_client.on_message(None, None, FakeMessage(""))
-            mqtt_client.on_message(None, None, FakeMessage("fire"))  # bare string, not a JSON object
-            mqtt_client.on_message(None, None, FakeMessage('{"nope": 1}'))
-        run.assert_not_called()
+        with out, err:
+            mqtt_client.on_message(None, dispatcher, FakeMessage(""))
+            mqtt_client.on_message(None, dispatcher, FakeMessage("fire"))  # bare string, not a JSON object
+            mqtt_client.on_message(None, dispatcher, FakeMessage('{"nope": 1}'))
+        self.assertEqual(dispatcher.submitted, [])
 
     def test_oversized_payloads_are_ignored_before_parsing(self):
+        dispatcher = FakeDispatcher()
         big = b'{"name": "' + b"a" * (mqtt_client.MAX_PAYLOAD_BYTES + 1) + b'"}'
         out, err = quiet()
-        with mock.patch.object(mqtt_client, "run_effect") as run, out, err:
-            mqtt_client.on_message(None, None, FakeMessage(big))
-        run.assert_not_called()
+        with out, err:
+            mqtt_client.on_message(None, dispatcher, FakeMessage(big))
+        self.assertEqual(dispatcher.submitted, [])
 
-    def test_disallowed_names_are_not_forwarded(self):
+    def test_disallowed_names_are_not_queued(self):
+        dispatcher = FakeDispatcher()
         out, err = quiet()
-        with mock.patch.object(mqtt_client, "ALLOWLIST", frozenset({"fire"})), \
-                mock.patch.object(mqtt_client, "run_effect") as run, out, err:
-            mqtt_client.on_message(None, None, FakeMessage('{"name": "aurora"}'))
-            mqtt_client.on_message(None, None, FakeMessage('{"name": "fire; rm -rf /"}'))
-        run.assert_not_called()
+        with mock.patch.object(mqtt_client, "ALLOWLIST", frozenset({"fire"})), out, err:
+            mqtt_client.on_message(None, dispatcher, FakeMessage('{"name": "aurora"}'))
+            mqtt_client.on_message(None, dispatcher, FakeMessage('{"name": "fire; rm -rf /"}'))
+        self.assertEqual(dispatcher.submitted, [])
+
+
+class EffectDispatcherTests(unittest.TestCase):
+    def wait_for(self, condition, timeout=2.0):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if condition():
+                return True
+            time.sleep(0.01)
+        return condition()
+
+    def test_burst_applies_only_the_newest_request(self):
+        applied = []
+        dispatcher = mqtt_client.EffectDispatcher(applied.append, debounce_seconds=0.05)
+        dispatcher.start()
+        try:
+            for name in ("fire", "aurora", "radar"):
+                dispatcher.submit(name)
+            self.assertTrue(self.wait_for(lambda: applied == ["radar"]))
+            time.sleep(0.15)  # no stale second apply after the burst
+            self.assertEqual(applied, ["radar"])
+        finally:
+            dispatcher.stop()
+
+    def test_message_arriving_during_apply_is_applied_next(self):
+        applied = []
+        first_started = threading.Event()
+        release = threading.Event()
+
+        def apply(name):
+            applied.append(name)
+            if len(applied) == 1:
+                first_started.set()
+                release.wait(2)
+
+        dispatcher = mqtt_client.EffectDispatcher(apply, debounce_seconds=0.01)
+        dispatcher.start()
+        try:
+            dispatcher.submit("fire")
+            self.assertTrue(first_started.wait(2))
+            dispatcher.submit("aurora")
+            release.set()
+            self.assertTrue(self.wait_for(lambda: applied == ["fire", "aurora"]))
+        finally:
+            dispatcher.stop()
+
+    def test_apply_errors_do_not_kill_the_worker(self):
+        applied = []
+
+        def apply(name):
+            if name == "boom":
+                raise RuntimeError("kaboom")
+            applied.append(name)
+
+        dispatcher = mqtt_client.EffectDispatcher(apply, debounce_seconds=0.01)
+        dispatcher.start()
+        err = contextlib.redirect_stderr(io.StringIO())
+        try:
+            with err:
+                dispatcher.submit("boom")
+                time.sleep(0.1)
+                dispatcher.submit("fire")
+                self.assertTrue(self.wait_for(lambda: applied == ["fire"]))
+        finally:
+            dispatcher.stop()
+
+    def test_stop_terminates_the_worker(self):
+        dispatcher = mqtt_client.EffectDispatcher(lambda name: None, debounce_seconds=0.01)
+        dispatcher.start()
+        dispatcher.stop()
+        self.assertFalse(dispatcher._thread.is_alive())
 
 
 if __name__ == "__main__":

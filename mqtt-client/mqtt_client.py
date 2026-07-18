@@ -5,7 +5,9 @@ A message on `open/dogsbody/thunderdome/effect` whose payload is an effect name
 is POSTed as a temporary override to the running `thunderdome control serve`
 HTTP service. Overrides expire after EFFECT_DURATION_SECONDS and the baseline
 display restarts, so a public MQTT message can never leave the dome
-permanently on an effect.
+permanently on an effect. Bursts are debounced (DEBOUNCE_SECONDS, newest
+message wins) and the HTTP call runs on a worker thread, never inside the
+MQTT network loop.
 
 Start the control service first, e.g.:
     thunderdome control serve --allow-live-control \
@@ -15,6 +17,8 @@ import json
 import os
 import re
 import sys
+import threading
+import time
 import urllib.error
 import urllib.request
 
@@ -36,6 +40,8 @@ DURATION_SECONDS = float(os.environ.get("EFFECT_DURATION_SECONDS", "120"))
 # Optional comma-separated allow-list. Unset = any well-formed name is forwarded
 # and the control service rejects unknown effects with a 400.
 ALLOWLIST = frozenset(filter(None, (n.strip() for n in os.environ.get("EFFECT_ALLOWLIST", "").split(",")))) or None
+# Let a burst of messages settle before forwarding; the newest request wins.
+DEBOUNCE_SECONDS = float(os.environ.get("DEBOUNCE_SECONDS", "2"))
 # The topic is public, so bound what we parse and forward.
 MAX_PAYLOAD_BYTES = 4096
 NAME_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
@@ -66,11 +72,73 @@ def run_effect(name: str) -> None:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    # ponytail: blocks the MQTT loop for up to 5s; keepalive is 60s so it's fine.
     with urllib.request.urlopen(request, timeout=5) as response:
         body = json.load(response)
     if not body.get("accepted"):
         raise ValueError(body.get("error") or body.get("reason") or "rejected")
+
+
+def apply_effect(name: str) -> None:
+    """run_effect plus operator-facing error reporting; runs off the MQTT loop."""
+    try:
+        run_effect(name)
+        print(f"override {name} accepted for {DURATION_SECONDS:g}s", flush=True)
+    except urllib.error.HTTPError as e:
+        # 400/409 carry a JSON reason; surface it instead of a bare status.
+        reason = e.read().decode("utf-8", errors="replace")
+        print(f"effect {name} rejected: {e.code} {reason}", file=sys.stderr, flush=True)
+    except (urllib.error.URLError, ValueError, OSError) as e:
+        print(f"failed to run effect {name}: {e}", file=sys.stderr, flush=True)
+
+
+class EffectDispatcher:
+    """Applies the newest requested effect on a worker thread.
+
+    `submit` never blocks: it records the latest name and wakes the worker.
+    The worker waits out the debounce window, then applies whichever request
+    arrived last, so a burst of messages costs one HTTP call and the slow
+    urlopen never runs inside Paho's network loop.
+    """
+
+    def __init__(self, apply, debounce_seconds):
+        self._apply = apply
+        self._debounce = debounce_seconds
+        self._lock = threading.Lock()
+        self._pending = None
+        self._wakeup = threading.Event()
+        self._stopping = False
+        self._thread = threading.Thread(target=self._run, name="effect-dispatcher", daemon=True)
+
+    def start(self) -> None:
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stopping = True
+        self._wakeup.set()
+        self._thread.join(timeout=5)
+
+    def submit(self, name: str) -> None:
+        with self._lock:
+            self._pending = name
+        self._wakeup.set()
+
+    def _run(self) -> None:
+        while True:
+            self._wakeup.wait()
+            if self._stopping:
+                return
+            time.sleep(self._debounce)  # let the burst settle; newest wins
+            with self._lock:
+                name, self._pending = self._pending, None
+                self._wakeup.clear()
+            if self._stopping:
+                return
+            if name is None:
+                continue
+            try:
+                self._apply(name)
+            except Exception as e:  # keep the worker alive; apply reports its own errors
+                print(f"unexpected error applying {name}: {e}", file=sys.stderr, flush=True)
 
 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -93,25 +161,23 @@ def on_message(client, userdata, msg):
     if validate_name(name) is None:
         print(f"ignored {msg.topic}: invalid or disallowed effect name {name!r:.80}", file=sys.stderr, flush=True)
         return
-    print(f"{msg.topic} -> override {name} for {DURATION_SECONDS:g}s", flush=True)
-    try:
-        run_effect(name)
-    except urllib.error.HTTPError as e:
-        # 400/409 carry a JSON reason; surface it instead of a bare status.
-        reason = e.read().decode("utf-8", errors="replace")
-        print(f"effect {name} rejected: {e.code} {reason}", file=sys.stderr, flush=True)
-    except (urllib.error.URLError, ValueError, OSError) as e:
-        print(f"failed to run effect {name}: {e}", file=sys.stderr, flush=True)
+    print(f"{msg.topic} -> queued {name} (debounce {DEBOUNCE_SECONDS:g}s)", flush=True)
+    userdata.submit(name)  # userdata is the EffectDispatcher; never block the MQTT loop
 
 
 def main():
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    dispatcher = EffectDispatcher(apply_effect, DEBOUNCE_SECONDS)
+    dispatcher.start()
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, userdata=dispatcher)
     if os.environ.get("MQTT_USER"):
         client.username_pw_set(os.environ["MQTT_USER"], os.environ.get("MQTT_PASS"))
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect_async(HOST, PORT, keepalive=60)
-    client.loop_forever(retry_first_connection=True)  # auto-reconnect, exponential backoff
+    try:
+        client.loop_forever(retry_first_connection=True)  # auto-reconnect, exponential backoff
+    finally:
+        dispatcher.stop()
 
 
 if __name__ == "__main__":

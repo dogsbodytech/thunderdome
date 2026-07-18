@@ -45,6 +45,7 @@ From `.env` or real env vars (env wins). All optional.
 | `EFFECT_OUTPUT` | *(unset)* | Force `simulator`/`ddp`/`both`; unset inherits the baseline output or the service's `--default-output` |
 | `EFFECT_DURATION_SECONDS` | `120` | How long a triggered effect runs before the baseline is restored |
 | `EFFECT_ALLOWLIST` | *(unset)* | Comma-separated effect names to accept, e.g. `fire,aurora`; unset forwards any well-formed name (the control service still rejects unknown effects) |
+| `DEBOUNCE_SECONDS` | `2` | Burst window; the newest message in the window wins and costs one HTTP call |
 
 Output policy (simulator vs live dome) and dome targeting live in the control
 service (`--controllers`, `--allow-live-control`, `--default-output`), not here.
