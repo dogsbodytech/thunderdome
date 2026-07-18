@@ -1,21 +1,25 @@
-"""Offline static geometry simulator server for Thunderdome Stage A."""
+"""Offline geometry simulator with live aiohttp WebSocket frame streaming."""
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import json
 import math
 import mimetypes
 import socket
 import threading
 import webbrowser
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote
+
+from aiohttp import WSCloseCode, WSMsgType, web
 
 from .config import GEOMETRY_PATH, LED_POSITIONS_PATH, PROJECT_ROOT, REFERENCE_ROUTE_PATH
 from .geometry import DomeGeometry, load_geometry
 from .led_positions import load_led_positions
 from .routes import load_routes
+from .streaming import FRAME_PAYLOAD_LENGTH, FRAME_VERSION, FrameProtocolError, decode_frame
 
 SIMULATOR_SCHEMA_VERSION = 1
 THREE_VERSION = "0.160.0"
@@ -210,57 +214,190 @@ def build_simulator_payload(geometry_path: str | Path, routes_path: str | Path, 
     return payload
 
 
-class SimulatorRequestHandler(BaseHTTPRequestHandler):
-    server: "SimulatorHTTPServer"
+class SimulatorHTTPServer:
+    """Compatibility wrapper that hosts the aiohttp simulator in its own loop thread."""
 
-    def log_message(self, format: str, *args: Any) -> None:  # noqa: A003 - stdlib signature
-        return
+    def __init__(self, server_address: tuple[str, int], payload: dict[str, Any], static_dir: Path):
+        self.payload = payload
+        self.static_dir = static_dir.resolve()
+        self._host, self._requested_port = server_address
+        self.server_address = server_address
+        self._loop = asyncio.new_event_loop()
+        self._ready = threading.Event()
+        self._stopped = threading.Event()
+        self._startup_error: BaseException | None = None
+        self._closed = False
+        self._producer: web.WebSocketResponse | None = None
+        self._viewers: dict[web.WebSocketResponse, asyncio.Queue[bytes]] = {}
+        self._latest_frame: bytes | None = None
+        self._last_frame: dict[str, Any] | None = None
+        self._received_frames = 0
+        self._rejected_frames = 0
+        self._app = web.Application(client_max_size=FRAME_PAYLOAD_LENGTH + 64)
+        self._configure_routes()
+        self._thread = threading.Thread(target=self._run, name="thunderdome-simulator", daemon=True)
+        self._thread.start()
+        self._ready.wait()
+        if self._startup_error is not None:
+            raise RuntimeError("could not start simulator server") from self._startup_error
 
-    def _send_bytes(self, status: int, body: bytes, content_type: str) -> None:
-        self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
-        self.end_headers()
-        self.wfile.write(body)
+    def _configure_routes(self) -> None:
+        self._app.router.add_get("/api/simulator/metadata", self._metadata)
+        self._app.router.add_get("/api/simulator/status", self._status)
+        self._app.router.add_get("/api/simulator/geometry", self._geometry)
+        self._app.router.add_get("/api/simulator/leds", self._leds)
+        self._app.router.add_get("/ws/producer", self._producer_ws)
+        self._app.router.add_get("/ws/viewer", self._viewer_ws)
+        self._app.router.add_get("/{path:.*}", self._static)
 
-    def _send_json(self, obj: Any) -> None:
-        self._send_bytes(200, json.dumps(obj, separators=(",", ":")).encode("utf-8"), "application/json; charset=utf-8")
-
-    def _send_error(self, status: int, message: str) -> None:
-        self._send_bytes(status, json.dumps({"error": message}).encode("utf-8"), "application/json; charset=utf-8")
-
-    def do_GET(self) -> None:  # noqa: N802 - stdlib handler name
-        parsed = urlparse(self.path)
-        path = unquote(parsed.path)
-        if path == "/api/simulator/metadata":
-            self._send_json(self.server.payload["metadata"])
-            return
-        if path == "/api/simulator/geometry":
-            self._send_json(self.server.payload["geometry"])
-            return
-        if path == "/api/simulator/leds":
-            self._send_json({"leds": self.server.payload["leds"]})
-            return
-        if path.startswith("/api/"):
-            self._send_error(404, "unknown simulator API endpoint")
-            return
-        if path == "/":
-            relative = Path("index.html")
-        else:
-            relative = Path(path.lstrip("/"))
-        if relative.is_absolute() or ".." in relative.parts:
-            self._send_error(403, "invalid static path")
-            return
-        candidate = (self.server.static_dir / relative).resolve()
+    def _run(self) -> None:
+        asyncio.set_event_loop(self._loop)
         try:
-            candidate.relative_to(self.server.static_dir.resolve())
+            self._loop.run_until_complete(self._start())
+        except BaseException as exc:
+            self._startup_error = exc
+            self._ready.set()
+        else:
+            self._ready.set()
+            self._loop.run_forever()
+        finally:
+            self._loop.run_until_complete(self._cleanup())
+            self._stopped.set()
+            self._loop.close()
+
+    async def _start(self) -> None:
+        self._runner = web.AppRunner(self._app)
+        await self._runner.setup()
+        self._site = web.TCPSite(self._runner, self._host, self._requested_port)
+        await self._site.start()
+        sockets = self._site._server.sockets  # aiohttp exposes the bound server here.
+        self.server_address = (self._host, int(sockets[0].getsockname()[1]))
+
+    async def _cleanup(self) -> None:
+        if hasattr(self, "_runner"):
+            await self._runner.cleanup()
+
+    @staticmethod
+    def _json(value: Any, *, status: int = 200) -> web.Response:
+        return web.Response(
+            status=status,
+            body=json.dumps(value, separators=(",", ":")).encode("utf-8"),
+            headers={"Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store"},
+        )
+
+    async def _metadata(self, request: web.Request) -> web.Response:
+        metadata = dict(self.payload["metadata"])
+        metadata["streaming"] = {
+            "supported": True,
+            "protocol_version": FRAME_VERSION,
+            "encoding": "rgb8",
+            "expected_pixel_count": FRAME_PAYLOAD_LENGTH // 3,
+            "expected_payload_length": FRAME_PAYLOAD_LENGTH,
+            "producer_websocket_path": "/ws/producer",
+            "viewer_websocket_path": "/ws/viewer",
+            "viewer_queue_size": 1,
+        }
+        return self._json(metadata)
+
+    async def _status(self, request: web.Request) -> web.Response:
+        return self._json(
+            {
+                "producer_connected": self._producer is not None and not self._producer.closed,
+                "viewer_count": len(self._viewers),
+                "received_frames": self._received_frames,
+                "rejected_frames": self._rejected_frames,
+                "last_frame": self._last_frame,
+            }
+        )
+
+    async def _geometry(self, request: web.Request) -> web.Response:
+        return self._json(self.payload["geometry"])
+
+    async def _leds(self, request: web.Request) -> web.Response:
+        return self._json({"leds": self.payload["leds"]})
+
+    async def _producer_ws(self, request: web.Request) -> web.StreamResponse:
+        if self._producer is not None and not self._producer.closed:
+            return self._json({"error": "a producer is already connected"}, status=409)
+        websocket = web.WebSocketResponse(max_msg_size=FRAME_PAYLOAD_LENGTH + 64)
+        await websocket.prepare(request)
+        self._producer = websocket
+        producer_last_sequence: int | None = None
+        try:
+            async for message in websocket:
+                if message.type != WSMsgType.BINARY:
+                    self._rejected_frames += 1
+                    await websocket.close(code=WSCloseCode.UNSUPPORTED_DATA, message=b"binary frames required")
+                    break
+                try:
+                    decoded = decode_frame(message.data)
+                except FrameProtocolError as exc:
+                    self._rejected_frames += 1
+                    await websocket.close(code=WSCloseCode.UNSUPPORTED_DATA, message=str(exc).encode("utf-8"))
+                    break
+                if producer_last_sequence is not None and decoded.sequence <= producer_last_sequence:
+                    self._rejected_frames += 1
+                    continue
+                producer_last_sequence = decoded.sequence
+                wire_frame = bytes(message.data)
+                self._latest_frame = wire_frame
+                self._last_frame = {
+                    "sequence": decoded.sequence,
+                    "timestamp": decoded.timestamp,
+                    "pixel_count": decoded.pixel_count,
+                }
+                self._received_frames += 1
+                self._broadcast_newest(wire_frame)
+        finally:
+            if self._producer is websocket:
+                self._producer = None
+        return websocket
+
+    def _broadcast_newest(self, wire_frame: bytes) -> None:
+        for queue in tuple(self._viewers.values()):
+            if queue.full():
+                with contextlib.suppress(asyncio.QueueEmpty):
+                    queue.get_nowait()
+            with contextlib.suppress(asyncio.QueueFull):
+                queue.put_nowait(wire_frame)
+
+    async def _send_viewer_frames(self, websocket: web.WebSocketResponse, queue: asyncio.Queue[bytes]) -> None:
+        while not websocket.closed:
+            await websocket.send_bytes(await queue.get())
+
+    async def _viewer_ws(self, request: web.Request) -> web.StreamResponse:
+        websocket = web.WebSocketResponse()
+        await websocket.prepare(request)
+        queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=1)
+        self._viewers[websocket] = queue
+        if self._latest_frame is not None:
+            queue.put_nowait(self._latest_frame)
+        sender = asyncio.create_task(self._send_viewer_frames(websocket, queue))
+        try:
+            async for message in websocket:
+                if message.type == WSMsgType.ERROR:
+                    break
+        finally:
+            self._viewers.pop(websocket, None)
+            sender.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await sender
+        return websocket
+
+    async def _static(self, request: web.Request) -> web.Response:
+        raw_path = unquote(request.match_info.get("path", ""))
+        relative = Path("index.html") if not raw_path else Path(raw_path)
+        if relative.is_absolute() or ".." in relative.parts:
+            return self._json({"error": "invalid static path"}, status=403)
+        candidate = (self.static_dir / relative).resolve()
+        try:
+            candidate.relative_to(self.static_dir)
         except ValueError:
-            self._send_error(403, "invalid static path")
-            return
+            return self._json({"error": "invalid static path"}, status=403)
         if not candidate.is_file():
-            self._send_error(404, "static asset not found")
-            return
+            if raw_path.startswith("api/"):
+                return self._json({"error": "unknown simulator API endpoint"}, status=404)
+            return self._json({"error": "static asset not found"}, status=404)
         content_type = mimetypes.guess_type(candidate.name)[0] or "application/octet-stream"
         if candidate.suffix == ".js":
             content_type = "text/javascript; charset=utf-8"
@@ -268,16 +405,22 @@ class SimulatorRequestHandler(BaseHTTPRequestHandler):
             content_type = "text/css; charset=utf-8"
         elif candidate.suffix == ".html":
             content_type = "text/html; charset=utf-8"
-        self._send_bytes(200, candidate.read_bytes(), content_type)
+        return web.Response(body=candidate.read_bytes(), headers={"Content-Type": content_type, "Cache-Control": "no-store"})
 
+    def serve_forever(self) -> None:
+        """Block like ``ThreadingHTTPServer.serve_forever`` for API compatibility."""
+        self._stopped.wait()
 
-class SimulatorHTTPServer(ThreadingHTTPServer):
-    daemon_threads = True
+    def shutdown(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        if self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._loop.stop)
+        self._thread.join(timeout=5)
 
-    def __init__(self, server_address: tuple[str, int], payload: dict[str, Any], static_dir: Path):
-        super().__init__(server_address, SimulatorRequestHandler)
-        self.payload = payload
-        self.static_dir = static_dir
+    def server_close(self) -> None:
+        self.shutdown()
 
 
 def create_http_server(host: str, port: int, geometry_path: str | Path, routes_path: str | Path, positions_path: str | Path) -> SimulatorHTTPServer:
@@ -316,9 +459,9 @@ def serve_simulator(
     server = create_http_server(host, port, geometry_path, routes_path, positions_path)
     actual_port = server.server_address[1]
     urls = _local_urls(host, actual_port)
-    print("Simulator mode: static viewer")
+    print("Simulator mode: live viewer")
     print("No HTTP requests will be sent to WLED controllers.")
-    print("No UDP/DDP packets will be sent.")
+    print("No UDP/DDP packets will be sent by the simulator server.")
     print("\nGeometry:")
     print(f"  {Path(geometry_path).resolve()}")
     print("\nRoutes:")
@@ -328,6 +471,8 @@ def serve_simulator(
     print("\nSimulator available at:")
     for url in urls:
         print(url)
+    print(f"\nProducer WebSocket: ws://{urls[0].removeprefix('http://').rstrip('/')}/ws/producer")
+    print(f"Viewer WebSocket: ws://{urls[0].removeprefix('http://').rstrip('/')}/ws/viewer")
     if host == "0.0.0.0":
         print("\nBinding to 0.0.0.0 exposes the local development server to reachable machines on this network.")
     if open_browser:

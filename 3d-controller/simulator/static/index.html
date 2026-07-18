@@ -10,8 +10,9 @@
   <main id="app">
     <aside id="panel">
       <h1>Thunderdome Simulator</h1>
-      <p class="stage">Stage A: static offline geometry and LED layout viewer</p>
+      <p class="stage">Stage B: local live geometry and LED layout viewer</p>
       <section id="status" class="card">Loading simulator data…</section>
+      <section class="card"><h2>Live frames</h2><p id="stream-status">Connecting…</p><p>Sequence: <span id="stream-sequence">—</span> · FPS: <span id="stream-fps">—</span> · Skipped: <span id="stream-skipped">0</span></p><button id="restore-diagnostics">Restore diagnostic colours</button></section>
       <section class="card controls">
         <h2>Visibility</h2>
         <label><input id="show-leds" type="checkbox" checked> LEDs</label>

@@ -72,4 +72,8 @@ Spatial `--loops` means full effect cycles where offered: one shell expansion, o
 
 `fire`, `rotating-plane`, `radar`, `aurora`, and `fireflies` are also application-rendered DDP effects. They render one 5,000-pixel RGB frame from generated XYZ coordinates, then reuse the same multi-controller DDP session and one socket per enabled controller. `fireflies` uses deterministic particle templates and true 3D distance falloff; the other procedural effects use deterministic turbulence, plane distance, angular sweep, or layered XYZ waves.
 
-`thunderdome effect auto` reuses the loaded spatial context, controller mapping, and DDP session while cycling the effect registry. It linearly blends full-brightness source frames during `--crossfade`/`--transition` and applies global `--brightness` once after blending, avoiding double brightness scaling. `--playlist`/`--effects` selects a comma-separated list; `--preset calm|energetic` selects curated lists. `--dry-run` exercises the playlist and sends no UDP or HTTP.
+`thunderdome effect auto` reuses the loaded spatial context and one selected sink set while cycling the effect registry. It linearly blends full-brightness source frames during `--crossfade`/`--transition` and applies global `--brightness` once after blending, avoiding double brightness scaling. `--playlist`/`--effects` selects a comma-separated list; `--preset calm|energetic` selects curated lists. `--output ddp` uses one persistent DDP session; `--output both` uses one DDP session plus one simulator connection. `--dry-run` is the compatibility alias for null output and sends neither UDP nor HTTP.
+
+## Stage B explicit physical output
+
+Spatial effects no longer select DDP implicitly. Use `--output ddp --controllers config/controllers.json` for physical output, or `--output both` to mirror an identical already-rendered logical frame to DDP and the local simulator. This warning-bearing mode is intentional because it affects the public dome.

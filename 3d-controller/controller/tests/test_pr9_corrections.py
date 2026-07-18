@@ -175,8 +175,8 @@ class PR9CorrectionTests(unittest.TestCase):
                 "effect", "auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora",
                 "--duration", "0.2", "--interval", "0.4", "--transition", "0", "--fps", "5", "--dry-run",
             ])
-        self.assertEqual(result, 1)
-        self.assertEqual(FailingSession.instances, 1)
+        self.assertEqual(result, 0)
+        self.assertEqual(FailingSession.instances, 0)
 
     def test_playlist_validation_order_duplicates_and_shuffle(self):
         self.assertEqual(cli._resolve_auto_playlist("fire,aurora,fireflies", None, False, 1), ["fire", "aurora", "fireflies"])

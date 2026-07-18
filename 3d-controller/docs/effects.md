@@ -1,8 +1,10 @@
 # Spatial effects
 
-Thunderdome renders application effects from `geometry/generated/led_positions_3d.json`, builds one logical 5,000-pixel linear RGB frame, and fans that exact 15,000-byte frame out to the five direct-DDP WLED controllers. WLED is the transport endpoint; XYZ mapping lives in Python.
+> Stage B preview output defaults to `--output simulator`. Use explicit `--output ddp --controllers config/controllers.json` only to send physical DDP; `--output both` sends the same rendered frame to both destinations, and `--output null` renders without network output.
 
-The Stage A simulator is a separate static geometry/LED-layout viewer. Effects are not streamed to it yet, and `thunderdome effect ...` commands continue to use their existing DDP/dry-run output behavior. See [simulator.md](simulator.md).
+Thunderdome renders application effects from `geometry/generated/led_positions_3d.json` into one logical 5,000-pixel / 15,000-byte RGB frame. The selected sink then delivers that same final frame to the local simulator, the five direct-DDP WLED controllers, both, or neither. XYZ mapping remains in Python.
+
+The Stage A geometry/LED-layout viewer remains available with no producer connected. Stage B streams local binary WebSocket frames into that same viewer; see [simulator.md](simulator.md).
 
 Generate/validate positions before effects:
 
@@ -47,13 +49,13 @@ Then run an effect directly, without preparation.
 
 All effects produce exactly 5,000 RGB pixels / 15,000 bytes. Tails are included by default and use their real generated XYZ coordinates. Add `--exclude-tail` to remove tail LEDs from selection and bounds.
 
-Common individual-effect runtime controls are `--controllers`, `--positions`, `--geometry`, `--brightness`, `--fps`, `--duration`, `--hold`, `--exclude-tail`, and `--dry-run`. Only effects with meaningful cycles expose cycle options: `clock-hand --rotations`; `expanding-rings --loops`; `height-wave --loops`; `rotating-plane --loops`; `radar --loops`.
+Common individual-effect runtime controls are `--output simulator|ddp|both|null`, `--simulator-url`, `--controllers`, `--positions`, `--geometry`, `--brightness`, `--fps`, `--duration`, `--hold`, `--exclude-tail`, and `--dry-run`. Controller configuration is loaded only for `ddp` and `both`; simulator and null output do not inspect it. Only effects with meaningful cycles expose cycle options: `clock-hand --rotations`; `expanding-rings --loops`; `height-wave --loops`; `rotating-plane --loops`; `radar --loops`.
 
 `fire`, `aurora`, and `fireflies` use `--duration` or `--hold`; they do not expose `--loops` because their procedural motion does not naturally return to a guaranteed starting visual state.
 
 `--fps` controls frame rate, 1..60, default 30. Ctrl+C cleanly stops held or continuous streams, closes DDP sessions, and reports frame statistics. Start at safe low Python brightness such as `--brightness 24`.
 
-`--dry-run` uses the same scheduling path as live streaming and splits rendered frames into simulated DDP packets without opening UDP sockets or making HTTP requests.
+`--output null` runs the real renderer and scheduler, validates frames, and discards them without network output. `--dry-run` is a compatibility alias for null output; it cannot be combined with `--output ddp` or `--output both`. Simulator connection failures are errors and never fall back to DDP.
 
 ## Existing spatial effects
 
@@ -129,18 +131,21 @@ Crossfade timing for interval `I` and transition `T` uses one interval per effec
 
 ```bash
 thunderdome effect auto \
-  --controllers config/controllers.json \
   --preset calm \
   --interval 30 \
   --crossfade 2 \
   --brightness 24
 
 thunderdome effect auto \
-  --controllers config/controllers.example.json \
   --playlist fire,aurora,fireflies \
   --cycles 1 \
   --interval 0.4 \
   --transition 0.1 \
   --fps 5 \
-  --dry-run
+  --output null
+
+thunderdome effect radar \
+  --output both \
+  --controllers config/controllers.json \
+  --duration 20
 ```

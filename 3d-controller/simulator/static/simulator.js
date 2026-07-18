@@ -25,7 +25,7 @@ export function formatLedMetadata(led) {
 }
 
 const state = { metadata: null, geometry: null, leds: [], selectedLed: null, selectedHub: null, cameraMode: 'perspective' };
-const objects = {};
+const objects = {}; let lastLiveFrameAt = 0; let lastLiveSequence = null; let skippedLiveFrames = 0; let reconnectAttempt = 0;
 const viewer = document.getElementById('viewer');
 const status = document.getElementById('status');
 const inspection = document.getElementById('inspection');
@@ -165,6 +165,19 @@ function updateLedColours() {
   attr.needsUpdate = true;
 }
 function setHubLabelsVisible(enabled) { objects.hubs.labels.visible = enabled; }
+function connectLiveFrames() {
+  const scheme = location.protocol === 'https:' ? 'wss' : 'ws'; const socket = new WebSocket(`${scheme}://${location.host}/ws/viewer`); socket.binaryType = 'arraybuffer';
+  socket.onopen = () => { reconnectAttempt = 0; document.getElementById('stream-status').textContent = 'Connected'; };
+  socket.onerror = () => socket.close();
+  socket.onclose = () => { const delay = Math.min(1000 * 2 ** reconnectAttempt, 30000); reconnectAttempt += 1; document.getElementById('stream-status').textContent = `Disconnected; retrying in ${(delay / 1000).toFixed(0)}s…`; setTimeout(connectLiveFrames, delay); };
+  socket.onmessage = event => {
+    const bytes = new Uint8Array(event.data); if (bytes.length !== 15032 || String.fromCharCode(...bytes.slice(0,4)) !== 'TDFR' || bytes[4] !== 1) return;
+    const view = new DataView(bytes.buffer); const sequence = Number(view.getBigUint64(8)); const attr = objects.leds.geometry.attributes.color;
+    if (view.getUint16(6) !== 32 || view.getUint32(24) !== 5000 || view.getUint32(28) !== 15000) return;
+    for (let index = 0; index < 5000; index += 1) { const source = 32 + index * 3; attr.array[index * 3] = bytes[source] / 255; attr.array[index * 3 + 1] = bytes[source + 1] / 255; attr.array[index * 3 + 2] = bytes[source + 2] / 255; }
+    attr.needsUpdate = true; const now = performance.now(); if (lastLiveFrameAt) document.getElementById('stream-fps').textContent = (1000 / (now - lastLiveFrameAt)).toFixed(1); if (lastLiveSequence !== null && sequence > lastLiveSequence + 1) { skippedLiveFrames += sequence - lastLiveSequence - 1; document.getElementById('stream-skipped').textContent = skippedLiveFrames; } lastLiveFrameAt = now; lastLiveSequence = sequence; document.getElementById('stream-sequence').textContent = sequence;
+  };
+}
 function updateToggles() { objects.leds.visible = document.getElementById('show-leds').checked; objects.spars.visible = document.getElementById('show-spars').checked; objects.hubs.visible = document.getElementById('show-hubs').checked; objects.ground.visible = document.getElementById('show-ground').checked; objects.axes.visible = document.getElementById('show-axes').checked; setHubLabelsVisible(document.getElementById('show-labels').checked); updateLedColours(); }
 function selectLed(index) { state.selectedLed = state.leds[index]; state.selectedHub = null; inspection.innerHTML = formatLedMetadata(state.selectedLed); updateLedColours(); }
 function selectHub(index) { const hub = state.geometry.hubs[index]; state.selectedHub = hub; state.selectedLed = null; inspection.innerHTML = `<h2>Hub ${hub.id}</h2><dl class="kv"><dt>XYZ</dt><dd>${hub.xyz.map(v=>Number(v).toFixed(3)).join(', ')}</dd><dt>Apex</dt><dd>${hub.is_apex ? 'yes' : 'no'}</dd></dl>`; }
@@ -176,7 +189,7 @@ async function init() {
     state.metadata = metadata; state.geometry = geometry; state.leds = ledPayload.leds;
     status.innerHTML = `<dl class="kv"><dt>LEDs</dt><dd>${metadata.total_led_count}</dd><dt>Tails</dt><dd>${metadata.tail_count}</dd><dt>Strings</dt><dd>${metadata.string_count}</dd><dt>Hubs</dt><dd>${metadata.hub_count}</dd><dt>Spars</dt><dd>${metadata.spar_count}</dd></dl>`;
     objects.spars = makeSpars(geometry.spars); objects.leds = makeLeds(state.leds); objects.hubs = makeHubs(geometry.hubs); objects.ground = makeGround(metadata.bounds); objects.axes = makeAxes(metadata.bounds);
-    scene.add(objects.ground, objects.spars, objects.leds, objects.hubs, objects.axes); resize(); fitView('perspective'); updateToggles(); animate();
+    scene.add(objects.ground, objects.spars, objects.leds, objects.hubs, objects.axes); resize(); fitView('perspective'); updateToggles(); connectLiveFrames(); animate();
   } catch (error) { showError(`Simulator failed to load.\n${error.message}\nConfirm local vendor files and API endpoints are available.`); }
 }
 function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
@@ -192,4 +205,5 @@ for (const button of document.querySelectorAll('button[data-view]')) button.addE
 document.getElementById('toggle-camera').addEventListener('click', switchCamera);
 document.getElementById('fit-view').addEventListener('click', () => fitView('perspective'));
 document.getElementById('reset-view').addEventListener('click', () => fitView('perspective'));
+document.getElementById('restore-diagnostics').addEventListener('click', updateLedColours);
 init();

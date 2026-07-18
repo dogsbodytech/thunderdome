@@ -22,10 +22,15 @@ from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
 from .routes import generate_route_document, load_routes, write_route_document
 from .simulator import SimulatorDataError, resolve_user_path, serve_simulator
+from .sinks import CompositeFrameSink, DDPFrameSink, FrameSink, NullFrameSink, SimulatorFrameSink
 from .transport.ddp import DirectDDPSession, parse_hex_color, send_frame
 from .transport.multi_ddp import MultiControllerDDPSession, SendResult
 from .wled.client import WLEDApiError, WLEDClient
 from .wled.multi import WLEDOperationResult, run_wled_operation
+
+
+class FrameDeliveryError(RuntimeError):
+    """Raised when an output sink cannot deliver an animation frame."""
 
 
 @dataclass(frozen=True)
@@ -80,6 +85,11 @@ def _controllers_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--controllers", default=str(GEOMETRY_PATH.parent.parent / "config" / "controllers.json"))
 
 
+def _output_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--output", choices=("simulator", "ddp", "both", "null"), default="simulator", help="frame destination (default: simulator)")
+    parser.add_argument("--simulator-url", default="ws://127.0.0.1:8080/ws/producer", help="local simulator producer WebSocket URL")
+
+
 def _positive_int(value: str) -> int:
     try:
         parsed = int(value)
@@ -92,6 +102,7 @@ def _positive_int(value: str) -> int:
 
 def _add_spatial_effect_options(parser: argparse.ArgumentParser) -> None:
     _controllers_option(parser)
+    _output_options(parser)
     parser.add_argument("--positions", default=str(LED_POSITIONS_PATH))
     parser.add_argument("--geometry", default=str(GEOMETRY_PATH))
     parser.add_argument("--color", default="FFFFFF")
@@ -109,6 +120,7 @@ def _add_spatial_effect_options(parser: argparse.ArgumentParser) -> None:
 
 def _add_effect_runtime_options(parser: argparse.ArgumentParser, *, loops: bool = False) -> None:
     _controllers_option(parser)
+    _output_options(parser)
     parser.add_argument("--positions", default=str(LED_POSITIONS_PATH))
     parser.add_argument("--geometry", default=str(GEOMETRY_PATH))
     parser.add_argument("--brightness", type=int, default=32)
@@ -207,6 +219,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     effect_sub = effect.add_subparsers(dest="command", required=True)
     clock = effect_sub.add_parser("clock-hand", help="render a rotating radial hand through DDP")
     _controllers_option(clock)
+    _output_options(clock)
     clock.add_argument("--positions", default=str(LED_POSITIONS_PATH)); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
     clock.add_argument("--color", default="FFFFFF"); clock.add_argument("--background", default="000000")
     clock.add_argument("--brightness", type=int, default=32); clock.add_argument("--width-mm", type=float, default=300)
@@ -224,6 +237,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     wave.add_argument("--height-mm", type=float, default=200)
     auto = effect_sub.add_parser("auto", help="cycle the registry playlist with crossfades")
     _controllers_option(auto)
+    _output_options(auto)
     auto.add_argument("--positions", default=str(LED_POSITIONS_PATH)); auto.add_argument("--geometry", default=str(GEOMETRY_PATH))
     auto.add_argument("--effects", "--playlist", dest="effects"); auto.add_argument("--preset", choices=tuple(PRESETS))
     auto.add_argument("--interval", type=float, default=30); auto.add_argument("--transition", "--crossfade", dest="transition", type=float, default=2)
@@ -415,7 +429,7 @@ def _run_clock_hand(args: argparse.Namespace) -> int:
     if args.rotations is not None and args.rotations <= 0: raise ValueError("rotations must be a positive integer")
     path=Path(args.positions)
     if not path.exists(): raise ValueError(f"positions file not found: {path}; run 'thunderdome positions generate'")
-    rows=load_led_positions(path); controllers=load_controllers(args.controllers)
+    rows=load_led_positions(path)
     geometry=load_geometry(args.geometry)
     if "H061" not in geometry.hubs: raise ValueError("geometry is missing apex hub H061")
     apex=geometry.hubs["H061"]; center_xy=(apex.x, apex.y)
@@ -423,47 +437,42 @@ def _run_clock_hand(args: argparse.Namespace) -> int:
     color=parse_hex_color(args.color); background=parse_hex_color(args.background)
     def frame_for(_number: int, elapsed: float) -> RGBFrame:
         return render_clock_hand(rows, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=args.rotation_seconds, direction=args.direction, offset_degrees=args.angle_offset_degrees), width_m=args.width_mm / 1000, color=color, background=background, brightness=args.brightness, center_xy=center_xy, exclude_tail=args.exclude_tail)
-    if args.dry_run:
-        print(f"Starting clock-hand: {args.direction}, width {args.width_mm:g}mm, rotation {args.rotation_seconds:g}s, {args.fps} FPS (dry run)")
-        return _send_effect_frames(controllers, frame_for, fps=args.fps, duration=duration, dry_run=True, label="clock-hand")
     print(f"Starting clock-hand: {args.direction}, width {args.width_mm:g}mm, rotation {args.rotation_seconds:g}s, {args.fps} FPS")
-    failures: dict[int, SendResult]={}; last=[]
-    def send(frame: RGBFrame):
-        nonlocal last
-        last=session.send_frame(frame); _record_controller_failures(failures,last)
-    with MultiControllerDDPSession(controllers) as session:
-        stats=run_frame_loop(frame_for, send, fps=args.fps, duration=duration)
-    _report_results(last); _report_persistent_failures(failures); _report_loop(stats)
-    print(f"Completed rotations: {stats.elapsed_seconds / args.rotation_seconds:.2f}")
-    return 1 if failures else 0
+    result = _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="clock-hand")
+    return result
 
 
 
-def _send_effect_frames(
-    controllers,
-    frame_for,
-    *,
-    fps: int,
-    duration: float | None,
-    dry_run: bool,
-    label: str,
-) -> int:
-    failures: dict[int, SendResult] = {}
-    last: list[SendResult] = []
+def _effect_sink(args: argparse.Namespace) -> FrameSink:
+    if args.dry_run:
+        if args.output in {"ddp", "both"}:
+            raise ValueError("--dry-run cannot be combined with --output ddp or both; use --output null")
+        return NullFrameSink()
+    if args.output == "null": return NullFrameSink()
+    if args.output == "simulator": return SimulatorFrameSink(args.simulator_url)
+    if args.output == "ddp": return DDPFrameSink(args.controllers)
+    return CompositeFrameSink([SimulatorFrameSink(args.simulator_url), DDPFrameSink(args.controllers)])
 
-    def send(frame: RGBFrame) -> None:
-        nonlocal last
-        last = session.send_frame(frame, dry_run=dry_run)
-        _record_controller_failures(failures, last)
 
-    with MultiControllerDDPSession(controllers) as session:
+def _print_output_mode(args: argparse.Namespace) -> None:
+    output = "null" if args.dry_run else args.output
+    if output == "simulator": print(f"Output mode: simulator\nNo HTTP or DDP traffic will be sent to WLED controllers.\nSimulator: {args.simulator_url}")
+    elif output == "ddp": print("Output mode: live DDP\nWARNING: frames will be sent to the physical dome controllers.")
+    elif output == "both": print("Output mode: simulator + live DDP\nWARNING: frames will also be sent to the physical dome controllers.")
+    else: print("Output mode: null\nFrames will be rendered and discarded.")
+
+
+def _send_effect_frames(args, frame_for, *, fps: int, duration: float | None, dry_run: bool, label: str) -> int:
+    _print_output_mode(args)
+    with _effect_sink(args) as sink:
+        def send(frame: RGBFrame) -> None:
+            result = sink.send_frame(frame)
+            if not result.ok:
+                raise FrameDeliveryError(f"output delivery failed: {result.name}: {result.error or 'delivery failed'}")
         stats = run_frame_loop(frame_for, send, fps=fps, duration=duration)
-    _report_results(last)
-    _report_persistent_failures(failures)
     _report_loop(stats)
-    if dry_run:
-        print(f"Dry run complete for {label}: {stats.frames_sent} frames")
-    return 1 if failures else 0
+    if dry_run: print(f"Dry run complete for {label}: {stats.frames_sent} frames")
+    return 0
 
 
 def _run_spatial_effect(args: argparse.Namespace) -> int:
@@ -485,7 +494,6 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
     if not path.exists():
         raise ValueError(f"positions file not found: {path}; run 'thunderdome positions generate'")
     context = SpatialContext.load(path, args.geometry)
-    controllers = load_controllers(args.controllers)
     color = parse_hex_color(args.color)
     background = parse_hex_color(args.background)
     thickness_m = thickness_mm / 1000
@@ -520,7 +528,7 @@ def _run_spatial_effect(args: argparse.Namespace) -> int:
 
     duration = None if args.hold else (args.duration if args.duration is not None else (args.loops or 1) * cycle_seconds)
     print(f"Starting {args.command}: thickness {thickness_mm:g}mm, speed {args.speed_mps:g}m/s, {args.fps} FPS" + (" (dry run)" if args.dry_run else ""))
-    return _send_effect_frames(controllers, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
+    return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
 
 
 PROCEDURAL_DURATION_DEFAULTS = {"fire": 5.0, "aurora": 10.0, "fireflies": 8.0}
@@ -528,7 +536,7 @@ PROCEDURAL_LOOP_EFFECTS = {"rotating-plane", "radar"}
 
 
 def _procedural_options(args: argparse.Namespace) -> dict[str, object]:
-    shared = {"command", "controllers", "positions", "geometry", "brightness", "exclude_tail", "dry_run", "hold", "duration", "loops", "fps", "area"}
+    shared = {"command", "controllers", "output", "simulator_url", "positions", "geometry", "brightness", "exclude_tail", "dry_run", "hold", "duration", "loops", "fps", "area"}
     return {key: value for key, value in vars(args).items() if key not in shared and value is not None}
 
 
@@ -594,7 +602,6 @@ def _run_procedural_effect(args: argparse.Namespace) -> int:
     _validate_procedural_options(args)
     options = _procedural_options(args)
     context = SpatialContext.load(args.positions, args.geometry)
-    controllers = load_controllers(args.controllers)
     seed = int(options.pop("seed", 1))
     renderer = create_renderer(args.command, context, brightness=args.brightness, exclude_tail=args.exclude_tail, seed=seed, **options)
     duration = _procedural_duration(args)
@@ -603,7 +610,7 @@ def _run_procedural_effect(args: argparse.Namespace) -> int:
         return renderer.render(elapsed)
 
     print(f"Starting {args.command}: {args.fps} FPS" + (" (dry run)" if args.dry_run else ""))
-    return _send_effect_frames(controllers, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
+    return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
 
 
 def _resolve_auto_playlist(effects: str | None, preset: str | None, shuffle: bool, seed: int) -> list[str]:
@@ -689,7 +696,6 @@ def _run_auto(args: argparse.Namespace) -> int:
         raise ValueError("auto dry-run requires --cycles or --duration so it can finish safely")
     names = _resolve_auto_playlist(args.effects, args.preset, args.shuffle, args.seed)
     context = SpatialContext.load(args.positions, args.geometry)
-    controllers = load_controllers(args.controllers)
     procedural_renderers = {
         name: BY_NAME[name].create_renderer(context, brightness=255, exclude_tail=args.exclude_tail, seed=args.seed)
         for name in names
@@ -711,7 +717,7 @@ def _run_auto(args: argparse.Namespace) -> int:
 
     duration = _auto_duration(args, names)
     print(f"Starting auto playlist: {', '.join(names)}; interval {args.interval:g}s; transition {args.transition:g}s" + (" (dry run)" if args.dry_run else ""))
-    return _send_effect_frames(controllers, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="auto")
+    return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="auto")
 
 def _main(args: argparse.Namespace) -> int:
     if args.area == "controller":
@@ -815,7 +821,7 @@ def _main(args: argparse.Namespace) -> int:
 def main(argv: Sequence[str] | None = None) -> int:
     try:
         return _main(parse_args(argv))
-    except (OSError, ValueError, SimulatorDataError, WLEDApiError) as exc:
+    except (FrameDeliveryError, OSError, ValueError, SimulatorDataError, WLEDApiError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 

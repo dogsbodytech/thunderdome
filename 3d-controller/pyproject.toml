@@ -7,7 +7,7 @@ name = "thunderdome"
 version = "0.1.0"
 description = "Python 3D LED rendering foundation for Thunderdome"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["aiohttp>=3.10,<4"]
 
 [project.scripts]
 thunderdome = "thunderdome.cli:main"

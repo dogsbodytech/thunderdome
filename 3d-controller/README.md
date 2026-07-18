@@ -239,3 +239,7 @@ thunderdome effect height-wave \
 For effects that expose `--loops`, loop controls are mutually exclusive with `--duration` and `--hold`. Fire, aurora, and fireflies use `--duration` or `--hold` instead of loops. Use `--dry-run` first to validate local configuration and real scheduler frame generation without UDP or HTTP. Start at low brightness and Ctrl+C cleanly stops held or auto output.
 
 To restore native fallback output, address every controller (for example `controllers power ... on`, `controllers brightness ... 64`, then `controllers effect ... EFFECT_ID`). Native WLED effects run independently and are not guaranteed spatially or phase synchronized; use Pi-rendered DDP for one coherent dome effect.
+
+## Stage B live simulator output
+
+Spatial effects now preview to the local simulator by default. Start `thunderdome simulator serve`, then run an effect normally. Use `--output ddp --controllers config/controllers.json` only for deliberate physical output, `--output both` for both destinations, and `--output null` for a no-network render. The simulator uses local binary WebSockets and never contacts WLED.

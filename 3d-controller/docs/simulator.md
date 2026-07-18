@@ -238,10 +238,24 @@ thunderdome simulator serve \
 
 Verify that hub labels show actual IDs, H061 is labelled at the apex, labels remain readable while orbiting and hide immediately, LEDs and hubs remain selectable, camera presets work, tails remain visible, and all five string colours are distinct.
 
+## Stage B binary live frames
+
+Install the Python dependency once with `python3 -m pip install -e .`; it installs the maintained `aiohttp` dependency used by one coherent local HTTP/WebSocket server. Runtime stays offline after installation and does not require Node.js or npm.
+
+Start the local-only server:
+
+```bash
+thunderdome simulator serve --host 127.0.0.1 --port 8080 --open-browser
+```
+
+The server retains all Stage A HTTP endpoints and static assets. It accepts one producer at `/ws/producer` and any number of browser viewers at `/ws/viewer`; a second producer receives HTTP 409. Frames use network-byte-order `TDFR` protocol version 1: a 32-byte header (magic, version, flags, header length, unsigned 64-bit sequence, float64 timestamp, pixel count, payload length) followed by exactly 15,000 RGB8 bytes for 5,000 LEDs. Invalid frames are rejected. Sequence ordering is enforced only for the active producer connection: its frames must strictly increase, but after it disconnects a later producer may restart at sequence zero. Metadata exposes the protocol version, encoding, expected sizes, and endpoint paths; `/api/simulator/status` exposes non-sensitive connection and frame counters.
+
+Viewers retain the latest complete frame and each has a queue of one: stale preview frames are discarded so latency stays low. The browser keeps the existing Stage A `THREE.Points` geometry, updates only its colour buffer, displays connection state, sequence, FPS, and skipped frames, and reconnects using bounded exponential backoff. Diagnostic string colours remain until the first live frame and can be restored with the button.
+
 ## Limitations
 
-- Stage A is static geometry only; live effect frames are not streamed to the viewer.
-- No WebSocket API is provided.
-- No simulator frame sink or output-selection CLI exists yet.
-- No browser automation test framework is introduced; frontend logic is kept in small exported functions for future testing.
+- The simulator is a local preview, not a guaranteed-delivery recorder or replay system.
+- The producer does not queue frames while disconnected; initial connection failure or streaming loss terminates the active effect or auto run and returns nonzero. There is no fallback from simulator output to DDP.
+- No browser authentication, MQTT, recording/replay, timeline controls, or effect-debug overlays are included.
+- No browser automation test framework is introduced; source-level asset tests and local protocol integration tests cover the live path.
 - Cylindrical spars and physically calibrated hub offsets are future enhancements.
