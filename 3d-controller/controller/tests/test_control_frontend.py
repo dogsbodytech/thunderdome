@@ -28,6 +28,23 @@ class ControlFrontendTests(unittest.TestCase):
         self.assertIn("p.name==='cycles' && value===''", self.js)
         self.assertIn("buttons.forEach(button=>button.disabled=true)", self.js)
 
+    def test_colour_controls_synchronize_and_submit_hex_values(self):
+        self.assertIn("picker.oninput=()=>hex.value=picker.value.toUpperCase()", self.js)
+        self.assertIn("hex.oninput=()=>", self.js)
+        self.assertIn("Colours must use #RRGGBB.", self.js)
+        self.assertIn("value=hex?.value || node?.value", self.js)
+
+    def test_duration_controls_default_to_continuous_and_submit_existing_runtime_field(self):
+        self.assertIn('id="continuous" type="checkbox" checked', self.html)
+        self.assertIn("duration_seconds:duration", self.js)
+        self.assertIn("Duration must be greater than zero.", self.js)
+
+    def test_playlist_editor_preserves_order_and_cannot_be_emptied(self):
+        for action in ("add", "remove", "up", "down"):
+            self.assertIn(f'data-playlist-action="{action}"', self.js)
+        self.assertIn("list.options.length>1", self.js)
+        self.assertIn("[...node.options].map(option=>option.value)", self.js)
+
 
 if __name__ == "__main__":
     unittest.main()

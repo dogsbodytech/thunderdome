@@ -76,6 +76,9 @@ class FrameRuntime:
             produced = self.producer_factory(display)
             producer, fps = produced[:2]
             duration = produced[2] if len(produced) == 3 else None
+            if display.expires_at is not None:
+                requested_duration = display.expires_at - display.created_at
+                duration = requested_duration if duration is None else min(duration, requested_duration)
             with self._sink(display.output) as sink:
                 def send(frame: RGBFrame) -> None:
                     result = sink.send_frame(frame)
@@ -183,7 +186,8 @@ class ControlAPI:
             parsed_output = OutputMode(output) if output is not None else None
             if parsed_output in {OutputMode.DDP, OutputMode.BOTH} and not self.settings.live_available:
                 raise ValueError("live DDP output is not enabled")
-            command = RuntimeCommand(CommandSource.BROWSER, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), payload.get("duration_seconds"))
+            duration = payload.get("duration_seconds")
+            command = RuntimeCommand(CommandSource.BROWSER, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
             result = self.coordinator.execute(command)
             if result.accepted and action == CommandAction.APPLY_OVERRIDE and command.duration_seconds is not None:
                 timer = threading.Timer(command.duration_seconds, self.coordinator.expire_overrides)

@@ -18,6 +18,7 @@
         <label>Output <select id="output-mode"><option value="simulator">Simulator</option><option value="ddp">Physical Dome</option><option value="both">Both</option></select></label>
         <p id="live-warning" class="error hidden">LIVE DOME: physical output affects the dome. Confirm before starting.</p>
         <label>Effect <select id="effect-select"></select></label>
+        <label><input id="continuous" type="checkbox" checked> Continuous</label><label>Duration (seconds) <input id="duration-seconds" type="number" min="0.001" step="0.1" disabled></label>
         <div id="effect-form"></div>
         <label id="live-confirm-label" class="hidden"><input id="live-confirm" type="checkbox"> I confirm live dome output</label>
         <button id="control-start">Start</button><button id="control-restart">Restart / Apply</button><button id="control-stop">Stop All</button>
