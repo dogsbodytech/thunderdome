@@ -9,17 +9,31 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
-from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LOGICAL_LED_COUNT
+from .auto_scheduler import AutoScheduler
+from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, REFERENCE_ROUTE_PATH
+from .control import ControlAPI, ControlSettings
+from .runtime import OutputMode
 from .controllers import load_controllers
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
+from .effects.common import SpatialContext, distance3, parse_spatial_origin, selected_xyz
+from .effects.expanding_rings import render_expanding_rings
+from .effects.height_wave import render_height_wave
+from .effects.procedural import blend, create_renderer, render as render_procedural
+from .effects.registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
 from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
 from .routes import generate_route_document, load_routes, write_route_document
+from .simulator import SimulatorDataError, create_http_server, resolve_user_path, serve_simulator
+from .sinks import CompositeFrameSink, DDPFrameSink, FrameSink, NullFrameSink, SimulatorFrameSink
 from .transport.ddp import DirectDDPSession, parse_hex_color, send_frame
 from .transport.multi_ddp import MultiControllerDDPSession, SendResult
 from .wled.client import WLEDApiError, WLEDClient
 from .wled.multi import WLEDOperationResult, run_wled_operation
+
+
+class FrameDeliveryError(RuntimeError):
+    """Raised when an output sink cannot deliver an animation frame."""
 
 
 @dataclass(frozen=True)
@@ -71,7 +85,56 @@ def _ddp_options(parser: argparse.ArgumentParser, *, colour: bool = False) -> No
 
 
 def _controllers_option(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--controllers", default="config/controllers.json")
+    parser.add_argument("--controllers", default=str(GEOMETRY_PATH.parent.parent / "config" / "controllers.json"))
+
+
+def _output_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--output", choices=("simulator", "ddp", "both", "null"), default="simulator", help="frame destination (default: simulator)")
+    parser.add_argument("--simulator-url", default="ws://127.0.0.1:8080/ws/producer", help="local simulator producer WebSocket URL")
+
+
+def _positive_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"expected a positive integer, got {value!r}") from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(f"expected a positive integer, got {value!r}")
+    return parsed
+
+
+def _add_spatial_effect_options(parser: argparse.ArgumentParser) -> None:
+    _controllers_option(parser)
+    _output_options(parser)
+    parser.add_argument("--positions", default=str(LED_POSITIONS_PATH))
+    parser.add_argument("--geometry", default=str(GEOMETRY_PATH))
+    parser.add_argument("--color", default="FFFFFF")
+    parser.add_argument("--background", default="000000")
+    parser.add_argument("--brightness", type=int, default=32)
+    parser.add_argument("--speed-mps", type=float, default=0.5, help="movement speed in metres per second")
+    parser.add_argument("--exclude-tail", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--hold", action="store_true")
+    mode.add_argument("--duration", type=float)
+    mode.add_argument("--loops", type=_positive_int, help="complete spatial movement cycles")
+    parser.add_argument("--fps", type=int, default=30)
+
+
+def _add_effect_runtime_options(parser: argparse.ArgumentParser, *, loops: bool = False) -> None:
+    _controllers_option(parser)
+    _output_options(parser)
+    parser.add_argument("--positions", default=str(LED_POSITIONS_PATH))
+    parser.add_argument("--geometry", default=str(GEOMETRY_PATH))
+    parser.add_argument("--brightness", type=int, default=32)
+    parser.add_argument("--exclude-tail", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--hold", action="store_true")
+    mode.add_argument("--duration", type=float)
+    if loops:
+        mode.add_argument("--loops", type=_positive_int, help="complete effect cycles")
+    parser.add_argument("--fps", type=int, default=30)
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -142,17 +205,85 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         elif name in {"effect", "palette"}: item.add_argument("value", type=int)
         elif name == "preset": item.add_argument("preset_id", type=int)
 
+    simulator = groups.add_parser("simulator", help="Offline local dome simulator")
+    simulator_sub = simulator.add_subparsers(dest="command", required=True)
+    serve = simulator_sub.add_parser("serve", help="serve the static offline dome simulator")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8080)
+    serve.add_argument("--geometry", default=None, help="geometry file; built-in default is the standard project geometry")
+    serve.add_argument("--routes", default=None, help="route file defining LED traversal and spar association; geometry, routes, and positions must describe the same dome")
+    serve.add_argument("--positions", default=None, help="generated LED positions file; built-in default is the standard project positions")
+    browser = serve.add_mutually_exclusive_group()
+    browser.add_argument("--open-browser", dest="open_browser", action="store_true")
+    browser.add_argument("--no-open-browser", dest="open_browser", action="store_false")
+    serve.set_defaults(open_browser=False)
+
+    control = groups.add_parser("control", help="Local operator control service")
+    control_sub = control.add_subparsers(dest="command", required=True)
+    control_serve = control_sub.add_parser("serve", help="serve simulator plus local control APIs")
+    control_serve.add_argument("--host", default="127.0.0.1")
+    control_serve.add_argument("--port", type=int, default=8080)
+    control_serve.add_argument("--controllers")
+    control_serve.add_argument("--allow-live-control", action="store_true")
+    control_serve.add_argument("--default-output", choices=("simulator", "ddp", "both"), default="simulator")
+    control_serve.add_argument("--effect-defaults", default=None, metavar="FILE", help="operator effect-defaults JSON (default: config/effect-defaults.json)")
+    control_serve.add_argument("--geometry", default=None)
+    control_serve.add_argument("--routes", default=None)
+    control_serve.add_argument("--positions", default=None)
+    control_browser = control_serve.add_mutually_exclusive_group()
+    control_browser.add_argument("--open-browser", dest="open_browser", action="store_true")
+    control_browser.add_argument("--no-open-browser", dest="open_browser", action="store_false")
+    control_serve.set_defaults(open_browser=False)
+
     effect = groups.add_parser("effect", help="Application-rendered spatial DDP effects")
     effect_sub = effect.add_subparsers(dest="command", required=True)
     clock = effect_sub.add_parser("clock-hand", help="render a rotating radial hand through DDP")
     _controllers_option(clock)
-    clock.add_argument("--positions", default="geometry/generated/led_positions_3d.json"); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
+    _output_options(clock)
+    clock.add_argument("--positions", default=str(LED_POSITIONS_PATH)); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
     clock.add_argument("--color", default="FFFFFF"); clock.add_argument("--background", default="000000")
     clock.add_argument("--brightness", type=int, default=32); clock.add_argument("--width-mm", type=float, default=300)
     clock.add_argument("--rotation-seconds", type=float, default=3); clock.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise")
     clock.add_argument("--angle-offset-degrees", type=float, default=0); clock.add_argument("--exclude-tail", action="store_true"); clock.add_argument("--dry-run", action="store_true")
     mode=clock.add_mutually_exclusive_group(); mode.add_argument("--hold", action="store_true"); mode.add_argument("--duration", type=float); mode.add_argument("--rotations", type=int)
     clock.add_argument("--fps", type=int, default=30)
+    rings = effect_sub.add_parser("expanding-rings", help="render an expanding XYZ spherical shell through DDP")
+    _add_spatial_effect_options(rings)
+    rings.add_argument("--origin", default="apex", metavar="apex|centre|base|X,Y,Z")
+    rings.add_argument("--thickness-mm", type=float, default=200)
+    wave = effect_sub.add_parser("height-wave", help="render a moving horizontal height band through DDP")
+    _add_spatial_effect_options(wave)
+    wave.add_argument("--direction", choices=("up", "down", "bounce"), default="up")
+    wave.add_argument("--height-mm", type=float, default=200)
+    auto = effect_sub.add_parser("auto", help="cycle the registry playlist with crossfades")
+    _controllers_option(auto)
+    _output_options(auto)
+    auto.add_argument("--positions", default=str(LED_POSITIONS_PATH)); auto.add_argument("--geometry", default=str(GEOMETRY_PATH))
+    auto.add_argument("--effects", "--playlist", dest="effects"); auto.add_argument("--preset", choices=tuple(PRESETS))
+    auto.add_argument("--interval", type=float, default=30); auto.add_argument("--transition", "--crossfade", dest="transition", type=float, default=2)
+    auto.add_argument("--shuffle", action="store_true"); auto.add_argument("--seed", type=int, default=1)
+    mode=auto.add_mutually_exclusive_group(); mode.add_argument("--duration", type=float); mode.add_argument("--loops", "--cycles", dest="cycles", type=_positive_int)
+    auto.add_argument("--brightness", type=int, default=32); auto.add_argument("--fps", type=int, default=30); auto.add_argument("--exclude-tail", action="store_true"); auto.add_argument("--dry-run", action="store_true")
+
+    fire = effect_sub.add_parser("fire", help="render rising turbulent XYZ flames")
+    _add_effect_runtime_options(fire)
+    fire.add_argument("--speed", type=float, default=1.0); fire.add_argument("--flame-height-m", type=float, default=2.5); fire.add_argument("--turbulence", type=float, default=.65); fire.add_argument("--cooling", type=float, default=.35); fire.add_argument("--scale", type=float, default=1.0); fire.add_argument("--palette", default="fire"); fire.add_argument("--seed", type=int, default=1)
+
+    plane = effect_sub.add_parser("rotating-plane", help="render a rotating signed-distance plane")
+    _add_effect_runtime_options(plane, loops=True)
+    plane.add_argument("--axis", default="vertical", metavar="vertical|horizontal|tilted|X,Y,Z", help="rotation axis: vertical=(0,0,1), horizontal=(1,0,0), tilted=normalize(1,1,1), or explicit X,Y,Z"); plane.add_argument("--rotation-seconds", type=float, default=10); plane.add_argument("--thickness-mm", type=float, default=220); plane.add_argument("--color", default="FFFFFF"); plane.add_argument("--background", default="000000"); plane.add_argument("--trail-degrees", type=float, default=20, metavar="0..180", help="directional fading trail in degrees; 0 disables, 180 covers all unique plane orientations"); plane.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); plane.add_argument("--seed", type=int, default=1)
+
+    radar = effect_sub.add_parser("radar", help="render a rotating XY radar beam")
+    _add_effect_runtime_options(radar, loops=True)
+    radar.add_argument("--rotation-seconds", type=float, default=8); radar.add_argument("--beam-width-degrees", type=float, default=12); radar.add_argument("--trail-degrees", type=float, default=35); radar.add_argument("--range-m", type=float, default=9999); radar.add_argument("--vertical-falloff", type=float, default=0); radar.add_argument("--color", default="00FF80"); radar.add_argument("--background", default="000000"); radar.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); radar.add_argument("--seed", type=int, default=1)
+
+    aurora = effect_sub.add_parser("aurora", help="render flowing luminous XYZ bands")
+    _add_effect_runtime_options(aurora)
+    aurora.add_argument("--speed", type=float, default=.25); aurora.add_argument("--scale", type=float, default=1.2); aurora.add_argument("--band-width", type=float, default=.45); aurora.add_argument("--intensity", type=float, default=1); aurora.add_argument("--palette", default="mixed"); aurora.add_argument("--direction", default="1,0,0"); aurora.add_argument("--seed", type=int, default=1)
+
+    flies = effect_sub.add_parser("fireflies", help="render deterministic 3D glowing particles")
+    _add_effect_runtime_options(flies)
+    flies.add_argument("--count", type=_positive_int, default=25); flies.add_argument("--speed", type=float, default=.35); flies.add_argument("--glow-radius-mm", type=float, default=300); flies.add_argument("--lifetime-seconds", type=float, default=8); flies.add_argument("--color", default="FFFFB0"); flies.add_argument("--color-variation", type=float, default=.25); flies.add_argument("--seed", type=int, default=1)
 
     all_ddp = groups.add_parser(
         "ddp-all",
@@ -318,7 +449,7 @@ def _run_clock_hand(args: argparse.Namespace) -> int:
     if args.rotations is not None and args.rotations <= 0: raise ValueError("rotations must be a positive integer")
     path=Path(args.positions)
     if not path.exists(): raise ValueError(f"positions file not found: {path}; run 'thunderdome positions generate'")
-    rows=load_led_positions(path); controllers=load_controllers(args.controllers)
+    rows=load_led_positions(path)
     geometry=load_geometry(args.geometry)
     if "H061" not in geometry.hubs: raise ValueError("geometry is missing apex hub H061")
     apex=geometry.hubs["H061"]; center_xy=(apex.x, apex.y)
@@ -326,20 +457,288 @@ def _run_clock_hand(args: argparse.Namespace) -> int:
     color=parse_hex_color(args.color); background=parse_hex_color(args.background)
     def frame_for(_number: int, elapsed: float) -> RGBFrame:
         return render_clock_hand(rows, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=args.rotation_seconds, direction=args.direction, offset_degrees=args.angle_offset_degrees), width_m=args.width_mm / 1000, color=color, background=background, brightness=args.brightness, center_xy=center_xy, exclude_tail=args.exclude_tail)
-    if args.dry_run:
-        with MultiControllerDDPSession(controllers) as session: results=session.send_frame(frame_for(0, 0), dry_run=True)
-        _report_results(results); return 1 if any(r.error for r in results) else 0
     print(f"Starting clock-hand: {args.direction}, width {args.width_mm:g}mm, rotation {args.rotation_seconds:g}s, {args.fps} FPS")
-    failures: dict[int, SendResult]={}; last=[]
-    def send(frame: RGBFrame):
-        nonlocal last
-        last=session.send_frame(frame); _record_controller_failures(failures,last)
-    with MultiControllerDDPSession(controllers) as session:
-        stats=run_frame_loop(frame_for, send, fps=args.fps, duration=duration)
-    _report_results(last); _report_persistent_failures(failures); _report_loop(stats)
-    print(f"Completed rotations: {stats.elapsed_seconds / args.rotation_seconds:.2f}")
-    return 1 if failures else 0
+    result = _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="clock-hand")
+    return result
 
+
+
+def _effect_sink(args: argparse.Namespace) -> FrameSink:
+    if args.dry_run:
+        if args.output in {"ddp", "both"}:
+            raise ValueError("--dry-run cannot be combined with --output ddp or both; use --output null")
+        return NullFrameSink()
+    if args.output == "null": return NullFrameSink()
+    if args.output == "simulator": return SimulatorFrameSink(args.simulator_url)
+    if args.output == "ddp": return DDPFrameSink(args.controllers)
+    return CompositeFrameSink([SimulatorFrameSink(args.simulator_url), DDPFrameSink(args.controllers)])
+
+
+def _print_output_mode(args: argparse.Namespace) -> None:
+    output = "null" if args.dry_run else args.output
+    if output == "simulator": print(f"Output mode: simulator\nNo HTTP or DDP traffic will be sent to WLED controllers.\nSimulator: {args.simulator_url}")
+    elif output == "ddp": print("Output mode: live DDP\nWARNING: frames will be sent to the physical dome controllers.")
+    elif output == "both": print("Output mode: simulator + live DDP\nWARNING: frames will also be sent to the physical dome controllers.")
+    else: print("Output mode: null\nFrames will be rendered and discarded.")
+
+
+def _send_effect_frames(args, frame_for, *, fps: int, duration: float | None, dry_run: bool, label: str) -> int:
+    _print_output_mode(args)
+    with _effect_sink(args) as sink:
+        def send(frame: RGBFrame) -> None:
+            result = sink.send_frame(frame)
+            if not result.ok:
+                raise FrameDeliveryError(f"output delivery failed: {result.name}: {result.error or 'delivery failed'}")
+        stats = run_frame_loop(frame_for, send, fps=fps, duration=duration)
+    _report_loop(stats)
+    if dry_run: print(f"Dry run complete for {label}: {stats.frames_sent} frames")
+    return 0
+
+
+def _run_spatial_effect(args: argparse.Namespace) -> int:
+    if not 1 <= args.fps <= 60:
+        raise ValueError("fps must be in range 1..60")
+    if args.speed_mps <= 0:
+        raise ValueError("speed-mps must be greater than zero")
+    if args.duration is not None and args.duration <= 0:
+        raise ValueError("duration must be greater than zero")
+    if args.command == "expanding-rings":
+        thickness_mm = args.thickness_mm
+        if thickness_mm <= 0:
+            raise ValueError("thickness-mm must be greater than zero")
+    else:
+        thickness_mm = args.height_mm
+        if thickness_mm <= 0:
+            raise ValueError("height-mm must be greater than zero")
+    path = Path(args.positions)
+    if not path.exists():
+        raise ValueError(f"positions file not found: {path}; run 'thunderdome positions generate'")
+    context = SpatialContext.load(path, args.geometry)
+    color = parse_hex_color(args.color)
+    background = parse_hex_color(args.background)
+    thickness_m = thickness_mm / 1000
+    selected = selected_xyz(context, exclude_tail=args.exclude_tail)
+    if args.command == "expanding-rings":
+        origin = parse_spatial_origin(args.origin, context)
+        cycle_distance = max(distance3(point, origin) for point in selected)
+        if cycle_distance <= 0:
+            raise ValueError("maximum shell distance must be greater than zero")
+        cycle_seconds = cycle_distance / args.speed_mps
+    else:
+        origin = None
+        minimum_z = min(point[2] for point in selected)
+        maximum_z = max(point[2] for point in selected)
+        traversal = maximum_z - minimum_z
+        if traversal <= 0:
+            raise ValueError("selected Z bounds must have positive height")
+        cycle_seconds = traversal / args.speed_mps * (2 if args.direction == "bounce" else 1)
+
+    def frame_for(_number: int, elapsed: float) -> RGBFrame:
+        kwargs = dict(
+            elapsed_seconds=elapsed,
+            speed_m_per_s=args.speed_mps,
+            color=color,
+            background=background,
+            brightness=args.brightness,
+            exclude_tail=args.exclude_tail,
+        )
+        if args.command == "expanding-rings":
+            return render_expanding_rings(context, thickness_m=thickness_m, origin=origin, **kwargs)
+        return render_height_wave(context, height_m=thickness_m, direction=args.direction, **kwargs)
+
+    duration = None if args.hold else (args.duration if args.duration is not None else (args.loops or 1) * cycle_seconds)
+    print(f"Starting {args.command}: thickness {thickness_mm:g}mm, speed {args.speed_mps:g}m/s, {args.fps} FPS" + (" (dry run)" if args.dry_run else ""))
+    return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
+
+
+PROCEDURAL_DURATION_DEFAULTS = {"fire": 5.0, "aurora": 10.0, "fireflies": 8.0}
+PROCEDURAL_LOOP_EFFECTS = {"rotating-plane", "radar"}
+
+
+def _procedural_options(args: argparse.Namespace) -> dict[str, object]:
+    shared = {"command", "controllers", "output", "simulator_url", "positions", "geometry", "brightness", "exclude_tail", "dry_run", "hold", "duration", "loops", "fps", "area"}
+    return {key: value for key, value in vars(args).items() if key not in shared and value is not None}
+
+
+def _procedural_duration(args: argparse.Namespace) -> float | None:
+    if args.hold:
+        return None
+    if args.duration is not None:
+        return args.duration
+    if args.command in PROCEDURAL_LOOP_EFFECTS:
+        return (args.loops or 1) * args.rotation_seconds
+    return PROCEDURAL_DURATION_DEFAULTS[args.command]
+
+
+def _validate_range(option: str, value: float, *, minimum: float | None = None, maximum: float | None = None, inclusive_minimum: bool = True) -> None:
+    if minimum is not None:
+        valid = value >= minimum if inclusive_minimum else value > minimum
+        if not valid:
+            comparator = ">=" if inclusive_minimum else ">"
+            raise ValueError(f"{option}={value!r} must be {comparator} {minimum:g}")
+    if maximum is not None and value > maximum:
+        raise ValueError(f"{option}={value!r} must be <= {maximum:g}")
+
+
+def _validate_procedural_options(args: argparse.Namespace) -> None:
+    if args.command == "fire":
+        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
+        _validate_range("flame-height-m", args.flame_height_m, minimum=0, inclusive_minimum=False)
+        _validate_range("scale", args.scale, minimum=0, inclusive_minimum=False)
+        _validate_range("turbulence", args.turbulence, minimum=0, maximum=1)
+        _validate_range("cooling", args.cooling, minimum=0, maximum=1)
+    elif args.command == "rotating-plane":
+        _validate_range("rotation-seconds", args.rotation_seconds, minimum=0, inclusive_minimum=False)
+        _validate_range("thickness-mm", args.thickness_mm, minimum=0, inclusive_minimum=False)
+        if args.trail_degrees < 0 or args.trail_degrees > 180:
+            raise ValueError(f"trail-degrees={args.trail_degrees!r} must be in range 0..180")
+    elif args.command == "radar":
+        _validate_range("rotation-seconds", args.rotation_seconds, minimum=0, inclusive_minimum=False)
+        _validate_range("beam-width-degrees", args.beam_width_degrees, minimum=0, maximum=360, inclusive_minimum=False)
+        _validate_range("trail-degrees", args.trail_degrees, minimum=0, maximum=360)
+        _validate_range("range-m", args.range_m, minimum=0, inclusive_minimum=False)
+        _validate_range("vertical-falloff", args.vertical_falloff, minimum=0, maximum=1)
+    elif args.command == "aurora":
+        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
+        _validate_range("scale", args.scale, minimum=0, inclusive_minimum=False)
+        _validate_range("band-width", args.band_width, minimum=0, maximum=1, inclusive_minimum=False)
+        _validate_range("intensity", args.intensity, minimum=0, maximum=1, inclusive_minimum=False)
+    elif args.command == "fireflies":
+        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
+        _validate_range("glow-radius-mm", args.glow_radius_mm, minimum=0, inclusive_minimum=False)
+        _validate_range("lifetime-seconds", args.lifetime_seconds, minimum=0, inclusive_minimum=False)
+        _validate_range("color-variation", args.color_variation, minimum=0, maximum=1)
+
+
+def _run_procedural_effect(args: argparse.Namespace) -> int:
+    if args.command not in {"fire", "rotating-plane", "radar", "aurora", "fireflies"}:
+        raise ValueError(f"unknown procedural effect command: {args.command}")
+    if not 1 <= args.fps <= 60:
+        raise ValueError("fps must be in range 1..60")
+    if args.duration is not None and args.duration <= 0:
+        raise ValueError("duration must be greater than zero")
+    if not 0 <= args.brightness <= 255:
+        raise ValueError("brightness must be in range 0..255")
+    _validate_procedural_options(args)
+    options = _procedural_options(args)
+    context = SpatialContext.load(args.positions, args.geometry)
+    seed = int(options.pop("seed", 1))
+    renderer = create_renderer(args.command, context, brightness=args.brightness, exclude_tail=args.exclude_tail, seed=seed, **options)
+    duration = _procedural_duration(args)
+
+    def frame_for(_number: int, elapsed: float) -> RGBFrame:
+        return renderer.render(elapsed)
+
+    print(f"Starting {args.command}: {args.fps} FPS" + (" (dry run)" if args.dry_run else ""))
+    return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label=args.command)
+
+
+def _resolve_auto_playlist(effects: str | None, preset: str | None, shuffle: bool, seed: int) -> list[str]:
+    if effects is not None:
+        names = [part.strip() for part in effects.split(",")]
+    elif preset:
+        names = list(PRESETS[preset])
+    else:
+        names = list(DEFAULT_PLAYLIST)
+    if not names or any(not name for name in names):
+        raise ValueError("effects must be a non-empty comma-separated list")
+    if len(set(names)) != len(names):
+        raise ValueError("effects playlist contains duplicates")
+    unknown = [name for name in names if name not in BY_NAME]
+    if unknown:
+        raise ValueError(f"unknown auto effect {unknown[0]!r}; valid choices: {', '.join(BY_NAME)}")
+    non_auto = [name for name in names if not BY_NAME[name].supports_auto]
+    if non_auto:
+        raise ValueError(f"effect {non_auto[0]!r} is not auto-capable")
+    if shuffle:
+        import random
+        random.Random(seed).shuffle(names)
+    return names
+
+
+def _auto_duration(args: argparse.Namespace, names: list[str]) -> float | None:
+    if args.duration is not None:
+        return args.duration
+    if args.cycles is not None:
+        return args.cycles * len(names) * args.interval
+    return None
+
+
+def _auto_timing(names: list[str], *, elapsed: float, interval: float, transition: float) -> dict[str, object]:
+    slot = int((elapsed + 1e-12) // interval)
+    interval_start = slot * interval
+    local_in_interval = elapsed - interval_start
+    index = slot % len(names)
+    active_started = 0.0 if slot == 0 else interval_start - transition
+    active_elapsed = elapsed - active_started
+    timing: dict[str, object] = {
+        "active": names[index],
+        "active_elapsed": active_elapsed,
+        "transitioning": False,
+    }
+    if transition and local_in_interval >= interval - transition - 1e-12:
+        incoming_start = interval_start + interval - transition
+        timing.update(
+            {
+                "transitioning": True,
+                "incoming": names[(index + 1) % len(names)],
+                "incoming_elapsed": elapsed - incoming_start,
+                "blend": (elapsed - incoming_start) / transition,
+            }
+        )
+    return timing
+
+
+def _auto_frame_for_elapsed(names, renderer_for, *, elapsed: float, interval: float, transition: float, brightness: int) -> RGBFrame:
+    timing = _auto_timing(names, elapsed=elapsed, interval=interval, transition=transition)
+    if timing["transitioning"]:
+        frame = blend(
+            renderer_for(timing["active"], timing["active_elapsed"]),
+            renderer_for(timing["incoming"], timing["incoming_elapsed"]),
+            timing["blend"],
+        )
+    else:
+        frame = renderer_for(timing["active"], timing["active_elapsed"])
+    frame.apply_brightness(brightness)
+    return frame
+
+
+def _run_auto(args: argparse.Namespace) -> int:
+    if not 1 <= args.fps <= 60:
+        raise ValueError("fps must be in range 1..60")
+    if not 0 <= args.brightness <= 255:
+        raise ValueError("brightness must be in range 0..255")
+    if args.interval <= 0 or args.transition < 0 or args.transition >= args.interval:
+        raise ValueError("transition must be >= 0 and less than interval")
+    if args.duration is not None and args.duration <= 0:
+        raise ValueError("duration must be greater than zero")
+    if args.dry_run and args.duration is None and args.cycles is None:
+        raise ValueError("auto dry-run requires --cycles or --duration so it can finish safely")
+    names = _resolve_auto_playlist(args.effects, args.preset, args.shuffle, args.seed)
+    scheduler = AutoScheduler(names, interval=args.interval, transition=args.transition)
+    context = SpatialContext.load(args.positions, args.geometry)
+    procedural_renderers = {
+        name: BY_NAME[name].create_renderer(context, brightness=255, exclude_tail=args.exclude_tail, seed=args.seed)
+        for name in names
+        if BY_NAME[name].category == "procedural"
+    }
+
+    def renderer_for(name: str, elapsed: float) -> RGBFrame:
+        preset = BY_NAME[name].auto_options
+        if name == "clock-hand":
+            return render_clock_hand(context.positions, angle_radians=angle_for_elapsed(elapsed, rotation_seconds=preset["rotation_seconds"]), width_m=preset["width_mm"] / 1000, center_xy=context.apex[:2], brightness=255, exclude_tail=args.exclude_tail)
+        if name == "expanding-rings":
+            return render_expanding_rings(context, elapsed_seconds=elapsed, speed_m_per_s=preset["speed_mps"], thickness_m=preset["thickness_mm"] / 1000, origin=parse_spatial_origin(preset["origin"], context), brightness=255, exclude_tail=args.exclude_tail)
+        if name == "height-wave":
+            return render_height_wave(context, elapsed_seconds=elapsed, speed_m_per_s=preset["speed_mps"], height_m=preset["height_mm"] / 1000, direction=preset["direction"], brightness=255, exclude_tail=args.exclude_tail)
+        return procedural_renderers[name].render(elapsed)
+
+    def frame_for(_number: int, elapsed: float) -> RGBFrame:
+        return scheduler.frame(elapsed, renderer_for, brightness=args.brightness)
+
+    duration = _auto_duration(args, names)
+    print(f"Starting auto playlist: {', '.join(names)}; interval {args.interval:g}s; transition {args.transition:g}s" + (" (dry run)" if args.dry_run else ""))
+    return _send_effect_frames(args, frame_for, fps=args.fps, duration=duration, dry_run=args.dry_run, label="auto")
 
 def _main(args: argparse.Namespace) -> int:
     if args.area == "controller":
@@ -415,10 +814,57 @@ def _main(args: argparse.Namespace) -> int:
                 )
         return 0
 
+    if args.area == "simulator":
+        geometry_path = resolve_user_path(args.geometry, GEOMETRY_PATH)
+        routes_path = resolve_user_path(args.routes, REFERENCE_ROUTE_PATH)
+        positions_path = resolve_user_path(args.positions, LED_POSITIONS_PATH)
+        if not geometry_path.is_file():
+            raise SimulatorDataError(f"geometry file not found: {geometry_path}")
+        if not routes_path.is_file():
+            raise SimulatorDataError(f"routes file not found: {routes_path}")
+        if not positions_path.is_file():
+            raise SimulatorDataError(f"positions file not found: {positions_path}; run `thunderdome positions generate`")
+        return serve_simulator(host=args.host, port=args.port, geometry_path=geometry_path, routes_path=routes_path, positions_path=positions_path, open_browser=args.open_browser)
+
+    if args.area == "control":
+        geometry_path = resolve_user_path(args.geometry, GEOMETRY_PATH)
+        routes_path = resolve_user_path(args.routes, REFERENCE_ROUTE_PATH)
+        positions_path = resolve_user_path(args.positions, LED_POSITIONS_PATH)
+        if not geometry_path.is_file() or not routes_path.is_file() or not positions_path.is_file():
+            raise SimulatorDataError("control service requires valid geometry, routes, and positions files")
+        if args.allow_live_control and not args.controllers:
+            raise ValueError("--allow-live-control requires --controllers FILE")
+        if args.default_output in {"ddp", "both"} and not (args.allow_live_control and args.controllers):
+            raise ValueError("DDP default output requires --controllers FILE and --allow-live-control")
+        settings = ControlSettings(f"ws://{args.host}:{args.port}/ws/producer", args.controllers, args.allow_live_control, OutputMode(args.default_output), args.effect_defaults or str(Path(__file__).resolve().parents[2] / "config/effect-defaults.json"))
+        api = ControlAPI(settings)
+        server = create_http_server(args.host, args.port, geometry_path, routes_path, positions_path, api)
+        print("Control service mode: local simulator and runtime APIs")
+        print(f"Control service available at http://{args.host}:{server.server_address[1]}/")
+        if settings.live_available:
+            print("WARNING: live DDP output is enabled with server-owned controller configuration.")
+        else:
+            print("Live DDP output is disabled; simulator output is the only available destination.")
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            return 130
+        finally:
+            try:
+                api.shutdown()
+            finally:
+                server.shutdown()
+        return 0
+
     if args.area == "ddp-all":
         return _run_multi_ddp(args)
 
-    if args.area == "effect": return _run_clock_hand(args)
+    if args.area == "effect":
+        if args.command == "clock-hand": return _run_clock_hand(args)
+        if args.command == "auto": return _run_auto(args)
+        if args.command in {"expanding-rings", "height-wave"}: return _run_spatial_effect(args)
+        if args.command in {"fire", "rotating-plane", "radar", "aurora", "fireflies"}: return _run_procedural_effect(args)
+        raise ValueError(f"unknown effect command: {args.command}")
 
     return _run_single_ddp(args)
 
@@ -426,7 +872,7 @@ def _main(args: argparse.Namespace) -> int:
 def main(argv: Sequence[str] | None = None) -> int:
     try:
         return _main(parse_args(argv))
-    except (OSError, ValueError, WLEDApiError) as exc:
+    except (FrameDeliveryError, OSError, ValueError, SimulatorDataError, WLEDApiError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 

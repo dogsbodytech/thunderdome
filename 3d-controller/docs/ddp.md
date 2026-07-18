@@ -61,3 +61,19 @@ Start at low brightness and validate controller mapping before a live stream.
 ## Spatial clock hand
 
 `thunderdome effect clock-hand` is a Pi-rendered DDP animation, not a WLED native effect. It builds one logical 5,000-pixel frame from generated XYZ data and the existing fan-out sends local 1,000-pixel slices to all enabled controllers. Its centre is hub H061's authoritative XY coordinate, not an LED-derived midpoint. `--width-mm` is the full hand width; selection uses the forward XY half-ray only. World `+X` is zero degrees and clockwise is viewed from above. All 5,000 positions, including tails, are used by default; use `--exclude-tail` to remove tail records. Tails share the apex XY and normally illuminate the centre continuously.
+
+## Spatial shells and height waves
+
+`expanding-rings` emits a true XYZ spherical shell, using Euclidean distance from `--origin`; it is not an XY-plane ring. `apex` is authoritative H061 XYZ, while `centre` and `base` use dome-only (never tail) Z bounds and H061 X/Y. Explicit `X,Y,Z` origin values are metres. `height-wave` moves a horizontal, full `--height-mm` band over actual selected Z bounds in `up`, `down`, or `bounce` direction. Tails are included in both effects by default and `--exclude-tail` removes them.
+
+Spatial `--loops` means full effect cycles where offered: one shell expansion, one up/down traversal and wrap, or one bounce out-and-back. It is mutually exclusive with `--duration` and `--hold`; Ctrl+C cleanly stops a held stream. `--fps` is 1..60 and spatial effects default to 30 FPS. Effect dry-run uses the real scheduler and simulated packet splitting without UDP or HTTP. Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness; the earlier effect `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear. See [effects.md](effects.md).
+
+## Auto showcase and new spatial effects
+
+`fire`, `rotating-plane`, `radar`, `aurora`, and `fireflies` are also application-rendered DDP effects. They render one 5,000-pixel RGB frame from generated XYZ coordinates, then reuse the same multi-controller DDP session and one socket per enabled controller. `fireflies` uses deterministic particle templates and true 3D distance falloff; the other procedural effects use deterministic turbulence, plane distance, angular sweep, or layered XYZ waves.
+
+`thunderdome effect auto` reuses the loaded spatial context and one selected sink set while cycling the effect registry. It linearly blends full-brightness source frames during `--crossfade`/`--transition` and applies global `--brightness` once after blending, avoiding double brightness scaling. `--playlist`/`--effects` selects a comma-separated list; `--preset calm|energetic` selects curated lists. `--output ddp` uses one persistent DDP session; `--output both` uses one DDP session plus one simulator connection. `--dry-run` is the compatibility alias for null output and sends neither UDP nor HTTP.
+
+## Stage B explicit physical output
+
+Spatial effects no longer select DDP implicitly. Use `--output ddp --controllers config/controllers.json` for physical output, or `--output both` to mirror an identical already-rendered logical frame to DDP and the local simulator. This warning-bearing mode is intentional because it affects the public dome.

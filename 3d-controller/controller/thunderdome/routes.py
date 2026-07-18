@@ -23,7 +23,7 @@ def hub(value:str)->str:
  n=int(re.sub(r'[^0-9]','',value));
  if not 1<=n<=61: raise RouteError(f'invalid hub {value}')
  return f'H{n:03d}'
-def load_routes(path:str|Path, geometry:DomeGeometry)->list[RouteDefinition]:
+def _load_markdown_routes(path:str|Path, geometry:DomeGeometry)->list[RouteDefinition]:
  text=Path(path).read_text(); blocks=re.split(r'^## String \d+\s*$',text,flags=re.M)[1:]
  if len(blocks)!=5: raise RouteError(f'expected exactly five route blocks, found {len(blocks)}')
  routes=[]
@@ -44,6 +44,48 @@ def load_routes(path:str|Path, geometry:DomeGeometry)->list[RouteDefinition]:
   if len(hubs)!=25 or len(seg)!=24 or len({x.spar_id for x in seg})!=24: raise RouteError(f'string {sid}: expected 25 hubs/24 unique spars')
   routes.append(RouteDefinition(string_id=sid,hubs=hubs,controller_number=controller,global_index_start=int(a),global_index_end=int(b),start_hub=start,end_hub=end,segments=tuple(seg)))
  validate_routes(geometry,routes); return sorted(routes,key=lambda x:x.string_id)
+
+def _load_json_routes(path:str|Path, geometry:DomeGeometry)->list[RouteDefinition]:
+ route_path=Path(path)
+ try: document=json.loads(route_path.read_text())
+ except json.JSONDecodeError as exc: raise RouteError(f'{route_path}: malformed routes JSON: {exc.msg}') from exc
+ except OSError as exc: raise RouteError(f'{route_path}: cannot read routes file: {exc}') from exc
+ records=document.get('routes') if isinstance(document,dict) else None
+ if not isinstance(records,list): raise RouteError(f'{route_path}: routes JSON must contain a routes array')
+ routes=[]
+ for index,record in enumerate(records,1):
+  if not isinstance(record,dict): raise RouteError(f'{route_path}: route {index} must be an object')
+  route_id=record.get('string_id',index)
+  hubs=record.get('ordered_hubs')
+  segments=record.get('segments')
+  if not isinstance(hubs,list) or not isinstance(segments,list): raise RouteError(f'{route_path}: route {route_id} is missing ordered_hubs or segments')
+  normalized_hubs=[]
+  for value in hubs:
+   if value not in geometry.hubs: raise RouteError(f'{route_path}: route {route_id}: unknown hub {value}')
+   normalized_hubs.append(value)
+  if len(normalized_hubs)<2 or len(segments)!=len(normalized_hubs)-1: raise RouteError(f'{route_path}: route {route_id}: segment count does not match ordered hubs')
+  directed=[]
+  for segment_index,(segment,from_hub,to_hub) in enumerate(zip(segments,normalized_hubs,normalized_hubs[1:]),1):
+   if not isinstance(segment,dict): raise RouteError(f'{route_path}: route {route_id}: segment {segment_index} must be an object')
+   for endpoint in ('from_hub','to_hub'):
+    value=segment.get(endpoint)
+    if value not in geometry.hubs: raise RouteError(f'{route_path}: route {route_id}: unknown hub {value}')
+   if segment['from_hub']!=from_hub or segment['to_hub']!=to_hub: raise RouteError(f'{route_path}: route {route_id}: segment {segment_index} does not match ordered hubs')
+   spar_id=segment.get('spar_id')
+   if spar_id not in geometry.spars: raise RouteError(f'{route_path}: route {route_id}: unknown spar {spar_id}')
+   spar=geometry.spar_between(from_hub,to_hub)
+   if spar is None: raise RouteError(f'{route_path}: route {route_id}: {from_hub}->{to_hub} is not a spar')
+   if spar.id!=spar_id: raise RouteError(f'{route_path}: route {route_id}: spar {spar_id} does not connect {from_hub}->{to_hub}')
+   directed.append(DirectedSegment(spar.id,spar.type,from_hub,to_hub,spar.length_m))
+  try:
+   routes.append(RouteDefinition(string_id=int(record['string_id']),hubs=tuple(normalized_hubs),controller_number=int(record['controller_number']),global_index_start=int(record['global_index_start']),global_index_end=int(record['global_index_end']),start_hub=str(record['start_hub']),end_hub=str(record['end_hub']),segments=tuple(directed)))
+  except (KeyError,TypeError,ValueError) as exc: raise RouteError(f'{route_path}: route {route_id} metadata is incomplete') from exc
+ validate_routes(geometry,routes); return sorted(routes,key=lambda x:x.string_id)
+
+def load_routes(path:str|Path, geometry:DomeGeometry)->list[RouteDefinition]:
+ route_path=Path(path)
+ if route_path.suffix.lower()=='.json': return _load_json_routes(route_path,geometry)
+ return _load_markdown_routes(route_path,geometry)
 def validate_routes(geometry:DomeGeometry,routes:list[RouteDefinition],require_apex:bool=True)->None:
  if routes and all(r.controller_number==0 for r in routes):
   used=set()

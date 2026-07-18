@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thunderdome Simulator</title>
+  <link rel="stylesheet" href="/simulator.css">
+</head>
+<body>
+  <main id="app">
+    <aside id="panel">
+      <h1>Thunderdome Simulator</h1>
+      <p class="stage">Stage B: local live geometry and LED layout viewer</p>
+      <section id="status" class="card">Loading simulator data…</section>
+      <section id="control-service" class="card hidden">
+        <h2>Operator controls</h2>
+        <p id="control-error" class="error"></p>
+        <label>Output <select id="output-mode"><option value="simulator">Simulator</option><option value="ddp">Physical Dome</option><option value="both">Both</option></select></label>
+        <p id="live-warning" class="error hidden">LIVE DOME: physical output affects the dome. Confirm before starting.</p>
+        <label>Effect <select id="effect-select"></select></label>
+        <label><input id="continuous" type="checkbox" checked> Continuous</label><label>Duration (seconds) <input id="duration-seconds" type="number" min="0.001" step="0.1" disabled></label>
+        <div id="effect-form"></div>
+        <p id="defaults-state">Built-in defaults</p><button id="control-save-default" type="button">Apply as Default</button><button id="control-reset-saved" type="button">Reset to Saved Default</button><button id="control-reset-built-in" type="button">Reset to Built-in Default</button>
+        <label id="live-confirm-label" class="hidden"><input id="live-confirm" type="checkbox"> I confirm live dome output</label>
+        <button id="control-start">Start</button><button id="control-restart">Restart / Apply</button><button id="control-stop">Stop All</button>
+        <button id="control-cancel-override">Cancel Override</button><button id="control-restart-baseline">Restart Baseline</button>
+        <pre id="runtime-status" class="status-pre">Loading runtime status…</pre>
+      </section>
+      <section class="card"><h2>Live frames</h2><p id="stream-status">Connecting…</p><p>Sequence: <span id="stream-sequence">—</span> · FPS: <span id="stream-fps">—</span> · Skipped: <span id="stream-skipped">0</span></p><button id="restore-diagnostics">Restore diagnostic colours</button></section>
+      <section class="card controls">
+        <h2>Visibility</h2>
+        <label><input id="show-leds" type="checkbox" checked> LEDs</label>
+        <label><input id="show-spars" type="checkbox" checked> Spars</label>
+        <label><input id="show-hubs" type="checkbox" checked> Hubs</label>
+        <label><input id="show-tails" type="checkbox" checked> Tails</label>
+        <label><input id="highlight-tails" type="checkbox"> Highlight only tails</label>
+        <label><input id="show-ground" type="checkbox" checked> Ground</label>
+        <label><input id="show-axes" type="checkbox" checked> XYZ axes</label>
+        <label><input id="show-labels" type="checkbox"> Hub labels</label>
+      </section>
+      <section class="card controls">
+        <h2>Strings</h2>
+        <label>Highlight string/controller
+          <select id="string-filter">
+            <option value="all">All strings</option>
+            <option value="1">Controller 1</option>
+            <option value="2">Controller 2</option>
+            <option value="3">Controller 3</option>
+            <option value="4">Controller 4</option>
+            <option value="5">Controller 5</option>
+          </select>
+        </label>
+      </section>
+      <section class="card controls">
+        <h2>Camera</h2>
+        <button data-view="perspective">Perspective</button>
+        <button data-view="top">Top</button>
+        <button data-view="front">Front</button>
+        <button data-view="side">Side</button>
+        <button data-view="opposite">Opposite side</button>
+        <button id="toggle-camera">Perspective / Orthographic</button>
+        <button id="fit-view">Fit dome</button>
+        <button id="reset-view">Reset view</button>
+      </section>
+      <section class="card controls">
+        <h2>LED lookup</h2>
+        <form id="lookup-form">
+          <input id="led-index" type="number" min="0" max="4999" placeholder="Global LED index 0–4999">
+          <button type="submit">Find</button>
+        </form>
+        <p id="lookup-error" class="error"></p>
+      </section>
+      <section id="inspection" class="card"><h2>Inspection</h2><p>Select an LED or hub.</p></section>
+    </aside>
+    <section id="viewer-wrap">
+      <div id="viewer"></div>
+      <div id="overlay-error" class="hidden"></div>
+    </section>
+  </main>
+  <script>
+    window.addEventListener('error', event => {
+      const overlay = document.getElementById('overlay-error');
+      if (!overlay || overlay.textContent) return;
+      overlay.textContent = `Simulator frontend failed to load: ${event.message || 'a required local module is missing.'}`;
+      overlay.classList.remove('hidden');
+    });
+    window.addEventListener('unhandledrejection', event => {
+      const overlay = document.getElementById('overlay-error');
+      if (!overlay || overlay.textContent) return;
+      overlay.textContent = `Simulator frontend failed to load: ${event.reason?.message || 'a required local module is missing.'}`;
+      overlay.classList.remove('hidden');
+    });
+  </script>
+  <script type="module" src="/simulator.js"></script>
+  <script type="module" src="/control-ui.js"></script>
+</body>
+</html>

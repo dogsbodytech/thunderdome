@@ -1,0 +1,28 @@
+:root { color-scheme: dark; --panel: #111827; --card: #1f2937; --fg: #e5e7eb; --muted: #9ca3af; --accent: #38bdf8; --danger: #f87171; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: #030712; color: var(--fg); overflow: hidden; }
+#app { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; height: 100vh; }
+#panel { background: var(--panel); border-right: 1px solid #374151; padding: 16px; overflow: auto; }
+h1 { margin: 0 0 4px; font-size: 1.4rem; }
+h2 { margin: 0 0 8px; font-size: 1rem; color: #bfdbfe; }
+.stage, .muted { color: var(--muted); }
+.card { background: var(--card); border: 1px solid #374151; border-radius: 10px; margin: 12px 0; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.controls label { display: block; margin: 8px 0; }
+button, input, select { background: #0f172a; color: var(--fg); border: 1px solid #475569; border-radius: 6px; padding: 7px 9px; margin: 3px; }
+button:hover { border-color: var(--accent); cursor: pointer; }
+input { width: 160px; }
+#viewer-wrap { position: relative; min-width: 0; }
+#viewer { width: 100%; height: 100vh; }
+#viewer canvas { display: block; width: 100%; height: 100%; }
+#overlay-error { position: absolute; inset: 20px; padding: 20px; border-radius: 12px; background: rgba(127,29,29,.92); border: 1px solid var(--danger); white-space: pre-wrap; }
+.hidden { display: none; }
+.error { color: var(--danger); }
+.kv { display: grid; grid-template-columns: 9em 1fr; gap: 4px 8px; font-size: .9rem; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; word-break: break-word; }
+.hub-label { color: #fef08a; font-size: 11px; text-shadow: 0 1px 3px #000; }
+.parameter { display: grid; gap: 4px; margin: 10px 0; }
+.parameter small, .status-pre { color: var(--muted); font-size: .78rem; }
+.status-pre { white-space: pre-wrap; max-height: 260px; overflow: auto; }
+textarea { width: 100%; background: #0f172a; color: var(--fg); border: 1px solid #475569; border-radius: 6px; padding: 7px; }
+@media (max-width: 800px) { body { overflow: auto; } #app { grid-template-columns: 1fr; height: auto; } #viewer { height: 70vh; } }
