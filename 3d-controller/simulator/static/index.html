@@ -12,6 +12,18 @@
       <h1>Thunderdome Simulator</h1>
       <p class="stage">Stage B: local live geometry and LED layout viewer</p>
       <section id="status" class="card">Loading simulator data…</section>
+      <section id="control-service" class="card hidden">
+        <h2>Operator controls</h2>
+        <p id="control-error" class="error"></p>
+        <label>Output <select id="output-mode"><option value="simulator">Simulator</option><option value="ddp">Physical Dome</option><option value="both">Both</option></select></label>
+        <p id="live-warning" class="error hidden">LIVE DOME: physical output affects the dome. Confirm before starting.</p>
+        <label>Effect <select id="effect-select"></select></label>
+        <div id="effect-form"></div>
+        <label id="live-confirm-label" class="hidden"><input id="live-confirm" type="checkbox"> I confirm live dome output</label>
+        <button id="control-start">Start</button><button id="control-restart">Restart / Apply</button><button id="control-stop">Stop All</button>
+        <button id="control-cancel-override">Cancel Override</button><button id="control-restart-baseline">Restart Baseline</button>
+        <pre id="runtime-status" class="status-pre">Loading runtime status…</pre>
+      </section>
       <section class="card"><h2>Live frames</h2><p id="stream-status">Connecting…</p><p>Sequence: <span id="stream-sequence">—</span> · FPS: <span id="stream-fps">—</span> · Skipped: <span id="stream-skipped">0</span></p><button id="restore-diagnostics">Restore diagnostic colours</button></section>
       <section class="card controls">
         <h2>Visibility</h2>
@@ -78,5 +90,6 @@
     });
   </script>
   <script type="module" src="/simulator.js"></script>
+  <script type="module" src="/control-ui.js"></script>
 </body>
 </html>
