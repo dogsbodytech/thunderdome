@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
+from .auto_scheduler import AutoScheduler
 from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, REFERENCE_ROUTE_PATH
 from .control import ControlAPI, ControlSettings
 from .runtime import OutputMode
@@ -713,6 +714,7 @@ def _run_auto(args: argparse.Namespace) -> int:
     if args.dry_run and args.duration is None and args.cycles is None:
         raise ValueError("auto dry-run requires --cycles or --duration so it can finish safely")
     names = _resolve_auto_playlist(args.effects, args.preset, args.shuffle, args.seed)
+    scheduler = AutoScheduler(names, interval=args.interval, transition=args.transition)
     context = SpatialContext.load(args.positions, args.geometry)
     procedural_renderers = {
         name: BY_NAME[name].create_renderer(context, brightness=255, exclude_tail=args.exclude_tail, seed=args.seed)
@@ -731,7 +733,7 @@ def _run_auto(args: argparse.Namespace) -> int:
         return procedural_renderers[name].render(elapsed)
 
     def frame_for(_number: int, elapsed: float) -> RGBFrame:
-        return _auto_frame_for_elapsed(names, renderer_for, elapsed=elapsed, interval=args.interval, transition=args.transition, brightness=args.brightness)
+        return scheduler.frame(elapsed, renderer_for, brightness=args.brightness)
 
     duration = _auto_duration(args, names)
     print(f"Starting auto playlist: {', '.join(names)}; interval {args.interval:g}s; transition {args.transition:g}s" + (" (dry run)" if args.dry_run else ""))
@@ -847,7 +849,10 @@ def _main(args: argparse.Namespace) -> int:
         except KeyboardInterrupt:
             return 130
         finally:
-            server.shutdown()
+            try:
+                api.shutdown()
+            finally:
+                server.shutdown()
         return 0
 
     if args.area == "ddp-all":

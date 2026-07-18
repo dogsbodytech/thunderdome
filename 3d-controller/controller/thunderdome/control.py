@@ -12,6 +12,7 @@ from typing import Callable
 from aiohttp import web
 
 from .animation.loop import run_frame_loop
+from .auto_scheduler import AutoScheduler
 from .effects.common import SpatialContext, parse_spatial_origin
 from .effects.clock_hand import angle_for_elapsed, render_clock_hand
 from .effects.expanding_rings import render_expanding_rings
@@ -110,13 +111,15 @@ def make_effect_producer(display: DisplayDefinition) -> tuple[Callable[[int, flo
     context = SpatialContext.load(values.pop("positions", None) or Path(__file__).resolve().parents[2] / "geometry/generated/led_positions_3d.json", values.pop("geometry", None) or Path(__file__).resolve().parents[2] / "geometry/thunderdome_geometry.json")
     brightness = int(values.pop("brightness", 255)); fps = int(values.pop("fps", 30)); exclude_tail = bool(values.pop("exclude_tail", False))
     if display.effect == "auto":
-        names = list(values["effects"]); interval = float(values["interval"]); transition = float(values["transition"]); seed = int(values["seed"])
+        scheduler = AutoScheduler(list(values["effects"]), interval=float(values["interval"]), transition=float(values["transition"]), shuffle=bool(values["shuffle"]), seed=int(values["seed"]))
+        names = scheduler.names; seed = int(values["seed"])
         renderers = {name: create_renderer(name, context, brightness=255, exclude_tail=exclude_tail, seed=seed, **{k: v for k, v in dict(display.parameters).items() if k not in {"brightness", "fps", "exclude_tail", "effects", "interval", "transition", "cycles", "shuffle", "seed"}}) for name in names if BY_NAME[name].category == "procedural"}
         def auto(_number: int, elapsed: float) -> RGBFrame:
-            index = int(elapsed // interval) % len(names); name = names[index]
-            if name in renderers: frame = renderers[name].render(elapsed)
-            else: frame = _spatial_frame(name, context, elapsed, brightness=255, exclude_tail=exclude_tail, values=validate_effect_parameters(name))
-            frame.apply_brightness(brightness); return frame
+            def renderer_for(name: str, effect_elapsed: float) -> RGBFrame:
+                if name in renderers:
+                    return renderers[name].render(effect_elapsed)
+                return _spatial_frame(name, context, effect_elapsed, brightness=255, exclude_tail=exclude_tail, values=validate_effect_parameters(name))
+            return scheduler.frame(elapsed, renderer_for, brightness=brightness)
         return auto, fps
     if BY_NAME[display.effect].category == "procedural":
         renderer = create_renderer(display.effect, context, brightness=brightness, exclude_tail=exclude_tail, seed=int(values.pop("seed", 1)), **values)
