@@ -3,9 +3,11 @@
 MQTT bridge for the thunderdome dome.
 
 Listens on `open/dogsbody/thunderdome/effect` and forwards each message to the
-`thunderdome control serve` REST API as a runtime baseline. The control service
-owns the single render loop, so each new effect replaces the running one. See
-`3d-controller/docs/api-rest.md` for the API.
+`thunderdome control serve` REST API as a temporary runtime override. The
+effect runs for `EFFECT_DURATION_SECONDS`, then the baseline display is
+restored — a public MQTT message can never leave the dome permanently on an
+effect. Operators can pre-empt MQTT by applying a browser override with a
+higher `priority`. See `3d-controller/docs/api-rest.md` for the API.
 
 ## Getting Started
 
@@ -40,7 +42,14 @@ From `.env` or real env vars (env wins). All optional.
 | `MQTT_USER` | *(unset)* | Optional; enables auth |
 | `MQTT_PASS` | *(unset)* | Only used if `MQTT_USER` set |
 | `CONTROL_URL` | `http://127.0.0.1:8080` | `thunderdome control serve` base URL |
-| `EFFECT_OUTPUT` | *(unset)* | Force `simulator`/`ddp`/`both`; unset inherits the service's `--default-output` |
+| `EFFECT_OUTPUT` | *(unset)* | Force `simulator`/`ddp`/`both`; unset inherits the baseline output or the service's `--default-output` |
+| `EFFECT_DURATION_SECONDS` | `120` | How long a triggered effect runs before the baseline is restored |
 
 Output policy (simulator vs live dome) and dome targeting live in the control
 service (`--controllers`, `--allow-live-control`, `--default-output`), not here.
+
+## Tests
+
+```sh
+.venv/bin/python -m unittest discover
+```
