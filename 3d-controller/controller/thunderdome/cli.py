@@ -31,6 +31,7 @@ from .transport.ddp import DirectDDPSession, parse_hex_color, send_frame
 from .transport.multi_ddp import MultiControllerDDPSession, SendResult
 from .wled.client import WLEDApiError, WLEDClient
 from .wled.multi import WLEDOperationResult, run_wled_operation
+from .xlights_export import update_xlights_rgbeffects
 
 
 class FrameDeliveryError(RuntimeError):
@@ -235,6 +236,13 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     control_browser.add_argument("--open-browser", dest="open_browser", action="store_true")
     control_browser.add_argument("--no-open-browser", dest="open_browser", action="store_false")
     control_serve.set_defaults(open_browser=False)
+
+    xlights = groups.add_parser("xlights", help="Export xLights model definitions for the dome")
+    xlights_sub = xlights.add_subparsers(dest="command", required=True)
+    xl_generate = xlights_sub.add_parser("generate", help="write Poly Line models to xlights_rgbeffects.xml")
+    xl_generate.add_argument("--geometry-path", default=str(GEOMETRY_PATH))
+    xl_generate.add_argument("--route-path", default=str(GEOMETRY_PATH.parent / "reference_string_route.md"))
+    xl_generate.add_argument("--output", required=True, help="path to xlights_rgbeffects.xml to write/update")
 
     effect = groups.add_parser("effect", help="Application-rendered spatial DDP effects")
     effect_sub = effect.add_subparsers(dest="command", required=True)
@@ -891,6 +899,13 @@ def _main(args: argparse.Namespace) -> int:
                 api.shutdown()
             finally:
                 server.shutdown()
+        return 0
+
+    if args.area == "xlights":
+        geometry = load_geometry(args.geometry_path)
+        routes = load_routes(args.route_path, geometry)
+        update_xlights_rgbeffects(args.output, geometry, routes)
+        print(f"Generated {args.output}")
         return 0
 
     if args.area == "ddp-all":
