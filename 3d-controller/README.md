@@ -23,6 +23,7 @@ Python owns spatial rendering and converts effects into the one logical 5,000-pi
 - Generated positions: `geometry/generated/led_positions_3d.json` (derived and intentionally ignored)
 - Active Python package: `controller/thunderdome/`
 - Offline Stage A simulator: `simulator/static/` and `docs/simulator.md`
+- xLights layout export: [`docs/xlights.md`](docs/xlights.md)
 - Tests: `controller/tests/`
 - Historical experiments: `archive/`
 

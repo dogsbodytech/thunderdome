@@ -11,6 +11,7 @@ from typing import Sequence
 from .animation.loop import FrameLoopStats, run_frame_loop
 from .auto_scheduler import AutoScheduler
 from .config import CONTROLLER_LED_COUNT, CONTROLLERS_PATH, DDP_CHUNK_LEDS, DDP_PORT, EFFECT_DEFAULTS_PATH, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, ROUTES_PATH
+from .xlights_export import export_xlights
 from .control import ControlAPI, ControlSettings
 from .effect_defaults import EffectDefaults
 from .runtime import OutputMode
@@ -183,6 +184,13 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         item = route_sub.add_parser(name)
         item.add_argument("--route-path", default=str(ROUTES_PATH))
         item.add_argument("--geometry-path", default=str(GEOMETRY_PATH))
+
+    xlights = groups.add_parser("xlights", help="Export canonical layout models for xLights")
+    xlights_sub = xlights.add_subparsers(dest="command", required=True)
+    xlights_generate = xlights_sub.add_parser("generate")
+    xlights_generate.add_argument("--output", required=True, metavar="FILE")
+    xlights_generate.add_argument("--geometry-path", default=str(GEOMETRY_PATH))
+    xlights_generate.add_argument("--route-path", default=str(ROUTES_PATH))
 
     positions = groups.add_parser("positions", help="Generate and validate nominal XYZ positions")
     positions_sub = positions.add_subparsers(dest="command", required=True)
@@ -830,6 +838,13 @@ def _main(args: argparse.Namespace) -> int:
                         f"dome indexes {dome[0]['global_index']}..{dome[-1]['global_index']}, "
                         f"tail length {(tail[-1]['distance_below_apex_m'] if tail else 0):.3f} m"
                     )
+        return 0
+
+    if args.area == "xlights":
+        geometry = load_geometry(args.geometry_path)
+        routes = load_routes(args.route_path, geometry)
+        export_xlights(args.output, geometry, routes)
+        print(f"Exported five Thunderdome xLights models to {args.output}")
         return 0
 
     if args.area == "controllers":
