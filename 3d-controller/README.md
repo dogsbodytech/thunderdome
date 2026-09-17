@@ -20,7 +20,7 @@ Python owns spatial rendering and converts effects into the one logical 5,000-pi
 - Geometry: `geometry/thunderdome_geometry.json`
 - Editable Blender source: `assets/blender/thunderdome_3v_5_8_scaled.blend`
 - Confirmed reference route: `geometry/reference_string_route.md`
-- Generated positions: `geometry/generated/led_positions_3d.json`
+- Generated positions: `geometry/generated/led_positions_3d.json` (derived and intentionally ignored)
 - Active Python package: `controller/thunderdome/`
 - Offline Stage A simulator: `simulator/static/` and `docs/simulator.md`
 - Tests: `controller/tests/`
@@ -75,17 +75,26 @@ thunderdome controllers summary --controllers config/controllers.json
 
 The global ranges form the one logical frame. Each controller receives only its corresponding 1,000-pixel slice as local LEDs `0..999`; frames are sent directly to all enabled controllers, never relayed through controller 1.
 
-## Test the controller
+## Development and test setup
 
-Run the automated tests and validate the data pipeline before connecting to hardware:
+The unit-test suite is self-contained: a fresh checkout can run it without `geometry/generated/led_positions_3d.json`. It creates temporary nominal-position data where a test needs it; installation and tests do not create the repository-local runtime artefact.
 
 ```bash
 python3 -m unittest discover -s controller/tests -v
+```
+
+## Runtime and spatial preparation
+
+Before starting the simulator, spatial effects, Auto mode, the control service, or any other feature that consumes nominal LED positions, prepare the derived runtime data:
+
+```bash
 thunderdome geometry validate
 thunderdome route validate
 thunderdome positions generate
 thunderdome positions validate
 ```
+
+`positions generate` deterministically creates `geometry/generated/led_positions_3d.json` from the tracked geometry and routes. The file is intentionally ignored by Git, so it is absent from a fresh checkout. Regenerate it after authoritative geometry or route changes. A missing positions file at runtime is a preparation issue; installation and runtime do not generate it silently.
 
 ## Offline static simulator
 
@@ -117,10 +126,9 @@ For a single-controller diagnostic, use `thunderdome ddp clear --host WLED_HOST`
 
 The `thunderdome effect` commands render from generated 5,000-LED XYZ positions and then reuse the existing multi-controller DDP fan-out. Implemented effects are `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, and `auto` showcase mode.
 
-Generate positions first, use dry-run before hardware, and start at safe brightness:
+Complete the runtime and spatial preparation above, then use dry-run before hardware and start at safe brightness:
 
 ```bash
-thunderdome positions generate
 thunderdome effect auto \
   --controllers config/controllers.example.json \
   --playlist fire,aurora,fireflies \
@@ -209,8 +217,6 @@ See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
 WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. Effect commands do not invoke those persistent-state operations automatically; power on controllers and set suitable WLED master brightness manually before streaming.
 
 ```bash
-thunderdome positions generate
-thunderdome positions validate
 thunderdome controllers power on --controllers config/controllers.json
 thunderdome controllers brightness 255 --controllers config/controllers.json
 thunderdome effect clock-hand --controllers config/controllers.json \

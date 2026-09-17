@@ -1,20 +1,37 @@
 # Quickstart
 
-Run these commands from the controller directory after cloning the repository and activating its virtual environment:
+## Development and test setup
+
+Run these commands from the controller directory after cloning the repository:
 
 ```bash
 cd thunderdome/3d-controller
+python3 -m venv .venv
+source .venv/bin/activate
 python3 -m pip install -e .
 python3 -m unittest discover -s controller/tests -v
-thunderdome geometry validate
 ```
+
+The unit-test suite works on a fresh checkout without `geometry/generated/led_positions_3d.json`. Tests create their own temporary nominal-position data where needed; installation and tests do not generate the repository-local runtime artefact.
+
+## Runtime and spatial preparation
+
+Before starting the simulator, spatial effects, Auto mode, the control service, or another consumer of nominal LED positions, prepare the derived runtime data:
+
+```bash
+thunderdome geometry validate
+thunderdome route validate
+thunderdome positions generate
+thunderdome positions validate
+```
+
+`positions generate` deterministically creates `geometry/generated/led_positions_3d.json` from the tracked geometry and routes. The file is intentionally ignored by Git, so a fresh checkout does not contain it. Regenerate it after authoritative geometry or route changes. Missing runtime positions are a preparation issue; installation and runtime do not generate them silently.
 
 ## Open the offline simulator
 
 Stage A of the simulator is a local static geometry viewer. It shows the authoritative hubs, spars, H061 apex, optional real hub-ID labels, tails, and all 5,000 generated XYZ LEDs with five diagnostic string colours. Enable **Hub labels** to display each hub ID; H061 has distinct apex styling. It does not stream effects, contact WLED, send DDP, or change output defaults.
 
 ```bash
-thunderdome positions validate
 thunderdome simulator serve --host 127.0.0.1 --port 8080
 ```
 
@@ -82,11 +99,9 @@ HTTP/native effects and favorites are optional support functions, not the animat
 
 ## Prepare and run spatial effects
 
-Generate and validate nominal positions, then manually power controllers and set WLED master brightness before application DDP:
+After completing runtime and spatial preparation, manually power controllers and set WLED master brightness before application DDP:
 
 ```bash
-thunderdome positions generate
-thunderdome positions validate
 thunderdome controllers power on --controllers config/controllers.json
 thunderdome controllers brightness 255 --controllers config/controllers.json
 thunderdome effect clock-hand --controllers config/controllers.json --geometry geometry/thunderdome_geometry.json --positions geometry/generated/led_positions_3d.json --brightness 32 --color FFFFFF --background 000000 --width-mm 300 --rotation-seconds 3 --fps 30 --hold
