@@ -50,6 +50,8 @@ thunderdome --help
 
 The package requires Python 3.11 or later. Reactivate the environment with `source .venv/bin/activate` in each new shell before using `thunderdome`.
 
+An editable/source checkout uses the repository geometry, routes, simulator assets, `config/`, and generated-positions path. A normal wheel installs immutable geometry, routes, and simulator assets under Python's installation data directory (`share/thunderdome/`). Wheel installs keep mutable operator state outside those immutable resources: controllers and effect defaults use `${XDG_CONFIG_HOME:-~/.config}/thunderdome/`; generated positions use `${XDG_DATA_HOME:-~/.local/share}/thunderdome/`. Set `THUNDERDOME_CONFIG_DIR` and/or `THUNDERDOME_DATA_DIR` to choose explicit writable directories; both overrides also apply to source checkouts.
+
 ## Configure the five controllers
 
 Create a local configuration file before using the multi-controller commands:

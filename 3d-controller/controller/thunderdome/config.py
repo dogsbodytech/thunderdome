@@ -50,8 +50,28 @@ SOURCE_RESOURCE_ROOT = _source_resource_root()
 GEOMETRY_PATH = RESOURCE_ROOT / "geometry" / "thunderdome_geometry.json"
 ROUTES_PATH = RESOURCE_ROOT / "geometry" / "routes" / "string_routes.json"
 SIMULATOR_STATIC_PATH = RESOURCE_ROOT / "simulator" / "static"
-# Mutable paths are made install-safe in the following change; retain source defaults now.
-_MUTABLE_ROOT = SOURCE_RESOURCE_ROOT or RESOURCE_ROOT
-LED_POSITIONS_PATH = _MUTABLE_ROOT / "geometry" / "generated" / "led_positions_3d.json"
-CONTROLLERS_PATH = _MUTABLE_ROOT / "config" / "controllers.json"
-EFFECT_DEFAULTS_PATH = _MUTABLE_ROOT / "config" / "effect-defaults.json"
+def mutable_runtime_paths(
+    *,
+    source_root: Path | None = SOURCE_RESOURCE_ROOT,
+    environ: dict[str, str] | None = None,
+    home: Path | None = None,
+) -> tuple[Path, Path, Path]:
+    """Return controller config, effect defaults, and generated-data paths."""
+    import os
+
+    environment = os.environ if environ is None else environ
+    user_home = Path.home() if home is None else home
+    config_override = environment.get("THUNDERDOME_CONFIG_DIR")
+    data_override = environment.get("THUNDERDOME_DATA_DIR")
+    if source_root is not None and not config_override and not data_override:
+        return (
+            source_root / "config" / "controllers.json",
+            source_root / "config" / "effect-defaults.json",
+            source_root / "geometry" / "generated" / "led_positions_3d.json",
+        )
+    config_dir = Path(config_override) if config_override else Path(environment.get("XDG_CONFIG_HOME", user_home / ".config")) / "thunderdome"
+    data_dir = Path(data_override) if data_override else Path(environment.get("XDG_DATA_HOME", user_home / ".local" / "share")) / "thunderdome"
+    return config_dir / "controllers.json", config_dir / "effect-defaults.json", data_dir / "led_positions_3d.json"
+
+
+CONTROLLERS_PATH, EFFECT_DEFAULTS_PATH, LED_POSITIONS_PATH = mutable_runtime_paths()
