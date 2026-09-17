@@ -87,7 +87,7 @@ Every effect shares three `runtime`-classified parameters: `brightness` (0–255
 
 ## Effect defaults
 
-Operator-saved parameter defaults, persisted server-side in `config/effect-defaults.json` and merged over built-in defaults. `auto` and runtime parameters (`brightness`, `fps`, `exclude_tail`) cannot be saved as defaults.
+Operator-saved parameter defaults, persisted server-side in `config/effect-defaults.json` and merged over built-in defaults. `Auto` and runtime parameters (`brightness`, `fps`, `exclude_tail`) cannot be saved as defaults.
 
 | Method and path | Behaviour |
 | --- | --- |
@@ -159,7 +159,7 @@ Set the normal display, replacing any existing baseline. If an override is activ
 ```bash
 curl -s -X POST http://127.0.0.1:8080/api/runtime/baseline \
   -H 'Content-Type: application/json' \
-  -d '{"effect": "Auto", "parameters": {"effects": ["Aurora", "Fireflies"], "interval": 30, "brightness": 32}}'
+  -d '{"effect": "Auto", "parameters": {"effects": ["Aurora", "Fireflies"], "interval": 30, "brightness": 255}}'
 ```
 
 ### `POST /api/runtime/override`
@@ -169,7 +169,7 @@ Temporarily pre-empt the baseline. Rejected with 409 (`"lower priority override 
 ```bash
 curl -s -X POST http://127.0.0.1:8080/api/runtime/override \
   -H 'Content-Type: application/json' \
-  -d '{"effect": "ExpandingRings", "parameters": {"origin": "apex", "brightness": 64}, "priority": 10, "duration_seconds": 15}'
+  -d '{"effect": "ExpandingRings", "parameters": {"origin": "apex", "brightness": 255}, "priority": 10, "duration_seconds": 15}'
 ```
 
 ### `POST /api/runtime/cancel-override`
@@ -191,9 +191,9 @@ Server-side, strict, applied to `parameters` and to saved defaults:
 - Unknown parameter names and unknown effects are rejected.
 - `integer`/`float` values must be finite numbers; booleans are not accepted as numbers.
 - `colour` values must match `#RRGGBB` or `RRGGBB`.
-- `vector` values (`rotating-plane --axis`, `aurora --direction`) accept the names `vertical`, `horizontal`, `tilted`, a `"X,Y,Z"` string, or a three-number array; zero vectors are rejected.
+- `vector` values (`RotatingPlane --axis`, `Aurora --direction`) accept the names `vertical`, `horizontal`, `tilted`, a `"X,Y,Z"` string, or a three-number array; zero vectors are rejected.
 - `choice` values must be one of the schema's `choices`.
-- `auto.effects` must be a non-empty list of known effect names without duplicates, and `transition` must be less than `interval`.
+- `Auto.effects` must be a non-empty list of known effect names without duplicates, and `transition` must be less than `interval`.
 - Minimum/maximum bounds from the schema are enforced.
 - Procedural animation `speed` and spatial `scale` values are bounded at `100.0` to keep renderer math in a useful finite operating range; the bound is not a duration or rate guarantee.
 
@@ -219,12 +219,12 @@ curl -s http://127.0.0.1:8080/api/control/capabilities
 # 2. Set a calm baseline in the simulator
 curl -s -X POST http://127.0.0.1:8080/api/runtime/baseline \
   -H 'Content-Type: application/json' \
-  -d '{"effect": "Aurora", "parameters": {"brightness": 32}}'
+  -d '{"effect": "Aurora", "parameters": {"brightness": 255}}'
 
 # 3. Flash a 10-second red alert over it
 curl -s -X POST http://127.0.0.1:8080/api/runtime/override \
   -H 'Content-Type: application/json' \
-  -d '{"effect": "HeightWave", "parameters": {"color": "FF0000", "direction": "bounce", "brightness": 64}, "priority": 10, "duration_seconds": 10}'
+  -d '{"effect": "HeightWave", "parameters": {"color": "FF0000", "direction": "bounce", "brightness": 255}, "priority": 10, "duration_seconds": 10}'
 
 # 4. Watch it hand back to the baseline
 curl -s http://127.0.0.1:8080/api/runtime/status

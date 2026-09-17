@@ -1,4 +1,6 @@
-# ADR 0001: Python 3D rendering over WLED ledmaps
+# ADR 0002: Python 3D rendering over WLED ledmaps
+
+> Historical design decision. The current Python/DDP architecture described here remains active.
 
 ## Decision
 
