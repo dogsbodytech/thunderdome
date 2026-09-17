@@ -13,7 +13,7 @@ from aiohttp import web
 
 from .animation.loop import run_frame_loop
 from .auto_scheduler import AutoScheduler, auto_duration
-from .config import GEOMETRY_PATH, LED_POSITIONS_PATH
+from .config import EFFECT_DEFAULTS_PATH, GEOMETRY_PATH, LED_POSITIONS_PATH
 from .effects.Common import SpatialContext, parse_spatial_origin
 from .effects.ClockHand import angle_for_elapsed, render_clock_hand
 from .effects.ExpandingRings import render_expanding_rings
@@ -33,7 +33,7 @@ class ControlSettings:
     controllers_path: str | None = None
     live_control_enabled: bool = False
     default_output: OutputMode = OutputMode.SIMULATOR
-    effect_defaults_path: str = str(Path(__file__).resolve().parents[2] / "config/effect-defaults.json")
+    effect_defaults_path: str = str(EFFECT_DEFAULTS_PATH)
 
     @property
     def live_available(self) -> bool:

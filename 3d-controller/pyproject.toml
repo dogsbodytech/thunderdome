@@ -17,3 +17,9 @@ package-dir = {"" = "controller"}
 
 [tool.setuptools.packages.find]
 where = ["controller"]
+
+[tool.setuptools.data-files]
+"share/thunderdome/geometry" = ["geometry/thunderdome_geometry.json"]
+"share/thunderdome/geometry/routes" = ["geometry/routes/string_routes.json"]
+"share/thunderdome/simulator/static" = ["simulator/static/index.html", "simulator/static/simulator.css", "simulator/static/simulator.js", "simulator/static/control-ui.js"]
+"share/thunderdome/simulator/static/vendor" = ["simulator/static/vendor/three.module.js", "simulator/static/vendor/OrbitControls.js", "simulator/static/vendor/LICENSE.threejs"]

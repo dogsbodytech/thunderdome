@@ -16,7 +16,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome import cli
-from thunderdome.config import GEOMETRY_PATH, LED_POSITIONS_PATH, PROJECT_ROOT, ROUTES_PATH
+from thunderdome.config import GEOMETRY_PATH, LED_POSITIONS_PATH, ROUTES_PATH
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 from thunderdome.simulator import (
     SimulatorDataError,
     build_simulator_payload,

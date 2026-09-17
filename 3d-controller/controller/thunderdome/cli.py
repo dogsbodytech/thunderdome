@@ -10,7 +10,7 @@ from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
 from .auto_scheduler import AutoScheduler
-from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, PROJECT_ROOT, ROUTES_PATH
+from .config import CONTROLLER_LED_COUNT, CONTROLLERS_PATH, DDP_CHUNK_LEDS, DDP_PORT, EFFECT_DEFAULTS_PATH, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, ROUTES_PATH
 from .control import ControlAPI, ControlSettings
 from .effect_defaults import EffectDefaults
 from .runtime import OutputMode
@@ -86,7 +86,7 @@ def _ddp_options(parser: argparse.ArgumentParser, *, colour: bool = False) -> No
 
 
 def _controllers_option(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--controllers", default=str(GEOMETRY_PATH.parent.parent / "config" / "controllers.json"))
+    parser.add_argument("--controllers", default=str(CONTROLLERS_PATH))
 
 
 def _output_options(parser: argparse.ArgumentParser) -> None:
@@ -745,7 +745,7 @@ def _run_auto(args: argparse.Namespace) -> int:
     names = _resolve_auto_playlist(args.effects, args.preset, args.shuffle, args.seed)
     scheduler = AutoScheduler(names, interval=args.interval, transition=args.transition)
     context = SpatialContext.load(args.positions, args.geometry)
-    defaults = EffectDefaults(PROJECT_ROOT / "config" / "effect-defaults.json")
+    defaults = EffectDefaults(EFFECT_DEFAULTS_PATH)
 
     def effect_values(name: str) -> dict[str, object]:
         return defaults.resolved(name)
@@ -869,7 +869,7 @@ def _main(args: argparse.Namespace) -> int:
             raise ValueError("--allow-live-control requires --controllers FILE")
         if args.default_output in {"ddp", "both"} and not (args.allow_live_control and args.controllers):
             raise ValueError("DDP default output requires --controllers FILE and --allow-live-control")
-        settings = ControlSettings(f"ws://{args.host}:{args.port}/ws/producer", args.controllers, args.allow_live_control, OutputMode(args.default_output), args.effect_defaults or str(Path(__file__).resolve().parents[2] / "config/effect-defaults.json"))
+        settings = ControlSettings(f"ws://{args.host}:{args.port}/ws/producer", args.controllers, args.allow_live_control, OutputMode(args.default_output), args.effect_defaults or str(EFFECT_DEFAULTS_PATH))
         api = ControlAPI(settings)
         server = create_http_server(args.host, args.port, geometry_path, routes_path, positions_path, api)
         print("Control service mode: local simulator and runtime APIs")

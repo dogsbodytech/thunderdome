@@ -14,6 +14,16 @@ from thunderdome.simulator import resolve_user_path
 
 
 class DefaultPathRegressionTests(unittest.TestCase):
+    def test_immutable_resources_resolve_from_source_or_installed_data_root(self):
+        from thunderdome.config import SIMULATOR_STATIC_PATH, installed_resource_root, resource_root
+        root = resource_root()
+        self.assertTrue((root / "geometry" / "thunderdome_geometry.json").is_file())
+        self.assertEqual(GEOMETRY_PATH, root / "geometry" / "thunderdome_geometry.json")
+        self.assertEqual(ROUTES_PATH, root / "geometry" / "routes" / "string_routes.json")
+        self.assertEqual(SIMULATOR_STATIC_PATH, root / "simulator" / "static")
+        for asset in ("index.html", "simulator.css", "simulator.js", "control-ui.js", "vendor/three.module.js", "vendor/OrbitControls.js", "vendor/LICENSE.threejs"):
+            self.assertTrue((SIMULATOR_STATIC_PATH / asset).is_file())
+        self.assertEqual(installed_resource_root(Path("/isolated/data")), Path("/isolated/data/share/thunderdome"))
     def test_builtin_effect_defaults_are_project_anchored_from_any_cwd(self):
         original = Path.cwd()
         try:

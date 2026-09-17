@@ -15,7 +15,7 @@ from urllib.parse import unquote
 
 from aiohttp import WSCloseCode, WSMsgType, web
 
-from .config import GEOMETRY_PATH, LED_POSITIONS_PATH, PROJECT_ROOT, ROUTES_PATH
+from .config import GEOMETRY_PATH, LED_POSITIONS_PATH, ROUTES_PATH, SIMULATOR_STATIC_PATH
 from .geometry import DomeGeometry, load_geometry
 from .led_positions import load_led_positions
 from .routes import load_routes
@@ -30,7 +30,7 @@ class SimulatorDataError(ValueError):
 
 
 def simulator_static_dir() -> Path:
-    return PROJECT_ROOT / "simulator" / "static"
+    return SIMULATOR_STATIC_PATH
 
 
 def resolve_user_path(value: str | None, default: str | Path) -> Path:
