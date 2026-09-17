@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from typing import Callable, Mapping
 
 from .Common import SpatialContext
-from .Procedural import SPACE_BODIES, create_renderer
+from .Procedural import create_renderer
+from .effect_names import LEGACY_NAMES
+from .space_body_catalogue import SPACE_BODIES
 
 
 @dataclass(frozen=True)
@@ -38,7 +40,7 @@ REGISTRY = (
 )
 
 BY_NAME = {registration.name: registration for registration in REGISTRY}
-LEGACY_NAMES = {"clock-hand": "ClockHand", "expanding-rings": "ExpandingRings", "height-wave": "HeightWave", "fire": "Fire", "rotating-plane": "RotatingPlane", "radar": "Radar", "aurora": "Aurora", "fireflies": "Fireflies", "twinkle": "Twinkle", "auto": "Auto"}
+
 DEFAULT_PLAYLIST = tuple(registration.name for registration in REGISTRY if registration.supports_auto)
 PRESETS = {
     "calm": ("HeightWave", "Aurora", "Fireflies", "ExpandingRings"),
