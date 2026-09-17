@@ -105,20 +105,33 @@ class SimulatorFrameSink(FrameSink):
         return SinkResult(self.name, True)
 
     async def _close(self) -> None:
+        failures = []
         if self._socket is not None:
-            await self._socket.close()
+            try:
+                await self._socket.close()
+            except Exception as exc:
+                failures.append(exc)
         if self._session is not None:
-            await self._session.close()
+            try:
+                await self._session.close()
+            except Exception as exc:
+                failures.append(exc)
+        if failures:
+            raise failures[0]
 
     def close(self) -> None:
-        if self._loop is not None:
+        loop = self._loop
+        try:
+            if loop is not None:
+                loop.run_until_complete(self._close())
+        finally:
             try:
-                self._loop.run_until_complete(self._close())
+                if loop is not None:
+                    loop.close()
             finally:
-                self._loop.close()
-        self._loop = None
-        self._session = None
-        self._socket = None
+                self._loop = None
+                self._session = None
+                self._socket = None
 
 
 class DDPFrameSink(FrameSink):

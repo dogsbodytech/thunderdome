@@ -91,7 +91,7 @@ class FrameRuntime:
                     with self._lock:
                         self.frames += 1
                 stats = run_frame_loop(producer, send, fps=fps, duration=duration, cancel_event=cancel)
-                if display.expires_at is not None and not stats.interrupted and self.on_baseline_complete is not None:
+                if not stats.interrupted and self.on_baseline_complete is not None:
                     self.on_baseline_complete(display.request_id)
         except (OSError, ValueError) as exc:
             with self._lock:
@@ -101,6 +101,8 @@ class FrameRuntime:
                 if self._cancel is cancel:
                     self._cancel = None
                     self.active_since = None
+                if self._thread is threading.current_thread():
+                    self._thread = None
 
     def stop(self) -> None:
         with self._lock:
@@ -109,6 +111,8 @@ class FrameRuntime:
             cancel.set()
         if thread is not None and thread is not threading.current_thread():
             thread.join(timeout=2)
+            if thread.is_alive():
+                raise OSError("control runtime worker did not stop within 2 seconds")
         with self._lock:
             if self._thread is thread:
                 self._thread = None
@@ -175,7 +179,9 @@ class ControlAPI:
             self.runtime.producer_factory = lambda display: make_effect_producer(display, self.defaults)
         self.coordinator = RuntimeCoordinator(self.runtime, default_output=settings.default_output)
         self.runtime.on_baseline_complete = self.coordinator.complete_baseline
-        self._timers: list[threading.Timer] = []
+        self._timer_lock = threading.RLock()
+        self._override_timer: threading.Timer | None = None
+        self._override_timer_request_id: str | None = None
         self._shutdown = False
 
     def register_routes(self, app: web.Application) -> None:
@@ -246,11 +252,8 @@ class ControlAPI:
             source = CommandSource.BROWSER
             command = RuntimeCommand(source, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
             result = self.coordinator.execute(command)
-            if result.accepted and action == CommandAction.APPLY_OVERRIDE and command.duration_seconds is not None:
-                timer = threading.Timer(command.duration_seconds, self.coordinator.expire_overrides)
-                timer.daemon = True
-                self._timers.append(timer)
-                timer.start()
+            if result.accepted:
+                self._sync_override_timer(result.status)
             return web.json_response({"accepted": result.accepted, "reason": result.reason, "status": result.status}, status=200 if result.accepted else 409)
         except (TypeError, ValueError) as exc:
             return web.json_response({"accepted": False, "error": str(exc)}, status=400)
@@ -259,7 +262,41 @@ class ControlAPI:
         if self._shutdown:
             return
         self._shutdown = True
-        for timer in self._timers:
-            timer.cancel()
-        self._timers.clear()
+        with self._timer_lock:
+            if self._override_timer is not None:
+                self._override_timer.cancel()
+            self._override_timer = None
+            self._override_timer_request_id = None
         self.runtime.shutdown()
+
+    def _sync_override_timer(self, status: object) -> None:
+        """Own exactly one timer for the currently effective timed override."""
+        override = status.get("override") if isinstance(status, dict) else None
+        request_id = override.get("request_id") if isinstance(override, dict) else None
+        remaining = status.get("remaining_override_seconds") if isinstance(status, dict) else None
+        with self._timer_lock:
+            if request_id == self._override_timer_request_id:
+                return
+            if self._override_timer is not None:
+                self._override_timer.cancel()
+            self._override_timer = None
+            self._override_timer_request_id = None
+            if request_id is None or remaining is None:
+                return
+            timer = threading.Timer(float(remaining), self._expire_override_timer, args=(request_id,))
+            timer.daemon = True
+            self._override_timer = timer
+            self._override_timer_request_id = request_id
+            timer.start()
+
+    def _expire_override_timer(self, request_id: str) -> None:
+        try:
+            status = self.coordinator.status()
+            override = status.get("override")
+            if isinstance(override, dict) and override.get("request_id") == request_id:
+                self.coordinator.expire_overrides()
+        finally:
+            with self._timer_lock:
+                if self._override_timer_request_id == request_id:
+                    self._override_timer = None
+                    self._override_timer_request_id = None
