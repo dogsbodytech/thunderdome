@@ -15,6 +15,7 @@ from thunderdome.config import GEOMETRY_PATH, LED_POSITIONS_PATH, REFERENCE_ROUT
 from thunderdome.simulator import create_http_server
 from thunderdome.streaming import FrameProtocolError, decode_frame, encode_frame
 from thunderdome.sinks import CompositeFrameSink, FrameSink, NullFrameSink, SinkResult
+from position_fixtures import generated_positions_path
 
 
 class FrameProtocolTests(unittest.TestCase):
@@ -45,8 +46,14 @@ class FrameProtocolTests(unittest.TestCase):
 
 
 class SimulatorLiveStreamingTests(unittest.IsolatedAsyncioTestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._positions = generated_positions_path()
+        cls.positions_path = cls._positions.__enter__()
+        cls.addClassCleanup(cls._positions.__exit__, None, None, None)
+
     async def asyncSetUp(self):
-        self.server = create_http_server("127.0.0.1", 0, GEOMETRY_PATH, REFERENCE_ROUTE_PATH, LED_POSITIONS_PATH)
+        self.server = create_http_server("127.0.0.1", 0, GEOMETRY_PATH, REFERENCE_ROUTE_PATH, self.positions_path)
         self.port = self.server.server_address[1]
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()

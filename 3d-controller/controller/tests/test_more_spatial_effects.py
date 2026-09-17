@@ -18,6 +18,7 @@ from thunderdome.effects.Procedural import (
 from thunderdome.effects.Registry import BY_NAME, REGISTRY
 from thunderdome.frame import RGBFrame
 from thunderdome.transport.multi_ddp import SendResult
+from position_fixtures import generated_positions_path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTROLLERS = ROOT / "config" / "controllers.example.json"
@@ -152,11 +153,11 @@ class AutoCliTests(unittest.TestCase):
 
     def test_auto_dry_run_uses_one_context_one_session_no_http_and_reports_packets(self):
         stdout = io.StringIO()
-        with patch("thunderdome.cli.run_wled_operation") as prepare:
+        with generated_positions_path() as positions_path, patch("thunderdome.cli.run_wled_operation") as prepare:
             with contextlib.redirect_stdout(stdout):
                 result = main([
                     "effect", "Auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora,fireflies",
-                    "--cycles", "1", "--interval", "1", "--transition", "0.2", "--fps", "5", "--dry-run",
+                    "--positions", str(positions_path), "--cycles", "1", "--interval", "1", "--transition", "0.2", "--fps", "5", "--dry-run",
                 ])
         self.assertEqual(result, 0)
         prepare.assert_not_called()

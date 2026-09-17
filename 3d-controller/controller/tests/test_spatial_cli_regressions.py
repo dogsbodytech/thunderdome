@@ -13,6 +13,7 @@ from thunderdome.cli import main, parse_args
 from thunderdome.effects.Common import SpatialContext
 from thunderdome.frame import RGBFrame
 from thunderdome.transport.multi_ddp import SendResult
+from position_fixtures import existing_positions_path
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -66,21 +67,21 @@ class SpatialCLIRegressionTests(unittest.TestCase):
             sender(producer(0, 0.0))
             return Mock(frames_sent=1, elapsed_seconds=0.0, interrupted=False)
 
-        with patch("thunderdome.cli.SpatialContext.load", return_value=context), patch(
+        with existing_positions_path() as positions_path, patch("thunderdome.cli.SpatialContext.load", return_value=context), patch(
             "thunderdome.cli.selected_xyz", return_value=((0.0, 0.0, 0.0), (0.0, 0.0, 1.0))
         ), patch(
             "thunderdome.cli.run_wled_operation"
         ) as prepare, patch("thunderdome.cli.render_height_wave", return_value=RGBFrame.allocate(5_000)), patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
             "thunderdome.cli.run_frame_loop", side_effect=loop
         ):
-            self.assertEqual(main(["effect", "HeightWave", "--output", "null", "--controllers", str(CONTROLLERS), "--loops", "1"]), 0)
+            self.assertEqual(main(["effect", "HeightWave", "--output", "null", "--controllers", str(CONTROLLERS), "--positions", str(positions_path), "--loops", "1"]), 0)
         prepare.assert_not_called()
         self.assertEqual(calls, ["stream"])
 
     def test_dry_run_uses_ddp_dry_run_without_http(self):
         context = Mock(spec=SpatialContext)
         session = Session()
-        with patch("thunderdome.cli.SpatialContext.load", return_value=context), patch(
+        with existing_positions_path() as positions_path, patch("thunderdome.cli.SpatialContext.load", return_value=context), patch(
             "thunderdome.cli.selected_xyz", return_value=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0))
         ), patch("thunderdome.cli.parse_spatial_origin", return_value=(0.0, 0.0, 0.0)), patch(
             "thunderdome.cli.render_expanding_rings", return_value=RGBFrame.allocate(5_000)
@@ -89,7 +90,7 @@ class SpatialCLIRegressionTests(unittest.TestCase):
         ) as prepare, patch("thunderdome.cli.MultiControllerDDPSession", return_value=session), patch(
             "thunderdome.cli.run_frame_loop", side_effect=lambda producer, sender, **_: (sender(producer(0, 0.0)) or Mock(frames_sent=1, elapsed_seconds=0.0, interrupted=False))
         ):
-            self.assertEqual(main(["effect", "ExpandingRings", "--controllers", str(CONTROLLERS), "--dry-run", "--loops", "1"]), 0)
+            self.assertEqual(main(["effect", "ExpandingRings", "--controllers", str(CONTROLLERS), "--positions", str(positions_path), "--dry-run", "--loops", "1"]), 0)
         prepare.assert_not_called()
         self.assertEqual(session.frames, [])
 

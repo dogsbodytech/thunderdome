@@ -13,6 +13,7 @@ from thunderdome.frame import RGBFrame
 from thunderdome.sinks import CompositeFrameSink, FrameSink, SinkResult
 from thunderdome.transport.ddp import packets_for_frame
 from thunderdome.transport.multi_ddp import SendResult
+from position_fixtures import existing_positions_path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -208,13 +209,15 @@ class CLILoopTests(unittest.TestCase):
         session = FakeMultiSession([controller_results(), controller_results(), controller_results()])
         rendered = RGBFrame.allocate(5_000, (1, 2, 3))
         stdout = io.StringIO()
-        with patch("thunderdome.cli.SpatialContext.load", return_value=Mock()) as load_context, patch(
+        with existing_positions_path() as positions_path, patch(
+            "thunderdome.cli.SpatialContext.load", return_value=Mock()
+        ) as load_context, patch(
             "thunderdome.cli.selected_xyz", return_value=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0))
         ), patch("thunderdome.cli.parse_spatial_origin", return_value=(0.0, 0.0, 0.0)), patch(
             "thunderdome.cli.render_expanding_rings", return_value=rendered
         ) as render, patch("thunderdome.cli.MultiControllerDDPSession", return_value=session):
             with contextlib.redirect_stdout(stdout):
-                result = main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS_EXAMPLE), "--dry-run", "--duration", "0.4", "--fps", "5"])
+                result = main(["effect", "expanding-rings", "--controllers", str(CONTROLLERS_EXAMPLE), "--positions", str(positions_path), "--dry-run", "--duration", "0.4", "--fps", "5"])
 
         self.assertEqual(result, 0)
         load_context.assert_called_once()

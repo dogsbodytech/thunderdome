@@ -22,6 +22,7 @@ from thunderdome.effects.Procedural import (
     rotate_vector,
 )
 from thunderdome.frame import RGBFrame
+from position_fixtures import generated_positions_path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTROLLERS = ROOT / "config" / "controllers.example.json"
@@ -205,9 +206,15 @@ class RotatingPlaneGeometryFollowupTests(unittest.TestCase):
 
 
 class ProceduralValidationFollowupTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._positions = generated_positions_path()
+        cls.positions_path = cls._positions.__enter__()
+        cls.addClassCleanup(cls._positions.__exit__, None, None, None)
+
     def run_command(self, extra):
         with patch("thunderdome.cli.run_frame_loop", side_effect=fake_loop), patch("thunderdome.cli.run_wled_operation") as wled:
-            result = cli.main(["effect", *extra, "--controllers", str(CONTROLLERS), "--duration", "0.2", "--fps", "5", "--dry-run"])
+            result = cli.main(["effect", *extra, "--controllers", str(CONTROLLERS), "--positions", str(self.positions_path), "--duration", "0.2", "--fps", "5", "--dry-run"])
         wled.assert_not_called()
         return result
 
