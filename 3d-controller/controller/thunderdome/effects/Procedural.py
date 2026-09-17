@@ -14,6 +14,11 @@ from .Common import SpatialContext, distance3, selected_xyz, smoothstep
 from .effect_names import LEGACY_NAMES
 from .space_body_catalogue import SPACE_BODIES
 
+# Fireflies performs count * 5,000 distance checks each frame.
+MAX_FIREFLIES = 100
+# Enough to replace every logical LED once per second.
+MAX_TWINKLE_SPAWN_RATE = LOGICAL_LED_COUNT
+
 from .procedural_math import *  # compatibility re-export
 from .procedural_math import _clamp, _noise, _ramp, _scale
 def _selected_bounds(context: SpatialContext, exclude_tail: bool) -> tuple[Vector, Vector]:
@@ -37,10 +42,11 @@ class FireflyParticle:
     color: tuple[int, int, int]
 
 
-@lru_cache(maxsize=128)
+# At most 1,600 templates retained across runs; keep reuse without frame clears.
+@lru_cache(maxsize=16)
 def particle_templates(count: int, seed: int) -> tuple[ParticleTemplate, ...]:
-    if count <= 0:
-        raise ValueError(f"count must be positive, got {count!r}")
+    if not 1 <= count <= MAX_FIREFLIES:
+        raise ValueError(f"count must be in range 1..{MAX_FIREFLIES}, got {count!r}")
     rng = random.Random(seed)
     templates = []
     for _ in range(count):
@@ -62,8 +68,8 @@ class ParticleSystem:
     """Reusable deterministic 3D particle support for fireflies and later effects."""
 
     def __init__(self, count: int, seed: int, bounds: tuple[Vector, Vector], *, color=(255, 255, 180), color_variation=0.25):
-        if count <= 0:
-            raise ValueError(f"count must be positive, got {count!r}")
+        if not 1 <= count <= MAX_FIREFLIES:
+            raise ValueError(f"count must be in range 1..{MAX_FIREFLIES}, got {count!r}")
         self.count = count
         self.seed = seed
         self.bounds = bounds
@@ -226,7 +232,7 @@ class TwinkleOverlay:
     """Reusable deterministic per-LED twinkle lifecycle overlay."""
 
     def __init__(self, context: SpatialContext, *, seed=1, exclude_tail=False, density=.08, spawn_rate=12.0, fade_in=.25, hold=.25, fade_out=.7, minimum_brightness=0.05, maximum_brightness=1.0, color="FFFFFF", mode="fixed", background="000000", color_change_speed=0.0, **_):
-        if not 0 <= density <= 1 or spawn_rate < 0 or min(fade_in, hold, fade_out) < 0:
+        if not 0 <= density <= 1 or not 0 <= spawn_rate <= MAX_TWINKLE_SPAWN_RATE or min(fade_in, hold, fade_out) < 0:
             raise ValueError("twinkle density/rate/timing values are out of range")
         if not 0 <= minimum_brightness <= maximum_brightness <= 1:
             raise ValueError("twinkle brightness bounds must be 0..1 and ordered")

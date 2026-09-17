@@ -69,6 +69,16 @@ class FailingFrameSink(FrameSink):
         self.closed += 1
 
 class CLILoopTests(unittest.TestCase):
+    def test_cli_rejects_non_finite_float_arguments_during_parsing(self):
+        self.assertEqual(parse_args(["effect", "Fire", "--duration", "1.25"]).duration, 1.25)
+        for argv in (
+            ["effect", "Fire", "--duration", "nan"],
+            ["effect", "Fire", "--speed", "inf"],
+            ["effect", "ExpandingRings", "--speed-mps", "nan"],
+        ):
+            with self.subTest(argv=argv), self.assertRaises(SystemExit):
+                parse_args(argv)
+
     def test_individual_effect_stops_after_first_sink_failure(self):
         sink = FailingFrameSink(fail_on=2)
         renderer = Mock()

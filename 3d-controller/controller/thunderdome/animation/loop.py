@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
@@ -44,8 +45,13 @@ def run_frame_loop(
     """
     if not 1 <= fps <= 60:
         raise ValueError("fps must be in range 1..60")
-    if duration is not None and duration <= 0:
-        raise ValueError("duration must be greater than zero")
+    if duration is not None:
+        try:
+            valid_duration = math.isfinite(duration) and duration > 0
+        except (TypeError, OverflowError) as exc:
+            raise ValueError("duration must be a finite number greater than zero") from exc
+        if not valid_duration:
+            raise ValueError("duration must be a finite number greater than zero")
     if loops is not None and loops <= 0:
         raise ValueError("loops must be a positive integer")
 

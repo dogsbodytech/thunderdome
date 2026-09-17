@@ -8,6 +8,11 @@ from thunderdome.animation.loop import run_frame_loop
 
 
 class FrameLoopTests(unittest.TestCase):
+    def test_duration_rejects_non_finite_values(self):
+        for duration in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(duration=duration), self.assertRaises(ValueError):
+                run_frame_loop(lambda _number, _elapsed: None, lambda _frame: None, fps=20, duration=duration, loops=1)
+
     def test_loop_sends_a_new_generated_frame_each_iteration(self):
         sent = []
         sleeps = []

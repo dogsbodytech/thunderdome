@@ -47,6 +47,18 @@ class CommandSourceTests(AioHTTPTestCase):
         self.assertEqual(response.status, 200)
         self.assertEqual(body["status"]["baseline"]["source"], "browser")
 
+    async def test_runtime_status_hides_internal_generation_and_exposes_error_state(self):
+        response = await self.client.post("/api/runtime/baseline", json={"effect": "Fire"})
+        body = await response.json()
+        self.assertNotIn("generation", body["status"]["baseline"])
+        self.assertNotIn("generation", body["status"]["effective"])
+
+        self.api.coordinator.runtime_terminated(self.api.runtime.started[-1], "renderer failed", False)
+        response = await self.client.get("/api/runtime/status")
+        status = await response.json()
+        self.assertEqual(status["service_state"], "error")
+        self.assertNotIn("generation", status["baseline"])
+
     async def test_declared_source_is_rejected(self):
         response = await self.client.post(
             "/api/runtime/override",
@@ -61,6 +73,19 @@ class CommandSourceTests(AioHTTPTestCase):
         response = await self.client.post("/api/runtime/baseline", json={"effect": "Fire", "source": "wizard"})
         self.assertEqual(response.status, 400)
         self.assertFalse((await response.json())["accepted"])
+
+    async def test_override_timer_replaces_and_cancels_obsolete_timer(self):
+        await self.client.post("/api/runtime/baseline", json={"effect": "Fire"})
+        first = await self.client.post("/api/runtime/override", json={"effect": "Aurora", "duration_seconds": 60, "request_id": "first"})
+        self.assertEqual(first.status, 200)
+        old_timer = self.api._override_timer
+        second = await self.client.post("/api/runtime/override", json={"effect": "Radar", "duration_seconds": 60, "request_id": "second"})
+        self.assertEqual(second.status, 200)
+        self.assertIsNot(old_timer, self.api._override_timer)
+        self.assertTrue(old_timer.finished.is_set())
+        cancelled = await self.client.post("/api/runtime/cancel-override", json={})
+        self.assertEqual(cancelled.status, 200)
+        self.assertIsNone(self.api._override_timer)
 
     async def test_effect_schema_lookup_resolves_canonical_and_legacy_names(self):
         listing = await (await self.client.get("/api/effects")).json()

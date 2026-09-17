@@ -48,3 +48,14 @@ class MultiDDPTests(unittest.TestCase):
   factory.assert_called_once_with(max_workers=5)
   self.assertEqual(executor.map.call_count,2)
   executor.shutdown.assert_called_once_with(wait=True)
+
+ def test_close_attempts_all_sockets_and_executor_after_failure(self):
+  first=Mock(); second=Mock(); first.close.side_effect=RuntimeError('first socket close failed')
+  executor=Mock(); session=MultiControllerDDPSession(self.config); session.sockets={1:first,2:second}; session._executor=executor
+  with self.assertRaisesRegex(RuntimeError,'first socket close failed'):
+   session.close()
+  first.close.assert_called_once_with(); second.close.assert_called_once_with(); executor.shutdown.assert_called_once_with(wait=True)
+  self.assertEqual(session.sockets,{})
+  self.assertIsNone(session._executor)
+  session.close()
+  first.close.assert_called_once_with(); second.close.assert_called_once_with()

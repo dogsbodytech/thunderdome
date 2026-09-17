@@ -125,7 +125,7 @@ Payload shape:
 }
 ```
 
-- `service_state` — `"idle"` or `"running"`.
+- `service_state` — `"idle"`, `"running"`, or `"error"`. `"error"` means the last runtime attempt failed and no worker is currently effective; the saved baseline may still be available for an explicit restart.
 - `effective` — what is actually displaying: the override if one is active, otherwise the baseline.
 - `remaining_override_seconds` — seconds until the active override expires, if it has a duration.
 - `latest_error` — last rejected/failed command; `latest_sink_error` — last frame-delivery failure (e.g. simulator not running).
@@ -195,6 +195,7 @@ Server-side, strict, applied to `parameters` and to saved defaults:
 - `choice` values must be one of the schema's `choices`.
 - `auto.effects` must be a non-empty list of known effect names without duplicates, and `transition` must be less than `interval`.
 - Minimum/maximum bounds from the schema are enforced.
+- Procedural animation `speed` and spatial `scale` values are bounded at `100.0` to keep renderer math in a useful finite operating range; the bound is not a duration or rate guarantee.
 
 ## Simulator read-only endpoints
 

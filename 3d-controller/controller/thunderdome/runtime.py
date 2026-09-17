@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import enum
+import math
 import threading
 import time
-from dataclasses import dataclass
+import uuid
+from collections import deque
+from contextlib import contextmanager
+from dataclasses import dataclass, field, replace
 from typing import Callable, Mapping, Protocol
 
 from .schemas import validate_effect_parameters
@@ -51,8 +55,13 @@ class RuntimeCommand:
             raise ValueError("request_id is required")
         if self.priority < 0:
             raise ValueError("priority must be non-negative")
-        if self.duration_seconds is not None and self.duration_seconds <= 0:
-            raise ValueError("duration_seconds must be positive")
+        if self.duration_seconds is not None:
+            try:
+                valid_duration = math.isfinite(self.duration_seconds) and self.duration_seconds > 0
+            except (TypeError, OverflowError) as exc:
+                raise ValueError("duration_seconds must be a finite positive number") from exc
+            if not valid_duration:
+                raise ValueError("duration_seconds must be a finite positive number")
 
 
 @dataclass(frozen=True)
@@ -65,9 +74,13 @@ class DisplayDefinition:
     created_at: float
     priority: int = 0
     expires_at: float | None = None
+    generation: str = field(default_factory=lambda: uuid.uuid4().hex)
 
-    def as_dict(self) -> dict[str, object]:
-        return {"effect": self.effect, "parameters": dict(self.parameters), "output": self.output.value, "source": self.source.value, "request_id": self.request_id, "created_at": self.created_at, "priority": self.priority, "expires_at": self.expires_at}
+    def as_dict(self, *, include_generation: bool = False) -> dict[str, object]:
+        payload = {"effect": self.effect, "parameters": dict(self.parameters), "output": self.output.value, "source": self.source.value, "request_id": self.request_id, "created_at": self.created_at, "priority": self.priority, "expires_at": self.expires_at}
+        if include_generation:
+            payload["generation"] = self.generation
+        return payload
 
 
 @dataclass(frozen=True)
@@ -78,6 +91,7 @@ class CommandResult:
 
 
 class DisplayRuntime(Protocol):
+    on_terminated: Callable[[DisplayDefinition, str | None, bool], None] | None
     def start(self, display: DisplayDefinition) -> None: ...
     def stop(self) -> None: ...
 
@@ -91,9 +105,76 @@ class RuntimeCoordinator:
         self._lock = threading.RLock()
         self._baseline: DisplayDefinition | None = None
         self._override: DisplayDefinition | None = None
+        self._active: DisplayDefinition | None = None
+        self._notifications: deque[tuple[DisplayDefinition, str | None, bool]] = deque()
+        self._notification_lock = threading.RLock()
+        self._guard_depth = 0
         self._state = "idle"
         self._latest_error: str | None = None
         self.default_output = default_output
+        self._runtime.on_terminated = self.runtime_terminated
+
+    @contextmanager
+    def _guard(self, *, blocking: bool = True):
+        """Drain termination events without ever blocking a worker on a joiner.
+
+        Publication and the outermost unlock are paired so a notification cannot
+        miss both the worker's nonblocking drain and the command's final drain.
+        """
+        acquired = self._lock.acquire(blocking=blocking)
+        if not acquired:
+            yield False
+            return
+        self._guard_depth += 1
+        try:
+            if self._guard_depth == 1:
+                self._drain_notifications()
+            yield True
+        finally:
+            if self._guard_depth == 1:
+                with self._notification_lock:
+                    try:
+                        self._drain_notifications()
+                    finally:
+                        self._guard_depth -= 1
+                        self._lock.release()
+            else:
+                self._guard_depth -= 1
+                self._lock.release()
+
+    def runtime_terminated(self, display: DisplayDefinition, error: str | None, cancelled: bool) -> None:
+        """Called after sink cleanup; display identity identifies one activation."""
+        with self._notification_lock:
+            self._notifications.append((display, error, cancelled))
+        with self._guard(blocking=False):
+            pass
+
+    def _drain_notifications(self) -> None:
+        while True:
+            with self._notification_lock:
+                if not self._notifications:
+                    return
+                display, error, cancelled = self._notifications.popleft()
+            if display is not self._active:
+                continue
+            self._active = None
+            self._state = "error" if error else "idle"
+            if error:
+                self._latest_error = error
+            if cancelled:
+                # A direct runtime stop is not natural completion. Retain the
+                # configured baseline, but never claim its worker is running.
+                self._override = None
+                continue
+            if self._override is not None and display.generation == self._override.generation:
+                self._override = None
+                try:
+                    if self._baseline is not None:
+                        self._start(self._baseline)
+                except Exception as exc:
+                    self._latest_error = str(exc)
+            elif error is None:
+                self._baseline = None
 
     def _definition(self, command: RuntimeCommand, *, inherited_output: OutputMode | None = None) -> DisplayDefinition:
         if command.effect is None:
@@ -110,16 +191,27 @@ class RuntimeCoordinator:
         if display is None:
             self._state = "idle"
             return
-        self._runtime.start(display)
+        # A restored baseline has the same definition generation, but each
+        # activation has a distinct object identity for completion ownership.
+        active = replace(display)
+        try:
+            self._runtime.start(active)
+        except Exception:
+            self._active = None
+            self._state = "error"
+            raise
+        self._active = active
         self._state = "running"
 
     def _replace_effective(self, display: DisplayDefinition | None) -> None:
-        if self._state != "idle":
+        if self._active is not None:
             self._runtime.stop()
+        self._active = None
+        self._state = "idle"
         self._start(display)
 
     def _effective(self) -> DisplayDefinition | None:
-        return self._override or self._baseline
+        return self._active
 
     def _validate_source_policy(self, command: RuntimeCommand) -> None:
         allowed_sources = {
@@ -141,68 +233,76 @@ class RuntimeCoordinator:
                 raise ValueError("MQTT override requires a baseline output")
 
     def execute(self, command: RuntimeCommand) -> CommandResult:
-        with self._lock:
-            self._expire_locked()
+        with self._guard():
             try:
+                self._expire_locked()
                 self._validate_source_policy(command)
                 if command.action == CommandAction.SET_BASELINE:
                     candidate = self._definition(command)
-                    self._baseline = candidate
-                    self._replace_effective(self._override or candidate)
+                    if self._override is not None:
+                        self._baseline = candidate
+                    else:
+                        self._replace_effective(candidate)
+                        self._baseline = candidate
                 elif command.action == CommandAction.APPLY_OVERRIDE:
                     inherited = self._baseline.output if self._baseline else None
                     candidate = self._definition(command, inherited_output=inherited)
                     if self._override is not None and candidate.priority < self._override.priority:
                         return CommandResult(False, "lower priority override rejected", self.status())
-                    self._override = candidate
                     self._replace_effective(candidate)
+                    self._override = candidate
                 elif command.action == CommandAction.CANCEL_OVERRIDE:
                     if self._override is None:
                         return CommandResult(False, "no active override", self.status())
-                    self._override = None
                     self._replace_effective(self._baseline)
+                    self._override = None
                 elif command.action == CommandAction.RESTART_BASELINE:
                     if self._baseline is None:
                         return CommandResult(False, "no baseline configured", self.status())
-                    self._override = None
                     self._replace_effective(self._baseline)
+                    self._override = None
                 elif command.action == CommandAction.STOP_ALL:
+                    self._replace_effective(None)
                     self._baseline = None
                     self._override = None
-                    self._replace_effective(None)
                 elif command.action != CommandAction.GET_STATUS:
                     return CommandResult(False, "unsupported action", self.status())
-            except (ValueError, OSError) as exc:
+            except Exception as exc:
                 self._latest_error = str(exc)
                 return CommandResult(False, str(exc), self.status())
             return CommandResult(True, None, self.status())
 
     def _expire_locked(self) -> bool:
         if self._override is not None and self._override.expires_at is not None and self._monotonic() >= self._override.expires_at:
-            self._override = None
             self._replace_effective(self._baseline)
+            self._override = None
             return True
         return False
 
-    def expire_overrides(self) -> bool:
-        with self._lock:
+    def expire_overrides(self, generation: str | None = None) -> bool:
+        with self._guard():
+            if generation is not None and (self._override is None or self._override.generation != generation):
+                return False
             return self._expire_locked()
 
-    def complete_baseline(self, request_id: str) -> bool:
-        """Clear a naturally completed finite baseline if it is still current."""
-        with self._lock:
-            if self._baseline is None or self._baseline.request_id != request_id:
-                return False
-            self._baseline = None
-            if self._override is None:
-                self._state = "idle"
-            return True
-
     def status(self) -> dict[str, object]:
-        with self._lock:
-            self._expire_locked()
+        return self._status(include_generation=False)
+
+    def internal_status(self) -> dict[str, object]:
+        """Return status with activation identity for internal timer ownership."""
+        return self._status(include_generation=True)
+
+    def _status(self, *, include_generation: bool) -> dict[str, object]:
+        with self._guard():
+            self._drain_notifications()
+            try:
+                self._expire_locked()
+            except Exception as exc:
+                self._latest_error = str(exc)
+            self._drain_notifications()
             effective = self._effective()
             remaining = None
             if self._override and self._override.expires_at is not None:
                 remaining = max(0.0, self._override.expires_at - self._monotonic())
-            return {"service_state": self._state, "baseline": self._baseline.as_dict() if self._baseline else None, "override": self._override.as_dict() if self._override else None, "effective": effective.as_dict() if effective else None, "remaining_override_seconds": remaining, "latest_error": self._latest_error}
+            as_dict = lambda display: display.as_dict(include_generation=include_generation) if display else None
+            return {"service_state": self._state, "baseline": as_dict(self._baseline), "override": as_dict(self._override), "effective": as_dict(effective), "remaining_override_seconds": remaining, "latest_error": self._latest_error}

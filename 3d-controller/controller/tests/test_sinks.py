@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from thunderdome.sinks import DDPFrameSink
+from thunderdome.sinks import CompositeFrameSink, DDPFrameSink, FrameSink
 from thunderdome.wled.multi import WLEDOperationResult
 
 
@@ -41,6 +41,39 @@ class DDPFrameSinkTests(unittest.TestCase):
                 DDPFrameSink("controllers.json").open()
 
         create_session.assert_not_called()
+
+
+class CompositeFrameSinkTests(unittest.TestCase):
+    def test_open_failure_closes_all_opened_sinks_and_preserves_primary_error(self):
+        events = []
+
+        class FakeSink(FrameSink):
+            def __init__(self, name, open_error=None, close_error=None):
+                self.name = name
+                self.open_error = open_error
+                self.close_error = close_error
+
+            def open(self):
+                events.append(f"open:{self.name}")
+                if self.open_error:
+                    raise self.open_error
+
+            def close(self):
+                events.append(f"close:{self.name}")
+                if self.close_error:
+                    raise self.close_error
+
+        open_error = RuntimeError("C open failed")
+        sink_a = FakeSink("A")
+        sink_b = FakeSink("B", close_error=RuntimeError("B close failed"))
+        sink_c = FakeSink("C", open_error=open_error)
+
+        with self.assertRaises(RuntimeError) as caught:
+            CompositeFrameSink([sink_a, sink_b, sink_c]).open()
+
+        self.assertIs(caught.exception, open_error)
+        self.assertEqual(events, ["open:A", "open:B", "open:C", "close:B", "close:A"])
+        self.assertTrue(any("B close failed" in note for note in caught.exception.__notes__))
 
 
 if __name__ == "__main__":
