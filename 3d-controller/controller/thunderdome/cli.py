@@ -191,7 +191,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         item = positions_sub.add_parser(name)
         item.add_argument("--route-path", default=str(GEOMETRY_PATH.parent / "reference_string_route.md"))
         item.add_argument("--geometry-path", default=str(GEOMETRY_PATH))
-        item.add_argument("--path", default=str(GEOMETRY_PATH.parent / "generated/led_positions_3d.json"))
+        item.add_argument("--path", default=str(LED_POSITIONS_PATH))
 
     controllers = groups.add_parser("controllers", help="Multi-controller configuration and HTTP commands")
     controllers_sub = controllers.add_subparsers(dest="command", required=True)

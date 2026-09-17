@@ -46,6 +46,10 @@ class DefaultPathRegressionTests(unittest.TestCase):
             finally:
                 os.chdir(original)
 
+    def test_positions_generation_uses_the_canonical_default_and_keeps_overrides(self):
+        self.assertEqual(Path(parse_args(["positions", "generate"]).path), LED_POSITIONS_PATH)
+        self.assertEqual(Path(parse_args(["positions", "generate", "--path", "local/positions.json"]).path), Path("local/positions.json"))
+
 
 if __name__ == "__main__":
     unittest.main()

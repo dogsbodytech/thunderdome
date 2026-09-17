@@ -13,6 +13,7 @@ from aiohttp import web
 
 from .animation.loop import run_frame_loop
 from .auto_scheduler import AutoScheduler, auto_duration
+from .config import GEOMETRY_PATH, LED_POSITIONS_PATH
 from .effects.Common import SpatialContext, parse_spatial_origin
 from .effects.ClockHand import angle_for_elapsed, render_clock_hand
 from .effects.ExpandingRings import render_expanding_rings
@@ -118,7 +119,7 @@ class FrameRuntime:
 
 def make_effect_producer(display: DisplayDefinition, defaults: EffectDefaults | None = None) -> tuple[Callable[[int, float], RGBFrame], int, float | None]:
     values = dict(display.parameters)
-    context = SpatialContext.load(values.pop("positions", None) or Path(__file__).resolve().parents[2] / "geometry/generated/led_positions_3d.json", values.pop("geometry", None) or Path(__file__).resolve().parents[2] / "geometry/thunderdome_geometry.json")
+    context = SpatialContext.load(values.pop("positions", None) or LED_POSITIONS_PATH, values.pop("geometry", None) or GEOMETRY_PATH)
     brightness = int(values.pop("brightness", 255)); fps = int(values.pop("fps", 30)); exclude_tail = bool(values.pop("exclude_tail", False))
     if display.effect == "Auto":
         scheduler = AutoScheduler(list(values["effects"]), interval=float(values["interval"]), transition=float(values["transition"]), shuffle=bool(values["shuffle"]), seed=int(values["seed"]))

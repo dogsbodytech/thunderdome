@@ -135,7 +135,7 @@ class SimulatorDataTests(unittest.TestCase):
             positions = json.loads(self.positions_path.read_text())
             positions["leds"][0]["from_hub"] = "H033"
             positions_path.write_text(json.dumps(positions), encoding="utf-8")
-            with self.assertRaisesRegex(SimulatorDataError, rf"{positions_path}.*conflicts with {route_path}"):
+            with self.assertRaisesRegex(SimulatorDataError, rf"{positions_path}.*incorrect from_hub"):
                 build_simulator_payload(GEOMETRY_PATH, route_path, positions_path)
 
 

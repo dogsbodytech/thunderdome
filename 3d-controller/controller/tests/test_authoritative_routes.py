@@ -1,10 +1,10 @@
 from __future__ import annotations
-import json, sys, tempfile, unittest
+import copy, json, sys, tempfile, unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from thunderdome.geometry import load_geometry
 from thunderdome.routes import RouteError, load_routes, generate_route_document
-from thunderdome.led_positions import generate_positions, validate_positions
+from thunderdome.led_positions import LedPositionsError, generate_positions, validate_positions
 
 ROOT=Path(__file__).resolve().parents[2]
 ROUTE=ROOT/'geometry/reference_string_route.md'; GEOM=ROOT/'geometry/thunderdome_geometry.json'
@@ -28,6 +28,22 @@ class AuthoritativeRoutesTests(unittest.TestCase):
   self.assertAlmostEqual(tail[0]['distance_below_apex_m'],tail[0]['distance_along_string_m']-self.routes[0].total_length_m,places=9)
   self.assertAlmostEqual(tail[0]['distance_along_string_m']-dome[-1]['distance_along_string_m'],.03,places=8)
   self.assertAlmostEqual(tail[-1]['distance_below_apex_m'],1.881449,places=6)
+ def test_position_validation_rejects_authoritative_placement_corruption(self):
+  document=generate_positions(self.routes,self.geometry); rows=document['leds']; spar=next(row for row in rows if row['location_type']=='spar' and row['string_index']>0); tail=next(row for row in rows if row['location_type']=='tail')
+  other_spar=next(spar_id for spar_id in self.geometry.spars if spar_id!=spar['spar_id'])
+  cases=[
+   ('x',spar['global_index'],spar['x']+.001),
+   ('spar_id',spar['global_index'],other_spar),
+   ('from_hub',spar['global_index'],spar['to_hub']),
+   ('fraction_along_spar',spar['global_index'],min(1.0,spar['fraction_along_spar']+.1)),
+   ('string_index',spar['global_index'],spar['string_index']+1),
+   ('x',tail['global_index'],tail['x']+.001),
+   ('z',tail['global_index'],tail['z']+.001),
+  ]
+  for field,index,value in cases:
+   with self.subTest(field=field,index=index):
+    corrupted=copy.deepcopy(document); corrupted['leds'][index][field]=value
+    with self.assertRaises(LedPositionsError): validate_positions(corrupted,self.geometry,self.routes)
  def test_corrupt_route_is_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'bad.md'; p.write_text('## String 1\nController: 1\nString ID: 0\nGlobal LED indexes: 0-999\nStart hub: H001\nEnd hub: H061\n```text\nH001 > H061\n```')

@@ -32,18 +32,20 @@ def generate_positions(routes:list[RouteDefinition],geometry:DomeGeometry)->dict
 def validate_positions(document,geometry:DomeGeometry,routes:list[RouteDefinition]):
  rows=document.get('leds') if isinstance(document,dict) else None
  if not isinstance(rows,list) or len(rows)!=5000: raise LedPositionsError('expected 5,000 records')
- if [r.get('global_index') for r in rows]!=list(range(5000)): raise LedPositionsError('indexes must be 0..4999')
- for route in routes:
-  group=[r for r in rows if r.get('string_id')==route.string_id]
-  if len(group)!=1000 or [r.get('string_index') for r in group]!=list(range(1000)): raise LedPositionsError('bad string indexing')
-  tails=[r for r in group if r.get('location_type')=='tail']; spars=[r for r in group if r.get('location_type')=='spar']
-  if any(r.get('location_type') not in {'spar','tail'} or not all(math.isfinite(float(r[k])) for k in ('x','y','z','distance_along_string_m')) for r in group): raise LedPositionsError('invalid location/XYZ')
-  if any(abs(r['distance_along_string_m']-i*PITCH)>EPS for i,r in enumerate(group)): raise LedPositionsError('string distance must use 30mm pitch')
-  if any(r['location_type']=='tail' for r in group[:len(spars)]) or [r['tail_index'] for r in tails]!=list(range(len(tails))): raise LedPositionsError('tail ordering')
-  if tails and (tails[0]['distance_below_apex_m']<=0 or any(abs(x['distance_below_apex_m']-(x['distance_along_string_m']-route.total_length_m))>EPS for x in tails)): raise LedPositionsError('tail depth mismatch')
-  if any(tails[i]['z']<tails[i+1]['z'] for i in range(len(tails)-1)): raise LedPositionsError('tail Z must decrease')
-  for r in spars:
-   if r['spar_id'] not in geometry.spars or not 0<=r['fraction_along_spar']<=1: raise LedPositionsError('invalid spar record')
+ if document.get('schema_version')!=1: raise LedPositionsError('unsupported positions schema')
+ expected_rows=generate_positions(routes,geometry)['leds']
+ numeric_fields={'distance_along_string_m','distance_along_route_m','x','y','z','fraction_along_spar','distance_along_spar_m','distance_below_apex_m'}
+ tolerance=1e-8
+ for index,(actual,expected) in enumerate(zip(rows,expected_rows)):
+  if not isinstance(actual,dict): raise LedPositionsError(f'record {index} must be an object')
+  for field,expected_value in expected.items():
+   if field not in actual: raise LedPositionsError(f'record {index} is missing {field}')
+   actual_value=actual[field]
+   if field in numeric_fields:
+    try: valid=math.isfinite(float(actual_value)) and math.isclose(float(actual_value),float(expected_value),rel_tol=0.0,abs_tol=tolerance)
+    except (TypeError,ValueError): valid=False
+   else: valid=actual_value==expected_value
+   if not valid: raise LedPositionsError(f'record {index} has incorrect {field}')
  return rows
 def write_positions(path,doc):
  path=Path(path); path.parent.mkdir(parents=True,exist_ok=True); path.write_text(json.dumps(doc,indent=2,sort_keys=True)+'\n')
