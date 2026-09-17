@@ -1,0 +1,22 @@
+; Example dialplan for the dome SIP audio bridge.
+;
+; Use EAGI rather than AGI. EAGI exposes inbound audio on file descriptor 3.
+
+[dome-incoming]
+exten => s,1,NoOp(Dome SIP audio bridge incoming call)
+ same => n,Answer()
+ same => n,Wait(1)
+ same => n,Set(CHANNEL(readformat)=slin16)
+ same => n,EAGI(wled_call_bridge.py)
+ same => n,Hangup()
+
+; Some providers send the called extension rather than s.
+exten => _X!,1,NoOp(Dome SIP audio bridge incoming call to ${EXTEN})
+ same => n,Answer()
+ same => n,Wait(1)
+ same => n,Set(CHANNEL(readformat)=slin16)
+ same => n,EAGI(wled_call_bridge.py)
+ same => n,Hangup()
+
+; Example forcing unicast to controller 1:
+; same => n,EAGI(wled_call_bridge.py,--target,192.168.12.10,--verbose)

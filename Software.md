@@ -120,10 +120,14 @@ WLED has native [2D LED mapping](https://kno.wled.ge/advanced/mapping/), but it 
 
 XYZ positions and effects therefore remain in the Python controller; WLED receives only its local RGB DDP frame.
 
-## Audio Control
+## Audio control
 
-The WLED controllers do not contain microphones, but audio can be sent from a laptop using [WLED audio sync from a PC](https://kno.wled.ge/advanced/audio-reactive/#audio-sync-from-a-pc). This is separate from the active Python spatial-rendering path.
+The active Python controller does not currently include audio-reactive rendering. The experimental tools in [`software/dome-audio-reactor/`](software/dome-audio-reactor/) instead send WLED Audio Sync packets directly to a controller running an AudioReactive effect.
+
+That path is useful for prototyping, but it is separate from the normal spatial-rendering and five-controller DDP architecture.
 
 ## SIP to audio feed
 
-A possible future interactive feature is connecting the on-site EMF phone/SIP system to an audio feed, allowing callers to influence dome lighting from their voice or nearby sound.
+The [`SIP audio bridge`](software/dome-audio-reactor/sip-bridge/) connects an Asterisk EAGI call to the experimental WLED Audio Sync path. It analyses incoming call audio and emits Audio Sync V2 UDP packets, with a self-test mode that works without Asterisk.
+
+The bridge is an experimental feature and still requires end-to-end testing with the physical controller and an EMF SIP account.
