@@ -6,8 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "thunderdome"
 version = "0.1.0"
 description = "Python 3D LED rendering foundation for Thunderdome"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["aiohttp>=3.10,<4"]
+
+[project.urls]
+Homepage = "https://github.com/dogsbodytech/thunderdome"
+Repository = "https://github.com/dogsbodytech/thunderdome"
 
 [project.scripts]
 thunderdome = "thunderdome.cli:main"

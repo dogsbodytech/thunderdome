@@ -109,6 +109,16 @@ thunderdome simulator serve
 
 The simulator is fully offline at runtime. Three.js r160 / 0.160.0, OrbitControls, and the Three.js licence notice are vendored under `simulator/static/vendor/`; no npm install or remote CDN is required. Use `--host`, `--port`, `--geometry`, `--routes`, `--positions`, and `--open-browser`/`--no-open-browser` to customize serving. Defaults are project-root-safe; explicit relative paths remain relative to the calling directory. Geometry, routes, and positions must describe the same dome. See `docs/simulator.md` for API endpoints, controls, path rules, and the implications of binding to `0.0.0.0`.
 
+## xLights layout export
+
+Export the five 1,000-node Poly Line models and `Thunderdome` model group from the canonical geometry and structured routes:
+
+```bash
+thunderdome xlights generate --output /path/to/xlights_rgbeffects.xml
+```
+
+The export does not configure xLights controllers, sequences, or effects. See [`docs/xlights.md`](docs/xlights.md).
+
 ## Safe DDP dry run
 
 Perform a dry run first. It validates the local controller configuration, creates a logical 5,000-pixel frame, splits it into five 1,000-pixel frames, and reports the DDP packet counts. `--dry-run` does **not** open network sockets or send UDP packets.
@@ -208,9 +218,9 @@ thunderdome ddp-all controller-colors \
 
 `ddp-all --dry-run` remains deliberately one-shot and never opens UDP sockets or sends UDP packets. It cannot be combined with `--hold`, `--duration`, or `--loops`.
 
-### Future spatial animations
+### Frame-loop implementation
 
-The reusable `thunderdome.animation.run_frame_loop` accepts either a static-frame callback, a callback that receives `(frame_number, elapsed_seconds)`, or a frame generator. This lets an effect render a different 5,000-pixel `RGBFrame` for each iteration while retaining the same scheduler and direct-DDP transports. A future clock-face or clock-hand sweep can therefore generate a frame from its current angle on each tick, then use the normal single- or multi-controller sender.
+The reusable `thunderdome.animation.run_frame_loop` drives static frames and the implemented time-varying effects with the same scheduler and direct-DDP transports.
 
 See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
 
