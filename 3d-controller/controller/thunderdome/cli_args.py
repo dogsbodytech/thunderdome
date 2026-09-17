@@ -1,6 +1,7 @@
 """Argument parser construction for the public controller CLI."""
 from __future__ import annotations
 import argparse
+import math
 from typing import Sequence
 from .config import CONTROLLER_LED_COUNT, CONTROLLERS_PATH, DDP_CHUNK_LEDS, DDP_PORT, EFFECT_DEFAULTS_PATH, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, ROUTES_PATH
 from .effects.Procedural import SPACE_BODIES
@@ -13,7 +14,7 @@ def _host(parser: argparse.ArgumentParser) -> None:
 def _add_loop_options(parser: argparse.ArgumentParser) -> None:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--hold", action="store_true", help="resend until Ctrl+C")
-    mode.add_argument("--duration", type=float, help="resend for this many seconds")
+    mode.add_argument("--duration", type=_finite_float, help="resend for this many seconds")
     mode.add_argument("--loops", type=int, help="resend exactly this many frames")
     parser.add_argument("--fps", type=int, default=20, help="frame rate for held/looped output (1..60; default: 20)")
 
@@ -53,6 +54,16 @@ def _positive_int(value: str) -> int:
     return parsed
 
 
+def _finite_float(value: str) -> float:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError) as exc:
+        raise argparse.ArgumentTypeError(f"expected a finite number, got {value!r}") from exc
+    if not math.isfinite(parsed):
+        raise argparse.ArgumentTypeError(f"expected a finite number, got {value!r}")
+    return parsed
+
+
 def _add_spatial_effect_options(parser: argparse.ArgumentParser) -> None:
     _controllers_option(parser)
     _output_options(parser)
@@ -61,12 +72,12 @@ def _add_spatial_effect_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--color", default="FFFFFF")
     parser.add_argument("--background", default="000000")
     parser.add_argument("--brightness", type=int, default=32)
-    parser.add_argument("--speed-mps", type=float, default=0.5, help="movement speed in metres per second")
+    parser.add_argument("--speed-mps", type=_finite_float, default=0.5, help="movement speed in metres per second")
     parser.add_argument("--exclude-tail", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--hold", action="store_true")
-    mode.add_argument("--duration", type=float)
+    mode.add_argument("--duration", type=_finite_float)
     mode.add_argument("--loops", type=_positive_int, help="complete spatial movement cycles")
     parser.add_argument("--fps", type=int, default=30)
 
@@ -81,7 +92,7 @@ def _add_effect_runtime_options(parser: argparse.ArgumentParser, *, loops: bool 
     parser.add_argument("--dry-run", action="store_true")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--hold", action="store_true")
-    mode.add_argument("--duration", type=float)
+    mode.add_argument("--duration", type=_finite_float)
     if loops:
         mode.add_argument("--loops", type=_positive_int, help="complete effect cycles")
     parser.add_argument("--fps", type=int, default=30)
@@ -198,58 +209,58 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     _output_options(clock)
     clock.add_argument("--positions", default=str(LED_POSITIONS_PATH)); clock.add_argument("--geometry", default=str(GEOMETRY_PATH))
     clock.add_argument("--color", default="FFFFFF"); clock.add_argument("--background", default="000000")
-    clock.add_argument("--brightness", type=int, default=32); clock.add_argument("--width-mm", type=float, default=300)
-    clock.add_argument("--rotation-seconds", type=float, default=3); clock.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise")
-    clock.add_argument("--angle-offset-degrees", type=float, default=0); clock.add_argument("--exclude-tail", action="store_true"); clock.add_argument("--dry-run", action="store_true")
-    mode=clock.add_mutually_exclusive_group(); mode.add_argument("--hold", action="store_true"); mode.add_argument("--duration", type=float); mode.add_argument("--rotations", type=int)
+    clock.add_argument("--brightness", type=int, default=32); clock.add_argument("--width-mm", type=_finite_float, default=300)
+    clock.add_argument("--rotation-seconds", type=_finite_float, default=3); clock.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise")
+    clock.add_argument("--angle-offset-degrees", type=_finite_float, default=0); clock.add_argument("--exclude-tail", action="store_true"); clock.add_argument("--dry-run", action="store_true")
+    mode=clock.add_mutually_exclusive_group(); mode.add_argument("--hold", action="store_true"); mode.add_argument("--duration", type=_finite_float); mode.add_argument("--rotations", type=int)
     clock.add_argument("--fps", type=int, default=30)
     rings = effect_sub.add_parser("ExpandingRings", aliases=("expanding-rings",), help="render an expanding XYZ spherical shell through DDP")
     _add_spatial_effect_options(rings)
     rings.add_argument("--origin", default="apex", metavar="apex|centre|base|X,Y,Z")
-    rings.add_argument("--thickness-mm", type=float, default=200)
+    rings.add_argument("--thickness-mm", type=_finite_float, default=200)
     wave = effect_sub.add_parser("HeightWave", aliases=("height-wave",), help="render a moving horizontal height band through DDP")
     _add_spatial_effect_options(wave)
     wave.add_argument("--direction", choices=("up", "down", "bounce"), default="up")
-    wave.add_argument("--height-mm", type=float, default=200)
+    wave.add_argument("--height-mm", type=_finite_float, default=200)
     auto = effect_sub.add_parser("Auto", aliases=("auto",), help="cycle the registry playlist with crossfades")
     _controllers_option(auto)
     _output_options(auto)
     auto.add_argument("--positions", default=str(LED_POSITIONS_PATH)); auto.add_argument("--geometry", default=str(GEOMETRY_PATH))
     auto.add_argument("--effects", "--playlist", dest="effects"); auto.add_argument("--preset", choices=tuple(PRESETS))
-    auto.add_argument("--interval", type=float, default=30); auto.add_argument("--transition", "--crossfade", dest="transition", type=float, default=2)
+    auto.add_argument("--interval", type=_finite_float, default=30); auto.add_argument("--transition", "--crossfade", dest="transition", type=_finite_float, default=2)
     auto.add_argument("--shuffle", action="store_true"); auto.add_argument("--seed", type=int, default=1)
-    mode=auto.add_mutually_exclusive_group(); mode.add_argument("--duration", type=float); mode.add_argument("--loops", "--cycles", dest="cycles", type=_positive_int)
+    mode=auto.add_mutually_exclusive_group(); mode.add_argument("--duration", type=_finite_float); mode.add_argument("--loops", "--cycles", dest="cycles", type=_positive_int)
     auto.add_argument("--brightness", type=int, default=32); auto.add_argument("--fps", type=int, default=30); auto.add_argument("--exclude-tail", action="store_true"); auto.add_argument("--dry-run", action="store_true")
 
     fire = effect_sub.add_parser("Fire", aliases=("fire",), help="render rising turbulent XYZ flames")
     _add_effect_runtime_options(fire)
-    fire.add_argument("--speed", type=float, default=1.0); fire.add_argument("--flame-height-m", type=float, default=2.5); fire.add_argument("--turbulence", type=float, default=.65); fire.add_argument("--cooling", type=float, default=.35); fire.add_argument("--scale", type=float, default=1.0); fire.add_argument("--palette", default="fire"); fire.add_argument("--seed", type=int, default=1)
+    fire.add_argument("--speed", type=_finite_float, default=1.0); fire.add_argument("--flame-height-m", type=_finite_float, default=2.5); fire.add_argument("--turbulence", type=_finite_float, default=.65); fire.add_argument("--cooling", type=_finite_float, default=.35); fire.add_argument("--scale", type=_finite_float, default=1.0); fire.add_argument("--palette", default="fire"); fire.add_argument("--seed", type=int, default=1)
 
     plane = effect_sub.add_parser("RotatingPlane", aliases=("rotating-plane",), help="render a rotating signed-distance plane")
     _add_effect_runtime_options(plane, loops=True)
-    plane.add_argument("--axis", default="vertical", metavar="vertical|horizontal|tilted|X,Y,Z", help="rotation axis: vertical=(0,0,1), horizontal=(1,0,0), tilted=normalize(1,1,1), or explicit X,Y,Z"); plane.add_argument("--rotation-seconds", type=float, default=10); plane.add_argument("--thickness-mm", type=float, default=220); plane.add_argument("--color", default="FFFFFF"); plane.add_argument("--background", default="000000"); plane.add_argument("--trail-degrees", type=float, default=20, metavar="0..180", help="directional fading trail in degrees; 0 disables, 180 covers all unique plane orientations"); plane.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); plane.add_argument("--seed", type=int, default=1)
+    plane.add_argument("--axis", default="vertical", metavar="vertical|horizontal|tilted|X,Y,Z", help="rotation axis: vertical=(0,0,1), horizontal=(1,0,0), tilted=normalize(1,1,1), or explicit X,Y,Z"); plane.add_argument("--rotation-seconds", type=_finite_float, default=10); plane.add_argument("--thickness-mm", type=_finite_float, default=220); plane.add_argument("--color", default="FFFFFF"); plane.add_argument("--background", default="000000"); plane.add_argument("--trail-degrees", type=_finite_float, default=20, metavar="0..180", help="directional fading trail in degrees; 0 disables, 180 covers all unique plane orientations"); plane.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); plane.add_argument("--seed", type=int, default=1)
 
     radar = effect_sub.add_parser("Radar", aliases=("radar",), help="render a rotating XY radar beam")
     _add_effect_runtime_options(radar, loops=True)
-    radar.add_argument("--rotation-seconds", type=float, default=8); radar.add_argument("--beam-width-degrees", type=float, default=12); radar.add_argument("--trail-degrees", type=float, default=35); radar.add_argument("--range-m", type=float, default=9999); radar.add_argument("--vertical-falloff", type=float, default=0); radar.add_argument("--color", default="00FF80"); radar.add_argument("--background", default="000000"); radar.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); radar.add_argument("--seed", type=int, default=1)
+    radar.add_argument("--rotation-seconds", type=_finite_float, default=8); radar.add_argument("--beam-width-degrees", type=_finite_float, default=12); radar.add_argument("--trail-degrees", type=_finite_float, default=35); radar.add_argument("--range-m", type=_finite_float, default=9999); radar.add_argument("--vertical-falloff", type=_finite_float, default=0); radar.add_argument("--color", default="00FF80"); radar.add_argument("--background", default="000000"); radar.add_argument("--direction", choices=("clockwise", "counterclockwise"), default="clockwise"); radar.add_argument("--seed", type=int, default=1)
 
     aurora = effect_sub.add_parser("Aurora", aliases=("aurora",), help="render flowing luminous XYZ bands")
     _add_effect_runtime_options(aurora)
-    aurora.add_argument("--speed", type=float, default=.25); aurora.add_argument("--scale", type=float, default=1.2); aurora.add_argument("--band-width", type=float, default=.45); aurora.add_argument("--intensity", type=float, default=1); aurora.add_argument("--palette", default="mixed"); aurora.add_argument("--direction", default="1,0,0"); aurora.add_argument("--seed", type=int, default=1)
+    aurora.add_argument("--speed", type=_finite_float, default=.25); aurora.add_argument("--scale", type=_finite_float, default=1.2); aurora.add_argument("--band-width", type=_finite_float, default=.45); aurora.add_argument("--intensity", type=_finite_float, default=1); aurora.add_argument("--palette", default="mixed"); aurora.add_argument("--direction", default="1,0,0"); aurora.add_argument("--seed", type=int, default=1)
 
     flies = effect_sub.add_parser("Fireflies", aliases=("fireflies",), help="render deterministic 3D glowing particles")
     _add_effect_runtime_options(flies)
-    flies.add_argument("--count", type=_positive_int, default=25); flies.add_argument("--speed", type=float, default=.35); flies.add_argument("--glow-radius-mm", type=float, default=300); flies.add_argument("--lifetime-seconds", type=float, default=8); flies.add_argument("--color", default="FFFFB0"); flies.add_argument("--color-variation", type=float, default=.25); flies.add_argument("--seed", type=int, default=1)
+    flies.add_argument("--count", type=_positive_int, default=25); flies.add_argument("--speed", type=_finite_float, default=.35); flies.add_argument("--glow-radius-mm", type=_finite_float, default=300); flies.add_argument("--lifetime-seconds", type=_finite_float, default=8); flies.add_argument("--color", default="FFFFB0"); flies.add_argument("--color-variation", type=_finite_float, default=.25); flies.add_argument("--seed", type=int, default=1)
 
     twinkle = effect_sub.add_parser("Twinkle", aliases=("twinkle",), help="render stateful LED twinkles")
     _add_effect_runtime_options(twinkle)
     twinkle.set_defaults(brightness=255)
-    twinkle.add_argument("--density", type=float, default=.08); twinkle.add_argument("--spawn-rate", type=float, default=12); twinkle.add_argument("--fade-in", type=float, default=.25); twinkle.add_argument("--hold-time", dest="twinkle_hold", type=float, default=.25); twinkle.add_argument("--fade-out", type=float, default=.7); twinkle.add_argument("--minimum-brightness", type=float, default=.05); twinkle.add_argument("--maximum-brightness", type=float, default=1); twinkle.add_argument("--color", default="FFFFFF"); twinkle.add_argument("--mode", choices=("fixed", "random"), default="fixed"); twinkle.add_argument("--background", default="000000"); twinkle.add_argument("--color-change-speed", type=float, default=0); twinkle.add_argument("--seed", type=int, default=1)
+    twinkle.add_argument("--density", type=_finite_float, default=.08); twinkle.add_argument("--spawn-rate", type=_finite_float, default=12); twinkle.add_argument("--fade-in", type=_finite_float, default=.25); twinkle.add_argument("--hold-time", dest="twinkle_hold", type=_finite_float, default=.25); twinkle.add_argument("--fade-out", type=_finite_float, default=.7); twinkle.add_argument("--minimum-brightness", type=_finite_float, default=.05); twinkle.add_argument("--maximum-brightness", type=_finite_float, default=1); twinkle.add_argument("--color", default="FFFFFF"); twinkle.add_argument("--mode", choices=("fixed", "random"), default="fixed"); twinkle.add_argument("--background", default="000000"); twinkle.add_argument("--color-change-speed", type=_finite_float, default=0); twinkle.add_argument("--seed", type=int, default=1)
 
     for _name, _space_body in SPACE_BODIES.items():
         _space_body_parser = effect_sub.add_parser(_name, help=f"render {_space_body.description}")
         _add_effect_runtime_options(_space_body_parser)
-        _space_body_parser.add_argument("--speed", type=float, default=_space_body.speed, help="animation speed")
+        _space_body_parser.add_argument("--speed", type=_finite_float, default=_space_body.speed, help="animation speed")
         _space_body_parser.add_argument("--seed", type=int, default=1)
 
     all_ddp = groups.add_parser(

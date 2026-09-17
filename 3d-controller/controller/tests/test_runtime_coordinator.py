@@ -39,6 +39,14 @@ class RuntimeCoordinatorTests(unittest.TestCase):
                 self.assertFalse(result.accepted)
                 self.assertIn("MQTT", result.reason)
 
+    def test_duration_must_be_finite_and_positive(self):
+        for duration in (float("nan"), float("inf"), float("-inf"), 0.0):
+            with self.subTest(duration=duration), self.assertRaises(ValueError):
+                RuntimeCommand(CommandSource.BROWSER, CommandAction.APPLY_OVERRIDE, "request", "Fire", {}, OutputMode.NULL, duration_seconds=duration)
+
+        command = RuntimeCommand(CommandSource.BROWSER, CommandAction.APPLY_OVERRIDE, "request", "Fire", {}, OutputMode.NULL, duration_seconds=2.5)
+        self.assertEqual(command.duration_seconds, 2.5)
+
     def test_mqtt_override_requires_duration_and_omitted_output(self):
         self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
         missing_duration = self.coordinator.execute(self.mqtt_command(CommandAction.APPLY_OVERRIDE, duration=None))

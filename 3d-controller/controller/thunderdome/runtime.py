@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import enum
+import math
 import threading
 import time
 import uuid
@@ -54,8 +55,13 @@ class RuntimeCommand:
             raise ValueError("request_id is required")
         if self.priority < 0:
             raise ValueError("priority must be non-negative")
-        if self.duration_seconds is not None and self.duration_seconds <= 0:
-            raise ValueError("duration_seconds must be positive")
+        if self.duration_seconds is not None:
+            try:
+                valid_duration = math.isfinite(self.duration_seconds) and self.duration_seconds > 0
+            except (TypeError, OverflowError) as exc:
+                raise ValueError("duration_seconds must be a finite positive number") from exc
+            if not valid_duration:
+                raise ValueError("duration_seconds must be a finite positive number")
 
 
 @dataclass(frozen=True)
