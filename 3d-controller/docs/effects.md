@@ -17,7 +17,7 @@ Built-in default geometry, positions, and controller paths are project-root-safe
 
 ## Controller readiness
 
-For `--output ddp` or `--output both`, the controller sets every enabled WLED controller's master brightness to `255` before opening the DDP session. It does not alter controller power, realtime mode, or current-limit settings; power remains an explicit operator-controlled state. The earlier `--prepare-ddp` effect option was removed because setting WLED off before realtime streaming caused animations to disappear.
+For `--output ddp` or `--output both`, the controller sets every enabled WLED controller's master brightness to `255` before opening the DDP session. That brightness API call can affect WLED's on/off state, so power remains operator-controlled and must be prepared before live output; realtime mode and current-limit settings are not changed. The earlier `--prepare-ddp` effect option was removed because setting WLED off before realtime streaming caused animations to disappear.
 
 Required manual setup:
 
