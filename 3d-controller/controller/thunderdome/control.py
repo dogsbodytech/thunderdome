@@ -19,7 +19,7 @@ from .effects.ClockHand import angle_for_elapsed, render_clock_hand
 from .effects.ExpandingRings import render_expanding_rings
 from .effects.HeightWave import render_height_wave
 from .effects.Procedural import ProceduralRenderer, create_renderer
-from .effects.Registry import BY_NAME
+from .effects.Registry import BY_NAME, LEGACY_NAMES
 from .effect_defaults import EffectDefaults
 from .frame import RGBFrame
 from .runtime import CommandAction, CommandSource, DisplayDefinition, OutputMode, RuntimeCommand, RuntimeCoordinator
@@ -210,7 +210,7 @@ class ControlAPI:
         return web.json_response({"effects": effects})
 
     async def effect(self, request: web.Request) -> web.Response:
-        schema = EFFECT_SCHEMAS.get(request.match_info["name"])
+        schema = EFFECT_SCHEMAS.get(LEGACY_NAMES.get(request.match_info["name"], request.match_info["name"]))
         if schema is None:
             return web.json_response({"error": "unknown effect"}, status=404)
         return web.json_response(schema.as_dict())
