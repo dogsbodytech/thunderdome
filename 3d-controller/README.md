@@ -1,266 +1,99 @@
-# Thunderdome 3D Controller
+# Thunderdome 3D controller
 
-Thunderdome is a 3V 5/8 geodesic LED dome: **61 hubs**, **165 spars** (30 A, 55 B, 80 C), and five physical strings of 1,000 LEDs. LEDs follow spars; H061 is the apex.
+The 3D controller turns the dome's tracked geometry and LED routes into spatial RGB animation. Python renders one logical frame for **5,000 LEDs**, splits it into five 1,000-LED controller frames, and sends those frames directly to five WLED devices with DDP over UDP.
 
-## Active architecture
+The safe place to start is the local simulator. You can prove the software without powering the dome, contacting WLED, or sending DDP.
+
+## Start here
+
+**I have forgotten how this works:** [Start here](docs/START-HERE.md)
+
+That page leads to:
+
+1. [Cold start](docs/runbooks/cold-start.md) — the complete “remember nothing” path.
+2. [Software and simulator](docs/runbooks/software-and-simulator.md) — install and see a moving browser effect without hardware.
+3. [Physical dome startup](docs/runbooks/physical-dome-startup.md) — the explicit boundary where WLED and physical DDP begin.
+4. [First light and DDP](docs/runbooks/first-light-and-ddp.md) — layered commissioning and string identification.
+5. [Normal operation](docs/runbooks/normal-operation.md) and [shutdown](docs/runbooks/shutdown.md) — routine event use.
+
+Do not start with physical output. The simulator is the software milestone.
+
+## What does what?
 
 ```text
-validated geometry
--> confirmed physical string routes
--> generated XYZ LED positions
--> Python effects
--> one logical 5,000-pixel RGB frame
--> five 1,000-pixel controller frames
--> DDP over UDP
--> five WLED controllers
+geometry JSON + structured routes
+              |
+              v
+     Python position generation
+              |
+              v
+     Python effects render 5,000 RGB pixels
+              |
+       split by global range
+       /       |       \\
+      v        v        v
+   WLED 1   WLED 2   ... WLED 5
+      |        |        |
+   string 1 string 2 ... string 5
 ```
 
-Python owns spatial rendering and converts effects into the one logical 5,000-pixel RGB frame. The controller splits that frame into five local 1,000-pixel frames, then sends each frame directly to its WLED controller using DDP over UDP (default port 4048). WLED is the network LED output/controller; it does not own the XYZ mapping, and its native 2D ledmap is not an active mapping authority.
+- **Python controller:** geometry, routes, XYZ positions, effects, and the RGB value for every physical LED.
+- **WLED:** LED output/GPIO, chipset and colour order, LED count, network, power/current configuration, realtime state, and DDP reception.
+- **DDP:** the transport carrying Python-rendered RGB8 pixels to WLED. When an effect is run with `--output ddp`, WLED is not calculating that effect.
 
-- Geometry: `geometry/thunderdome_geometry.json`
-- Editable Blender source: `assets/blender/thunderdome_3v_5_8_scaled.blend`
-- Canonical structured routes: `geometry/routes/string_routes.json`
-- Generated positions: `geometry/generated/led_positions_3d.json` (derived and intentionally ignored)
-- Active Python package: `controller/thunderdome/`
-- Offline Stage A simulator: `simulator/static/` and `docs/simulator.md`
-- xLights layout export: [`docs/xlights.md`](docs/xlights.md)
-- Tests: `controller/tests/`
+The current Python path addresses all five WLED devices directly. Controller 1 is not a relay or master for application DDP.
 
-All five structured routes are authoritative. Their generated XYZ positions are nominal mathematical coordinates through exact hub centres, with no hub correction or symmetry inference. The first tail LED is the next 30 mm nominal position after the route endpoint, so it is offset below H061 by the residual pitch distance. Future calibration may adjust pitch, first offset, and tail geometry.
+## The important files
 
-## Clone and install
+| Purpose | File |
+| --- | --- |
+| Structural geometry authority | `geometry/thunderdome_geometry.json` |
+| LED traversal and allocation authority | `geometry/routes/string_routes.json` |
+| Derived positions (generated, ignored) | `geometry/generated/led_positions_3d.json` |
+| Local runtime controller configuration | `config/controllers.json` |
+| Configuration template | `config/controllers.example.json` |
+| Python package and CLI | `controller/thunderdome/` |
+| Local simulator assets | `simulator/static/` |
+| Tests | `controller/tests/` |
 
-From a new machine, clone the repository and install the controller in an isolated virtual environment:
+Generated positions are derived data. A fresh checkout may not contain them; [the simulator runbook](docs/runbooks/software-and-simulator.md) generates and validates them.
 
-```bash
-git clone https://github.com/dogsbodytech/thunderdome.git
-cd thunderdome/3d-controller
+## Physical controller map
 
-sudo apt update
-sudo apt install python3-venv
+The runtime uses zero-based internal `string_id` values, while people use controller/string numbers 1–5. Keep that distinction visible:
 
-python3 -m venv .venv
-source .venv/bin/activate
-
-python3 -m pip install --upgrade pip
-python3 -m pip install -e .
-
-thunderdome --help
-```
-
-The package requires Python 3.11 or later. Reactivate the environment with `source .venv/bin/activate` in each new shell before using `thunderdome`.
-
-An editable/source checkout uses the repository geometry, routes, simulator assets, `config/`, and generated-positions path. A normal wheel installs immutable geometry, routes, and simulator assets under Python's installation data directory (`share/thunderdome/`). Wheel installs keep mutable operator state outside those immutable resources: controllers and effect defaults use `${XDG_CONFIG_HOME:-~/.config}/thunderdome/`; generated positions use `${XDG_DATA_HOME:-~/.local/share}/thunderdome/`. Set `THUNDERDOME_CONFIG_DIR` and/or `THUNDERDOME_DATA_DIR` to choose explicit writable directories; both overrides also apply to source checkouts.
-
-## Configure the five controllers
-
-Create a local configuration file before using the multi-controller commands:
-
-```bash
-cp config/controllers.example.json config/controllers.json
-```
-
-`config/controllers.json` is intentionally ignored by Git so each installation can keep its local controller addresses. Update its five `host` values to match the deployed controller addresses below, then validate the file:
-
-```bash
-thunderdome controllers validate --controllers config/controllers.json
-thunderdome controllers summary --controllers config/controllers.json
-```
-
-| Controller | Address | String | Start hub | Global LEDs | Local LEDs |
-| --- | --- | ---: | --- | --- | --- |
+| Human controller/string | WLED address | Internal `string_id` | Start hub | Global frame range | Local range |
+| ---: | --- | ---: | --- | --- | --- |
 | 1 | `192.168.12.10` | 0 | H032 | 0..999 | 0..999 |
 | 2 | `192.168.12.20` | 1 | H033 | 1000..1999 | 0..999 |
 | 3 | `192.168.12.30` | 2 | H034 | 2000..2999 | 0..999 |
 | 4 | `192.168.12.40` | 3 | H035 | 3000..3999 | 0..999 |
 | 5 | `192.168.12.50` | 4 | H031 | 4000..4999 | 0..999 |
 
-The global ranges form the one logical frame. Each controller receives only its corresponding 1,000-pixel slice as local LEDs `0..999`; frames are sent directly to all enabled controllers, never relayed through controller 1.
+The DDP destination is UDP port `4048`. See [controller network reference](docs/reference/controller-network.md) and [physical installation reference](docs/reference/physical-installation.md).
 
-## Development and test setup
+## Technical reference
 
-The unit-test suite is self-contained: a fresh checkout can run it without `geometry/generated/led_positions_3d.json`. It creates temporary nominal-position data where a test needs it; installation and tests do not create the repository-local runtime artefact.
+- [Architecture](docs/architecture.md)
+- [WLED and DDP](docs/reference/wled-and-ddp.md)
+- [Source of truth](docs/reference/source-of-truth.md)
+- [Geometry](docs/geometry.md)
+- [Routes](docs/route-capture.md)
+- [Effects](docs/effects.md)
+- [Simulator technical reference](docs/simulator.md)
+- [Control service](docs/control-service.md) and [REST API](docs/api-rest.md)
+- [MQTT contract](docs/mqtt-integration-spec.md) — future adapter; not currently connected
+- [xLights export](docs/xlights.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
-```bash
-python3 -m unittest discover -s controller/tests -v
-```
+## External physical references
 
-## Runtime and spatial preparation
+The wider public repository contains the detailed installation material. The controller-local references link to it rather than copying it:
 
-Before starting the simulator, spatial effects, Auto mode, the control service, or any other feature that consumes nominal LED positions, prepare the derived runtime data:
+- [Dome construction](https://github.com/dogsbodytech/thunderdome/blob/main/Dome.md)
+- [Lighting and power](https://github.com/dogsbodytech/thunderdome/blob/main/Lighting.md)
+- [Project software overview](https://github.com/dogsbodytech/thunderdome/blob/main/Software.md)
 
-```bash
-thunderdome geometry validate
-thunderdome route validate
-thunderdome positions generate
-thunderdome positions validate
-```
+## Scope
 
-`positions generate` deterministically creates `geometry/generated/led_positions_3d.json` from the tracked geometry and routes. The file is intentionally ignored by Git, so it is absent from a fresh checkout. Regenerate it after authoritative geometry or route changes. A missing positions file at runtime is a preparation issue; installation and runtime do not generate it silently.
-
-## Offline static simulator
-
-Stage A of the simulator is a local browser viewer for authoritative dome geometry, routes, and generated LED positions. It renders hubs, spars, H061, optional real hub-ID labels, tails, and all 5,000 generated XYZ LED records with diagnostic string/controller colours. It does **not** stream live effect frames, change default output, contact WLED, or send DDP packets.
-
-```bash
-thunderdome simulator serve
-# then open http://127.0.0.1:8080/
-```
-
-The simulator is fully offline at runtime. Three.js r160 / 0.160.0, OrbitControls, and the Three.js licence notice are vendored under `simulator/static/vendor/`; no npm install or remote CDN is required. Use `--host`, `--port`, `--geometry`, `--routes`, `--positions`, and `--open-browser`/`--no-open-browser` to customize serving. Defaults are project-root-safe; explicit relative paths remain relative to the calling directory. Geometry, routes, and positions must describe the same dome. See `docs/simulator.md` for API endpoints, controls, path rules, and the implications of binding to `0.0.0.0`.
-
-## xLights layout export
-
-Export the five 1,000-node Poly Line models and `Thunderdome` model group from the canonical geometry and structured routes:
-
-```bash
-thunderdome xlights generate --output /path/to/xlights_rgbeffects.xml
-```
-
-The export does not configure xLights controllers, sequences, or effects. See [`docs/xlights.md`](docs/xlights.md).
-
-## Safe DDP dry run
-
-Perform a dry run first. It validates the local controller configuration, creates a logical 5,000-pixel frame, splits it into five 1,000-pixel frames, and reports the DDP packet counts. `--dry-run` does **not** open network sockets or send UDP packets.
-
-```bash
-thunderdome ddp-all controller-colors \
-  --controllers config/controllers.json \
-  --brightness 16 \
-  --dry-run
-```
-
-`controller-colors` gives each controller's local frame a distinct colour in the generated frame. After confirming the dry-run output and only when the hardware/network is ready, remove `--dry-run` to transmit it. Start at low brightness. Other multi-controller commands are `ddp-all clear` and `ddp-all solid --color FF0000 --brightness 16`.
-
-For a single-controller diagnostic, use `thunderdome ddp clear --host WLED_HOST` or `thunderdome ddp pixel --host WLED_HOST 0 --color FF0000 --brightness 16`; these commands transmit immediately, so do not use them as a dry-run substitute.
-
-## Application-rendered spatial effects
-
-The `thunderdome effect` commands render from generated 5,000-LED XYZ positions and then reuse the existing multi-controller DDP fan-out. Implemented effects are `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, and `auto` showcase mode.
-
-Complete the runtime and spatial preparation above, then use dry-run before hardware and start at safe brightness:
-
-```bash
-thunderdome effect auto \
-  --controllers config/controllers.example.json \
-  --playlist fire,aurora,fireflies \
-  --loops 1 \
-  --dry-run
-
-thunderdome effect auto \
-  --controllers config/controllers.json \
-  --preset calm \
-  --brightness 24
-```
-
-For live DDP output, the controller prepares every enabled WLED controller by setting its master brightness to `255` before opening the DDP session. That brightness API call can affect WLED's on/off state, so power remains operator-controlled and must be prepared before live output; realtime mode and current-limit settings are not changed. The earlier `--prepare-ddp` effect option was removed because setting WLED off before realtime streaming caused animations to disappear. `rotating-plane` uses true 3D axis rotation (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and precomputes its plane/trail samples once per frame; LEDs then only do signed-distance work against the bounded samples. `--trail-degrees` accepts `0..180`, where zero disables the trail and values above 180 are rejected. Auto crossfades preserve incoming effect time across interval boundaries. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
-
-## Realtime live mode and DDP streaming
-
-A normal `ddp clear`, `solid`, `pixel`, or `range` command sends **one** DDP frame and exits. WLED may leave realtime mode when its configured realtime timeout expires, then restore its previous WLED effect. Use a held frame or animation loop when output must remain active.
-
-### Set WLED realtime live mode
-
-Use the WLED JSON state API through the controller CLI to explicitly enable or disable WLED live mode:
-
-```bash
-thunderdome controller live --host 192.168.12.10 on
-thunderdome controller live --host 192.168.12.10 off
-
-thunderdome controllers live --controllers config/controllers.json on
-thunderdome controllers live --controllers config/controllers.json off
-```
-
-The multi-controller form attempts every enabled controller and reports each result; it returns a non-zero status if any controller cannot be updated.
-
-### Hold or repeat a static frame
-
-`--hold`, `--duration`, and `--loops` use the same Python frame-loop engine as future animations. They are mutually exclusive. `--fps` defaults to 20 when a loop mode is used and must be in the range 1..60. Each session reuses its UDP socket(s), rather than creating a socket per frame. Ctrl+C stops cleanly and reports frames sent and elapsed time.
-
-```bash
-# Keep one red pixel active until Ctrl+C.
-thunderdome ddp pixel \
-  --host 192.168.12.10 \
-  --led-count 1000 \
-  20 --color FF0000 --brightness 255 \
-  --hold --fps 20
-
-# Keep a low-brightness blue frame active for 10 seconds.
-thunderdome ddp solid \
-  --host 192.168.12.10 \
-  --led-count 1000 \
-  --color 0000FF --brightness 32 \
-  --duration 10 --fps 20
-
-# Send exactly 100 copies of a static frame.
-thunderdome ddp pixel \
-  --host 192.168.12.10 \
-  --led-count 1000 \
-  20 --color FF0000 --brightness 255 \
-  --loops 100 --fps 20
-```
-
-The same controls apply to the one logical 5,000-pixel multi-controller frame:
-
-```bash
-thunderdome ddp-all controller-colors \
-  --controllers config/controllers.json \
-  --brightness 16 --hold --fps 20
-
-thunderdome ddp-all clear \
-  --controllers config/controllers.json \
-  --duration 5 --fps 10
-
-thunderdome ddp-all controller-colors \
-  --controllers config/controllers.json \
-  --brightness 16 --loops 200 --fps 20
-```
-
-`ddp-all --dry-run` remains deliberately one-shot and never opens UDP sockets or sends UDP packets. It cannot be combined with `--hold`, `--duration`, or `--loops`.
-
-### Frame-loop implementation
-
-The reusable `thunderdome.animation.run_frame_loop` drives static frames and the implemented time-varying effects with the same scheduler and direct-DDP transports.
-
-See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
-
-## Persistent WLED control and spatial effects
-
-WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. Live DDP effect output sets enabled controllers' WLED master brightness to `255` when its output session opens; power remains an explicit operator-controlled state.
-
-```bash
-thunderdome controllers power on --controllers config/controllers.json
-thunderdome effect clock-hand --controllers config/controllers.json \
-  --positions geometry/generated/led_positions_3d.json --brightness 32 \
-  --color FFFFFF --background 000000 --width-mm 300 \
-  --rotation-seconds 3 --fps 30 --hold
-```
-
-`clock-hand` renders all 5,000 LED records from generated XYZ data and fans them out over DDP. Its centre is authoritative geometry hub H061's XY coordinate, never an LED-derived bound or average. Width is the full visible width in millimetres; zero degrees points along world `+X`; clockwise is viewed from above; and `--angle-offset-degrees` aligns the installation. Tails are included by default; use `--exclude-tail` to omit them. Because tails descend from H061 and share its XY location, they normally form a continuously lit centre at every angle.
-
-The implemented spatial effects are `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, and `auto`; see [`docs/effects.md`](docs/effects.md) for the complete command table and operational guidance. `expanding-rings` is a true XYZ spherical shell rather than a flat XY ring. Its `--origin` accepts `apex` (H061 XYZ), `centre` (H061 X/Y plus the midpoint of dome-only Z bounds), `base` (H061 X/Y plus dome-only minimum Z), or explicit `X,Y,Z` metres. Tails use real XYZ positions by default; `--exclude-tail` explicitly removes them.
-
-```bash
-# True XYZ spherical shell expands from H061.
-thunderdome effect expanding-rings \
-  --controllers config/controllers.json \
-  --origin apex --speed-mps 1.0 --thickness-mm 250 \
-  --brightness 24 --loops 2
-
-# A full-height bouncing band reverses at the selected Z bounds.
-thunderdome effect height-wave \
-  --controllers config/controllers.json \
-  --direction bounce --height-mm 300 --brightness 24 --hold
-```
-
-For effects that expose `--loops`, loop controls are mutually exclusive with `--duration` and `--hold`. Fire, aurora, and fireflies use `--duration` or `--hold` instead of loops. Use `--dry-run` first to validate local configuration and real scheduler frame generation without UDP or HTTP. Start at low brightness and Ctrl+C cleanly stops held or auto output.
-
-To restore native fallback output, address every controller (for example `controllers power ... on`, `controllers brightness ... 64`, then `controllers effect ... EFFECT_ID`). Native WLED effects run independently and are not guaranteed spatially or phase synchronized; use Pi-rendered DDP for one coherent dome effect.
-
-## Stage B live simulator output
-
-Spatial effects now preview to the local simulator by default. Start `thunderdome simulator serve`, then run an effect normally. Use `--output ddp --controllers config/controllers.json` only for deliberate physical output, `--output both` for both destinations, and `--output null` for a no-network render. The simulator uses local binary WebSockets and never contacts WLED.
-
-## Stage C1 control service
-
-`thunderdome control serve` hosts the simulator plus local-only control APIs. It uses one shared runtime coordinator for browser/API commands and future MQTT integration, with baseline and temporary-override arbitration. Simulator output and brightness `255` are the defaults. Physical DDP is unavailable unless the service is started with both `--controllers FILE` and `--allow-live-control`; browser clients cannot provide controller addresses and no simulator-to-DDP fallback exists. See [`docs/control-service.md`](docs/control-service.md).
+This directory documents and operates the Python controller, simulator, WLED/DDP boundary, and controller-specific commissioning. It does not document whole-project deployment, physical electrical isolation, router administration, or DNS cutover. Where this component lacks a fact, it says **NOT CURRENTLY CAPTURED** instead of guessing.
