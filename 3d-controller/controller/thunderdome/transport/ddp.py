@@ -129,8 +129,21 @@ def build_ddp_packet(payload: bytes, *, byte_offset: int = 0, is_last: bool = Tr
     return header + bytes(payload)
 
 
-def packets_for_frame(frame: bytes | bytearray, *, chunk_leds: int = DDP_CHUNK_LEDS) -> list[bytes]:
-    return [build_ddp_packet(chunk.payload, byte_offset=chunk.byte_offset, is_last=chunk.is_last) for chunk in chunk_frame(frame, chunk_leds=chunk_leds)]
+def packets_for_frame(
+    frame: bytes | bytearray,
+    *,
+    chunk_leds: int = DDP_CHUNK_LEDS,
+    destination_id: int = DDP_DESTINATION_ID,
+) -> list[bytes]:
+    return [
+        build_ddp_packet(
+            chunk.payload,
+            byte_offset=chunk.byte_offset,
+            is_last=chunk.is_last,
+            destination_id=destination_id,
+        )
+        for chunk in chunk_frame(frame, chunk_leds=chunk_leds)
+    ]
 
 
 def normalize_host(host: str) -> str:
@@ -151,11 +164,13 @@ class DirectDDPSession:
         *,
         port: int = DDP_PORT,
         chunk_leds: int = DDP_CHUNK_LEDS,
+        destination_id: int = DDP_DESTINATION_ID,
         socket_factory: Callable[..., socket.socket] = socket.socket,
     ) -> None:
         self.host = host
         self.port = port
         self.chunk_leds = chunk_leds
+        self.destination_id = destination_id
         self._socket_factory = socket_factory
         self._socket: socket.socket | None = None
 
@@ -179,12 +194,21 @@ class DirectDDPSession:
             frame,
             port=self.port,
             chunk_leds=self.chunk_leds,
+            destination_id=self.destination_id,
             sock=self._socket,
         )
 
 
-def send_frame(host: str, frame: bytes | bytearray, *, port: int = DDP_PORT, chunk_leds: int = DDP_CHUNK_LEDS, sock: socket.socket | None = None) -> int:
-    packets = packets_for_frame(frame, chunk_leds=chunk_leds)
+def send_frame(
+    host: str,
+    frame: bytes | bytearray,
+    *,
+    port: int = DDP_PORT,
+    chunk_leds: int = DDP_CHUNK_LEDS,
+    destination_id: int = DDP_DESTINATION_ID,
+    sock: socket.socket | None = None,
+) -> int:
+    packets = packets_for_frame(frame, chunk_leds=chunk_leds, destination_id=destination_id)
     dest_host = normalize_host(host)
     owns_socket = sock is None
     if sock is None:
