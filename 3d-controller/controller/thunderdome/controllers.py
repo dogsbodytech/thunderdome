@@ -25,6 +25,7 @@ class ControllerSet:
 def load_controllers(path)->ControllerSet:
  try: d=json.loads(Path(path).read_text()); ddp=DDPDefaults(**d['ddp']); cs=tuple(Controller(**x) for x in d['controllers'])
  except Exception as e: raise ControllerConfigError(f'invalid controller config: {e}') from e
+ if not 1<=ddp.port<=65535 or ddp.chunk_size<=0 or not 0<=ddp.destination_id<=255 or ddp.timeout_seconds<=0: raise ControllerConfigError('invalid DDP port, chunk size, destination ID, or timeout')
  if len(cs)!=5 or {c.controller_number for c in cs}!={1,2,3,4,5} or {c.string_id for c in cs}!={0,1,2,3,4}: raise ControllerConfigError('requires controllers 1..5 and strings 0..4')
  if sorted((c.global_start,c.global_end) for c in cs)!=[(i*CONTROLLER_LED_COUNT,i*CONTROLLER_LED_COUNT+CONTROLLER_LED_COUNT-1) for i in range(5)]: raise ControllerConfigError('ranges must completely cover 0..4999 in blocks of 1000')
  if any((c.string_id,c.start_hub)!=EXPECTED[c.controller_number] or c.local_led_count!=CONTROLLER_LED_COUNT or not c.host.strip() for c in cs): raise ControllerConfigError('invalid controller allocation, host, or LED count')

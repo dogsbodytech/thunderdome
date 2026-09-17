@@ -1,3 +1,3 @@
 # Route capture
 
-Write manual routes as ordered hubs, for example `H032 > H019 > ... > H061`. Each adjacent pair must be a real spar. Hubs may repeat. Spars may not be shared by different strings. Every string ends at H061. The confirmed reference route is in `geometry/reference_string_route.md`; later strings will be derived using 72-degree rotational symmetry, with human confirmation authoritative.
+The five authoritative routes are structured in `geometry/routes/string_routes.json` as ordered hubs with controller/string and global-index allocation. Each adjacent pair must be a real spar. Hubs may repeat; spars may not be shared by different strings; every string ends at H061. Geometry derives spar IDs, types, lengths, and route summaries. Rotational symmetry is not used to infer active routes.

@@ -1,4 +1,5 @@
 import json,sys,tempfile,unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import Mock, patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
@@ -30,3 +31,20 @@ class MultiDDPTests(unittest.TestCase):
    with MultiControllerDDPSession(self.config,sender=sender) as session: results=session.send_frame(RGBFrame.allocate(LOGICAL_LED_COUNT))
   self.assertEqual(set(attempted),{controller.host for controller in self.config.controllers})
   self.assertEqual([result.controller_number for result in results if result.error],[2])
+ def test_configured_destination_and_timeout_reach_each_controller(self):
+  config=replace(self.config,ddp=replace(self.config.ddp,destination_id=7,timeout_seconds=.25))
+  sockets=[Mock() for _ in config.controllers]; calls=[]
+  def sender(host,*_args,**kwargs): calls.append((host,kwargs)); return 3
+  with patch('thunderdome.transport.multi_ddp.socket.socket',side_effect=sockets):
+   with MultiControllerDDPSession(config,sender=sender) as session: results=session.send_frame(RGBFrame.allocate(LOGICAL_LED_COUNT))
+  self.assertTrue(all(result.error is None for result in results))
+  self.assertEqual({kwargs['destination_id'] for _host,kwargs in calls},{7})
+  for sock in sockets: sock.settimeout.assert_called_once_with(.25)
+ def test_parallel_worker_pool_is_reused_and_shutdown(self):
+  executor=Mock(); executor.map.side_effect=lambda function,items:list(map(function,items)); factory=Mock(return_value=executor)
+  with patch('thunderdome.transport.multi_ddp.socket.socket',side_effect=[Mock() for _ in self.config.controllers]):
+   session=MultiControllerDDPSession(self.config,sender=Mock(return_value=3),executor_factory=factory)
+   session.send_frame(RGBFrame.allocate(LOGICAL_LED_COUNT)); session.send_frame(RGBFrame.allocate(LOGICAL_LED_COUNT)); session.close()
+  factory.assert_called_once_with(max_workers=5)
+  self.assertEqual(executor.map.call_count,2)
+  executor.shutdown.assert_called_once_with(wait=True)

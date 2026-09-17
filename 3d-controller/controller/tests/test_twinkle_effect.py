@@ -106,7 +106,7 @@ class TwinkleEffectTests(unittest.TestCase):
             store.save("Twinkle", {"density": .12, "mode": "random"})
             renderer = Mock(render=lambda _elapsed: RGBFrame.allocate(COUNT))
             args = parse_args(["effect", "Auto", "--effects", "Twinkle", "--duration", ".2", "--dry-run"])
-            with patch("thunderdome.cli.PROJECT_ROOT", root), patch("thunderdome.cli.SpatialContext.load", return_value=self.ctx), patch("thunderdome.effects.Registry.create_renderer", return_value=renderer) as create, patch("thunderdome.cli._send_effect_frames", return_value=0):
+            with patch("thunderdome.cli.EFFECT_DEFAULTS_PATH", root / "config" / "effect-defaults.json"), patch("thunderdome.cli.SpatialContext.load", return_value=self.ctx), patch("thunderdome.effects.Registry.create_renderer", return_value=renderer) as create, patch("thunderdome.cli._send_effect_frames", return_value=0):
                 self.assertEqual(cli._run_auto(args), 0)
             self.assertEqual(create.call_args.kwargs["density"], .12)
             self.assertEqual(create.call_args.kwargs["mode"], "random")

@@ -80,6 +80,9 @@ class DDPTests(unittest.TestCase):
         self.assertEqual(struct.unpack("!L", packets[1][4:8])[0], 6)
         self.assertEqual(struct.unpack("!L", packets[2][4:8])[0], 12)
 
+    def test_packets_use_configured_destination_id(self):
+        self.assertEqual(packets_for_frame(bytes(3), destination_id=7)[0][3], 7)
+
     def test_send_frame_uses_mocked_udp_socket(self):
         sock = Mock()
         count = send_frame("192.0.2.1", bytes(5 * 3), port=4048, chunk_leds=2, sock=sock)

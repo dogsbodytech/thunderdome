@@ -12,6 +12,7 @@ from thunderdome.control import ControlAPI, ControlSettings, make_effect_produce
 from thunderdome.effect_defaults import EffectDefaults
 from thunderdome.runtime import CommandSource, DisplayDefinition, OutputMode
 from thunderdome.schemas import validate_effect_parameters
+from position_fixtures import generated_positions_path
 
 
 class EffectDefaultsTests(unittest.TestCase):
@@ -59,11 +60,13 @@ class EffectDefaultsTests(unittest.TestCase):
     def test_auto_refreshes_saved_procedural_defaults_while_running(self):
         self.defaults.save("Twinkle", {"density": 0, "background": "100000"})
         parameters = validate_effect_parameters("Auto", {"effects": ["Twinkle"], "interval": 30, "transition": 0})
-        display = DisplayDefinition("Auto", parameters, OutputMode.NULL, CommandSource.BROWSER, "auto-defaults", time.monotonic())
-        producer, _, _ = make_effect_producer(display, self.defaults)
-        self.assertEqual(tuple(producer(0, .2).data[:3]), (16, 0, 0))
-        self.defaults.save("Twinkle", {"density": 0, "background": "001000"})
-        self.assertEqual(tuple(producer(1, .4).data[:3]), (0, 16, 0))
+        with generated_positions_path() as positions_path:
+            parameters["positions"] = str(positions_path)
+            display = DisplayDefinition("Auto", parameters, OutputMode.NULL, CommandSource.BROWSER, "auto-defaults", time.monotonic())
+            producer, _, _ = make_effect_producer(display, self.defaults)
+            self.assertEqual(tuple(producer(0, .2).data[:3]), (16, 0, 0))
+            self.defaults.save("Twinkle", {"density": 0, "background": "001000"})
+            self.assertEqual(tuple(producer(1, .4).data[:3]), (0, 16, 0))
 
 
 if __name__ == "__main__": unittest.main()

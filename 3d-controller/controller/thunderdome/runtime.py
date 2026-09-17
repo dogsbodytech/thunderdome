@@ -121,10 +121,30 @@ class RuntimeCoordinator:
     def _effective(self) -> DisplayDefinition | None:
         return self._override or self._baseline
 
+    def _validate_source_policy(self, command: RuntimeCommand) -> None:
+        allowed_sources = {
+            CommandAction.SET_BASELINE: {CommandSource.BROWSER, CommandSource.CLI, CommandSource.SYSTEM},
+            CommandAction.APPLY_OVERRIDE: {CommandSource.BROWSER, CommandSource.MQTT, CommandSource.SYSTEM},
+            CommandAction.CANCEL_OVERRIDE: {CommandSource.BROWSER, CommandSource.MQTT, CommandSource.SYSTEM},
+            CommandAction.RESTART_BASELINE: {CommandSource.BROWSER, CommandSource.CLI, CommandSource.SYSTEM},
+            CommandAction.STOP_ALL: {CommandSource.BROWSER, CommandSource.CLI, CommandSource.SYSTEM},
+            CommandAction.GET_STATUS: set(CommandSource),
+        }
+        if command.source not in allowed_sources.get(command.action, set()):
+            raise ValueError(f"{command.source.value.upper()} may not perform {command.action.value}")
+        if command.source == CommandSource.MQTT and command.action == CommandAction.APPLY_OVERRIDE:
+            if command.duration_seconds is None:
+                raise ValueError("MQTT override requires duration_seconds")
+            if command.output is not None:
+                raise ValueError("MQTT override must omit output")
+            if self._baseline is None:
+                raise ValueError("MQTT override requires a baseline output")
+
     def execute(self, command: RuntimeCommand) -> CommandResult:
         with self._lock:
             self._expire_locked()
             try:
+                self._validate_source_policy(command)
                 if command.action == CommandAction.SET_BASELINE:
                     candidate = self._definition(command)
                     self._baseline = candidate

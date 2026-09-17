@@ -47,19 +47,32 @@ class CommandSourceTests(AioHTTPTestCase):
         self.assertEqual(response.status, 200)
         self.assertEqual(body["status"]["baseline"]["source"], "browser")
 
-    async def test_declared_source_is_reported_in_status(self):
+    async def test_declared_source_is_rejected(self):
         response = await self.client.post(
             "/api/runtime/override",
             json={"effect": "Fire", "source": "mqtt", "output": "null", "duration_seconds": 5},
         )
         body = await response.json()
-        self.assertEqual(response.status, 200)
-        self.assertEqual(body["status"]["override"]["source"], "mqtt")
+        self.assertEqual(response.status, 400)
+        self.assertFalse(body["accepted"])
+        self.assertIn("source", body["error"])
 
     async def test_unknown_source_is_rejected(self):
         response = await self.client.post("/api/runtime/baseline", json={"effect": "Fire", "source": "wizard"})
         self.assertEqual(response.status, 400)
         self.assertFalse((await response.json())["accepted"])
+
+    async def test_effect_schema_lookup_resolves_canonical_and_legacy_names(self):
+        listing = await (await self.client.get("/api/effects")).json()
+        self.assertIn("Fire", [effect["name"] for effect in listing["effects"]])
+        self.assertNotIn("fire", [effect["name"] for effect in listing["effects"]])
+        for canonical, legacy in (("Fire", "fire"), ("ClockHand", "clock-hand")):
+            with self.subTest(canonical=canonical):
+                canonical_response = await self.client.get(f"/api/effects/{canonical}")
+                legacy_response = await self.client.get(f"/api/effects/{legacy}")
+                self.assertEqual(canonical_response.status, 200)
+                self.assertEqual(legacy_response.status, 200)
+                self.assertEqual(await legacy_response.json(), await canonical_response.json())
 
 
 if __name__ == "__main__":

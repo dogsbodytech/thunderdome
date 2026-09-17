@@ -13,12 +13,13 @@ from aiohttp import web
 
 from .animation.loop import run_frame_loop
 from .auto_scheduler import AutoScheduler, auto_duration
+from .config import EFFECT_DEFAULTS_PATH, GEOMETRY_PATH, LED_POSITIONS_PATH
 from .effects.Common import SpatialContext, parse_spatial_origin
 from .effects.ClockHand import angle_for_elapsed, render_clock_hand
 from .effects.ExpandingRings import render_expanding_rings
 from .effects.HeightWave import render_height_wave
 from .effects.Procedural import ProceduralRenderer, create_renderer
-from .effects.Registry import BY_NAME
+from .effects.Registry import BY_NAME, LEGACY_NAMES
 from .effect_defaults import EffectDefaults
 from .frame import RGBFrame
 from .runtime import CommandAction, CommandSource, DisplayDefinition, OutputMode, RuntimeCommand, RuntimeCoordinator
@@ -32,7 +33,7 @@ class ControlSettings:
     controllers_path: str | None = None
     live_control_enabled: bool = False
     default_output: OutputMode = OutputMode.SIMULATOR
-    effect_defaults_path: str = str(Path(__file__).resolve().parents[2] / "config/effect-defaults.json")
+    effect_defaults_path: str = str(EFFECT_DEFAULTS_PATH)
 
     @property
     def live_available(self) -> bool:
@@ -118,7 +119,7 @@ class FrameRuntime:
 
 def make_effect_producer(display: DisplayDefinition, defaults: EffectDefaults | None = None) -> tuple[Callable[[int, float], RGBFrame], int, float | None]:
     values = dict(display.parameters)
-    context = SpatialContext.load(values.pop("positions", None) or Path(__file__).resolve().parents[2] / "geometry/generated/led_positions_3d.json", values.pop("geometry", None) or Path(__file__).resolve().parents[2] / "geometry/thunderdome_geometry.json")
+    context = SpatialContext.load(values.pop("positions", None) or LED_POSITIONS_PATH, values.pop("geometry", None) or GEOMETRY_PATH)
     brightness = int(values.pop("brightness", 255)); fps = int(values.pop("fps", 30)); exclude_tail = bool(values.pop("exclude_tail", False))
     if display.effect == "Auto":
         scheduler = AutoScheduler(list(values["effects"]), interval=float(values["interval"]), transition=float(values["transition"]), shuffle=bool(values["shuffle"]), seed=int(values["seed"]))
@@ -209,7 +210,7 @@ class ControlAPI:
         return web.json_response({"effects": effects})
 
     async def effect(self, request: web.Request) -> web.Response:
-        schema = EFFECT_SCHEMAS.get(request.match_info["name"])
+        schema = EFFECT_SCHEMAS.get(LEGACY_NAMES.get(request.match_info["name"], request.match_info["name"]))
         if schema is None:
             return web.json_response({"error": "unknown effect"}, status=404)
         return web.json_response(schema.as_dict())
@@ -234,13 +235,15 @@ class ControlAPI:
     async def command(self, request: web.Request) -> web.Response:
         try:
             payload = await request.json()
+            if "source" in payload:
+                raise ValueError("source is server-owned for HTTP runtime commands")
             action = {"/api/runtime/baseline": CommandAction.SET_BASELINE, "/api/runtime/override": CommandAction.APPLY_OVERRIDE, "/api/runtime/cancel-override": CommandAction.CANCEL_OVERRIDE, "/api/runtime/restart-baseline": CommandAction.RESTART_BASELINE, "/api/runtime/stop": CommandAction.STOP_ALL}[request.path]
             output = payload.get("output")
             parsed_output = OutputMode(output) if output is not None else None
             if parsed_output in {OutputMode.DDP, OutputMode.BOTH} and not self.settings.live_available:
                 raise ValueError("live DDP output is not enabled")
             duration = payload.get("duration_seconds")
-            source = CommandSource(str(payload.get("source") or CommandSource.BROWSER))
+            source = CommandSource.BROWSER
             command = RuntimeCommand(source, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
             result = self.coordinator.execute(command)
             if result.accepted and action == CommandAction.APPLY_OVERRIDE and command.duration_seconds is not None:

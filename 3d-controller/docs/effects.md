@@ -17,19 +17,16 @@ Built-in default geometry, positions, and controller paths are project-root-safe
 
 ## Controller readiness
 
-Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness. The earlier `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear.
+For `--output ddp` or `--output both`, the controller sets every enabled WLED controller's master brightness to `255` before opening the DDP session. That brightness API call can affect WLED's on/off state, so power remains operator-controlled and must be prepared before live output; realtime mode and current-limit settings are not changed. The earlier `--prepare-ddp` effect option was removed because setting WLED off before realtime streaming caused animations to disappear.
 
-Recommended manual setup:
+Required manual setup:
 
 ```bash
 thunderdome controllers power on \
   --controllers config/controllers.json
-
-thunderdome controllers brightness 255 \
-  --controllers config/controllers.json
 ```
 
-Then run an effect directly, without preparation.
+Then run an effect directly; live DDP output prepares WLED brightness itself.
 
 ## Command table
 

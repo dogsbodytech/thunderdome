@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from thunderdome import cli
 from thunderdome.effects.Registry import BY_NAME, DEFAULT_PLAYLIST, PRESETS
 from thunderdome.frame import RGBFrame
+from position_fixtures import generated_positions_path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTROLLERS = ROOT / "config" / "controllers.example.json"
@@ -44,6 +45,12 @@ def fake_loop(times):
 
 
 class PR9CorrectionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._positions = generated_positions_path()
+        cls.positions_path = cls._positions.__enter__()
+        cls.addClassCleanup(cls._positions.__exit__, None, None, None)
+
     def test_effect_help_does_not_expose_prepare_ddp_and_options_are_relevant(self):
         commands = ["ClockHand", "ExpandingRings", "HeightWave", "Fire", "RotatingPlane", "Radar", "Aurora", "Fireflies", "Auto"]
         for command in commands:
@@ -102,7 +109,7 @@ class PR9CorrectionTests(unittest.TestCase):
             with self.subTest(command=command):
                 runner = fake_loop([0.0, 0.2, 0.4])
                 with patch("thunderdome.cli.run_frame_loop", runner), patch("thunderdome.cli.run_wled_operation") as wled:
-                    result = cli.main(["effect", command, "--controllers", str(CONTROLLERS), "--fps", "5", "--dry-run", *extra])
+                    result = cli.main(["effect", command, "--controllers", str(CONTROLLERS), "--positions", str(self.positions_path), "--fps", "5", "--dry-run", *extra])
                 self.assertEqual(result, 0)
                 self.assertGreaterEqual(len(runner.calls), 2)
                 wled.assert_not_called()
@@ -146,7 +153,7 @@ class PR9CorrectionTests(unittest.TestCase):
         with patch("thunderdome.cli.run_frame_loop", runner), patch("thunderdome.cli.run_wled_operation") as wled:
             result = cli.main([
                 "effect", "Auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora,fireflies",
-                "--cycles", "1", "--interval", "0.4", "--transition", "0.1", "--fps", "5", "--brightness", "24", "--dry-run",
+                "--positions", str(self.positions_path), "--cycles", "1", "--interval", "0.4", "--transition", "0.1", "--fps", "5", "--brightness", "24", "--dry-run",
             ])
         self.assertEqual(result, 0)
         self.assertGreaterEqual(len(runner.calls), 5)
@@ -174,7 +181,7 @@ class PR9CorrectionTests(unittest.TestCase):
         with patch("thunderdome.cli.run_frame_loop", runner), patch("thunderdome.cli.MultiControllerDDPSession", FailingSession):
             result = cli.main([
                 "effect", "Auto", "--controllers", str(CONTROLLERS), "--effects", "fire,aurora",
-                "--duration", "0.2", "--interval", "0.4", "--transition", "0", "--fps", "5", "--dry-run",
+                "--positions", str(self.positions_path), "--duration", "0.2", "--interval", "0.4", "--transition", "0", "--fps", "5", "--dry-run",
             ])
         self.assertEqual(result, 0)
         self.assertEqual(FailingSession.instances, 0)

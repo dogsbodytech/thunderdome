@@ -19,14 +19,14 @@ Python owns spatial rendering and converts effects into the one logical 5,000-pi
 
 - Geometry: `geometry/thunderdome_geometry.json`
 - Editable Blender source: `assets/blender/thunderdome_3v_5_8_scaled.blend`
-- Confirmed reference route: `geometry/reference_string_route.md`
-- Generated positions: `geometry/generated/led_positions_3d.json`
+- Canonical structured routes: `geometry/routes/string_routes.json`
+- Generated positions: `geometry/generated/led_positions_3d.json` (derived and intentionally ignored)
 - Active Python package: `controller/thunderdome/`
 - Offline Stage A simulator: `simulator/static/` and `docs/simulator.md`
+- xLights layout export: [`docs/xlights.md`](docs/xlights.md)
 - Tests: `controller/tests/`
-- Historical experiments: `archive/`
 
-All five manually captured routes are authoritative. Their generated XYZ positions are nominal mathematical coordinates through exact hub centres, with no hub correction or symmetry inference. The first tail LED is the next 30 mm nominal position after the route endpoint, so it is offset below H061 by the residual pitch distance. Future calibration may adjust pitch, first offset, and tail geometry.
+All five structured routes are authoritative. Their generated XYZ positions are nominal mathematical coordinates through exact hub centres, with no hub correction or symmetry inference. The first tail LED is the next 30 mm nominal position after the route endpoint, so it is offset below H061 by the residual pitch distance. Future calibration may adjust pitch, first offset, and tail geometry.
 
 ## Clone and install
 
@@ -49,6 +49,8 @@ thunderdome --help
 ```
 
 The package requires Python 3.11 or later. Reactivate the environment with `source .venv/bin/activate` in each new shell before using `thunderdome`.
+
+An editable/source checkout uses the repository geometry, routes, simulator assets, `config/`, and generated-positions path. A normal wheel installs immutable geometry, routes, and simulator assets under Python's installation data directory (`share/thunderdome/`). Wheel installs keep mutable operator state outside those immutable resources: controllers and effect defaults use `${XDG_CONFIG_HOME:-~/.config}/thunderdome/`; generated positions use `${XDG_DATA_HOME:-~/.local/share}/thunderdome/`. Set `THUNDERDOME_CONFIG_DIR` and/or `THUNDERDOME_DATA_DIR` to choose explicit writable directories; both overrides also apply to source checkouts.
 
 ## Configure the five controllers
 
@@ -75,17 +77,26 @@ thunderdome controllers summary --controllers config/controllers.json
 
 The global ranges form the one logical frame. Each controller receives only its corresponding 1,000-pixel slice as local LEDs `0..999`; frames are sent directly to all enabled controllers, never relayed through controller 1.
 
-## Test the controller
+## Development and test setup
 
-Run the automated tests and validate the data pipeline before connecting to hardware:
+The unit-test suite is self-contained: a fresh checkout can run it without `geometry/generated/led_positions_3d.json`. It creates temporary nominal-position data where a test needs it; installation and tests do not create the repository-local runtime artefact.
 
 ```bash
 python3 -m unittest discover -s controller/tests -v
+```
+
+## Runtime and spatial preparation
+
+Before starting the simulator, spatial effects, Auto mode, the control service, or any other feature that consumes nominal LED positions, prepare the derived runtime data:
+
+```bash
 thunderdome geometry validate
 thunderdome route validate
 thunderdome positions generate
 thunderdome positions validate
 ```
+
+`positions generate` deterministically creates `geometry/generated/led_positions_3d.json` from the tracked geometry and routes. The file is intentionally ignored by Git, so it is absent from a fresh checkout. Regenerate it after authoritative geometry or route changes. A missing positions file at runtime is a preparation issue; installation and runtime do not generate it silently.
 
 ## Offline static simulator
 
@@ -97,6 +108,16 @@ thunderdome simulator serve
 ```
 
 The simulator is fully offline at runtime. Three.js r160 / 0.160.0, OrbitControls, and the Three.js licence notice are vendored under `simulator/static/vendor/`; no npm install or remote CDN is required. Use `--host`, `--port`, `--geometry`, `--routes`, `--positions`, and `--open-browser`/`--no-open-browser` to customize serving. Defaults are project-root-safe; explicit relative paths remain relative to the calling directory. Geometry, routes, and positions must describe the same dome. See `docs/simulator.md` for API endpoints, controls, path rules, and the implications of binding to `0.0.0.0`.
+
+## xLights layout export
+
+Export the five 1,000-node Poly Line models and `Thunderdome` model group from the canonical geometry and structured routes:
+
+```bash
+thunderdome xlights generate --output /path/to/xlights_rgbeffects.xml
+```
+
+The export does not configure xLights controllers, sequences, or effects. See [`docs/xlights.md`](docs/xlights.md).
 
 ## Safe DDP dry run
 
@@ -117,10 +138,9 @@ For a single-controller diagnostic, use `thunderdome ddp clear --host WLED_HOST`
 
 The `thunderdome effect` commands render from generated 5,000-LED XYZ positions and then reuse the existing multi-controller DDP fan-out. Implemented effects are `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, and `auto` showcase mode.
 
-Generate positions first, use dry-run before hardware, and start at safe brightness:
+Complete the runtime and spatial preparation above, then use dry-run before hardware and start at safe brightness:
 
 ```bash
-thunderdome positions generate
 thunderdome effect auto \
   --controllers config/controllers.example.json \
   --playlist fire,aurora,fireflies \
@@ -133,7 +153,7 @@ thunderdome effect auto \
   --brightness 24
 ```
 
-Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness. The earlier `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear. `rotating-plane` uses true 3D axis rotation (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and precomputes its plane/trail samples once per frame; LEDs then only do signed-distance work against the bounded samples. `--trail-degrees` accepts `0..180`, where zero disables the trail and values above 180 are rejected. Auto crossfades preserve incoming effect time across interval boundaries. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
+For live DDP output, the controller prepares every enabled WLED controller by setting its master brightness to `255` before opening the DDP session. That brightness API call can affect WLED's on/off state, so power remains operator-controlled and must be prepared before live output; realtime mode and current-limit settings are not changed. The earlier `--prepare-ddp` effect option was removed because setting WLED off before realtime streaming caused animations to disappear. `rotating-plane` uses true 3D axis rotation (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and precomputes its plane/trail samples once per frame; LEDs then only do signed-distance work against the bounded samples. `--trail-degrees` accepts `0..180`, where zero disables the trail and values above 180 are rejected. Auto crossfades preserve incoming effect time across interval boundaries. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
 
 ## Realtime live mode and DDP streaming
 
@@ -198,21 +218,18 @@ thunderdome ddp-all controller-colors \
 
 `ddp-all --dry-run` remains deliberately one-shot and never opens UDP sockets or sends UDP packets. It cannot be combined with `--hold`, `--duration`, or `--loops`.
 
-### Future spatial animations
+### Frame-loop implementation
 
-The reusable `thunderdome.animation.run_frame_loop` accepts either a static-frame callback, a callback that receives `(frame_number, elapsed_seconds)`, or a frame generator. This lets an effect render a different 5,000-pixel `RGBFrame` for each iteration while retaining the same scheduler and direct-DDP transports. A future clock-face or clock-hand sweep can therefore generate a frame from its current angle on each tick, then use the normal single- or multi-controller sender.
+The reusable `thunderdome.animation.run_frame_loop` drives static frames and the implemented time-varying effects with the same scheduler and direct-DDP transports.
 
 See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
 
 ## Persistent WLED control and spatial effects
 
-WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. Effect commands do not invoke those persistent-state operations automatically; power on controllers and set suitable WLED master brightness manually before streaming.
+WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. Live DDP effect output sets enabled controllers' WLED master brightness to `255` when its output session opens; power remains an explicit operator-controlled state.
 
 ```bash
-thunderdome positions generate
-thunderdome positions validate
 thunderdome controllers power on --controllers config/controllers.json
-thunderdome controllers brightness 255 --controllers config/controllers.json
 thunderdome effect clock-hand --controllers config/controllers.json \
   --positions geometry/generated/led_positions_3d.json --brightness 32 \
   --color FFFFFF --background 000000 --width-mm 300 \

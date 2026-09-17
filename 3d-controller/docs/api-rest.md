@@ -59,11 +59,11 @@ What this service instance can do. Check `supported_outputs` before requesting `
 
 ### `GET /api/effects`
 
-All effect schemas: `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, `twinkle`, `auto`, and the solar-system bodies (`Sol`, `Mercury`, `Venus`, `Earth`, `Mars`, `Jupiter`, `Saturn`, `Uranus`, `Neptune`, `AsteroidBelt`, `KuiperBelt`, `Voyager1`). Each entry lists every parameter with its type, default, bounds, units, and choices — this is the authoritative parameter reference; use it instead of hard-coding parameter lists. Non-`auto` entries also include `resolved_defaults` (built-in defaults merged with saved operator defaults).
+All effect schemas use canonical names: `ClockHand`, `ExpandingRings`, `HeightWave`, `Fire`, `RotatingPlane`, `Radar`, `Aurora`, `Fireflies`, `Twinkle`, `Auto`, and the solar-system bodies (`Sol`, `Mercury`, `Venus`, `Earth`, `Mars`, `Jupiter`, `Saturn`, `Uranus`, `Neptune`, `AsteroidBelt`, `KuiperBelt`, `Voyager1`). Each entry lists every parameter with its type, default, bounds, units, and choices — this is the authoritative parameter reference; use it instead of hard-coding parameter lists. Non-`Auto` entries also include `resolved_defaults` (built-in defaults merged with saved operator defaults).
 
 ### `GET /api/effects/{name}`
 
-One effect schema, or 404. Example (abridged):
+One canonical effect schema, or 404. The endpoint accepts the canonical name and existing CLI/legacy aliases, returning the same canonical payload: for example, both `/api/effects/Fire` and `/api/effects/fire` return the `Fire` schema; `/api/effects/ClockHand` and `/api/effects/clock-hand` return `ClockHand`. Example (abridged):
 
 ```json
 {
@@ -139,7 +139,7 @@ Request body:
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `effect` | string | for `baseline`/`override` | Name from `GET /api/effects` |
+| `effect` | string | for `baseline`/`override` | Canonical name from `GET /api/effects`, or an accepted existing CLI/legacy alias; status reports the canonical name |
 | `parameters` | object | no | Validated against the effect schema; omitted parameters use resolved defaults; unknown names are rejected |
 | `output` | string | no | `simulator`, `ddp`, `both`, `null`. Baseline defaults to the service default (`simulator`); an override inherits the baseline's output |
 | `priority` | integer ≥ 0 | no | Default 0; only meaningful for `override` |
