@@ -38,9 +38,12 @@ def finite_vector(value: str | Sequence[float], *, option: str = "vector", allow
         raw = tuple(float(part) for part in value)
     if len(raw) != 3 or not all(math.isfinite(part) for part in raw):
         raise ValueError(f"{option} must be finite X,Y,Z, got {value!r}")
-    length = math.sqrt(sum(part * part for part in raw))
-    if length <= 0:
+    scale = max(abs(part) for part in raw)
+    if scale == 0:
         raise ValueError(f"{option} must be non-zero, got {value!r}")
+    # Scaling first handles both squared-length overflow and subnormal inputs.
+    raw = tuple(part / scale for part in raw)
+    length = math.hypot(*raw)
     return (raw[0] / length, raw[1] / length, raw[2] / length)
 
 
@@ -193,6 +196,10 @@ def plane_intensity_from_samples(point: Vector, centre: Vector, samples: Sequenc
 
 def _noise(x: float, y: float, z: float, t: float, seed: int) -> float:
     # Smooth deterministic value-like noise without calling random per LED.
+    # Fold large integer seeds before floating-point phase multiplication.
+    # Preserve existing noise for ordinary signed 32-bit-magnitude seeds.
+    if seed.bit_length() > 32:
+        seed %= 1 << 32
     return 0.5 + 0.25 * math.sin(x * 1.73 + y * 2.17 + z * 1.31 + t + seed * 12.9898) + 0.25 * math.sin(
         x * 0.71 - y * 1.19 + z * 2.41 + t * 0.63 + seed * 3.17
     )

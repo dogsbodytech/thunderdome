@@ -6,7 +6,7 @@ import math
 import re
 from typing import Any, Mapping
 
-from .effects.Procedural import SPACE_BODIES
+from .effects.Procedural import MAX_FIREFLIES, MAX_TWINKLE_SPAWN_RATE, SPACE_BODIES
 from .effects.Registry import BY_NAME, DEFAULT_PLAYLIST, LEGACY_NAMES
 
 
@@ -91,9 +91,9 @@ EFFECT_SCHEMAS: dict[str, EffectSchema] = {
     "Aurora": _schema("Aurora", "Aurora", BY_NAME["Aurora"].description,
         _parameter("speed", "float", .25, "Animation speed", minimum=.001, step=.01), _parameter("scale", "float", 1.2, "Pattern scale", minimum=.001, step=.05), _parameter("band_width", "float", .45, "Band width", minimum=.001, maximum=1, step=.01), _parameter("intensity", "float", 1.0, "Intensity", minimum=0, maximum=1, step=.01), _parameter("palette", "choice", "mixed", "Palette", choices=("mixed",)), _parameter("direction", "vector", "1,0,0", "Direction vector"), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
     "Fireflies": _schema("Fireflies", "Fireflies", BY_NAME["Fireflies"].description,
-        _parameter("count", "integer", 25, "Particle count", minimum=1, step=1), _parameter("speed", "float", .35, "Animation speed", minimum=.001, step=.01), _parameter("glow_radius_mm", "float", 300.0, "Glow radius", minimum=.001, step=1, units="mm"), _parameter("lifetime_seconds", "float", 8.0, "Particle lifetime", minimum=.001, step=.1, units="seconds"), _parameter("color", "colour", "FFFFB0", "Base colour"), _parameter("color_variation", "float", .25, "Colour variation", minimum=0, maximum=1, step=.01), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
+        _parameter("count", "integer", 25, "Particle count", minimum=1, maximum=MAX_FIREFLIES, step=1), _parameter("speed", "float", .35, "Animation speed", minimum=.001, step=.01), _parameter("glow_radius_mm", "float", 300.0, "Glow radius", minimum=.001, step=1, units="mm"), _parameter("lifetime_seconds", "float", 8.0, "Particle lifetime", minimum=.001, step=.1, units="seconds"), _parameter("color", "colour", "FFFFB0", "Base colour"), _parameter("color_variation", "float", .25, "Colour variation", minimum=0, maximum=1, step=.01), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
     "Twinkle": _schema("Twinkle", "Twinkle", BY_NAME["Twinkle"].description,
-        _parameter("density", "float", .08, "Maximum lit LED fraction", minimum=0, maximum=1, step=.01), _parameter("spawn_rate", "float", 12.0, "Twinkles spawned per second", minimum=0, step=1), _parameter("fade_in", "float", .25, "Fade-in time", minimum=0, step=.05, units="seconds"), _parameter("hold", "float", .25, "Peak hold time", minimum=0, step=.05, units="seconds"), _parameter("fade_out", "float", .7, "Fade-out time", minimum=.001, step=.05, units="seconds"), _parameter("minimum_brightness", "float", .05, "Minimum twinkle brightness", minimum=0, maximum=1, step=.01), _parameter("maximum_brightness", "float", 1.0, "Maximum twinkle brightness", minimum=0, maximum=1, step=.01), _parameter("color", "colour", "FFFFFF", "Selected twinkle colour"), _parameter("mode", "choice", "fixed", "Twinkle colour mode", choices=("fixed", "random")), _parameter("background", "colour", "000000", "Background colour"), _parameter("color_change_speed", "float", 0.0, "Random-hue drift speed", minimum=0, step=.05), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
+        _parameter("density", "float", .08, "Maximum lit LED fraction", minimum=0, maximum=1, step=.01), _parameter("spawn_rate", "float", 12.0, "Twinkles spawned per second", minimum=0, maximum=MAX_TWINKLE_SPAWN_RATE, step=1), _parameter("fade_in", "float", .25, "Fade-in time", minimum=0, step=.05, units="seconds"), _parameter("hold", "float", .25, "Peak hold time", minimum=0, step=.05, units="seconds"), _parameter("fade_out", "float", .7, "Fade-out time", minimum=.001, step=.05, units="seconds"), _parameter("minimum_brightness", "float", .05, "Minimum twinkle brightness", minimum=0, maximum=1, step=.01), _parameter("maximum_brightness", "float", 1.0, "Maximum twinkle brightness", minimum=0, maximum=1, step=.01), _parameter("color", "colour", "FFFFFF", "Selected twinkle colour"), _parameter("mode", "choice", "fixed", "Twinkle colour mode", choices=("fixed", "random")), _parameter("background", "colour", "000000", "Background colour"), _parameter("color_change_speed", "float", 0.0, "Random-hue drift speed", minimum=0, step=.05), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
     "Auto": _schema("Auto", "Auto showcase", "Cycle existing effects with crossfades.",
         _parameter("effects", "effect-list", list(DEFAULT_PLAYLIST), "Ordered auto playlist", required=True), _parameter("interval", "float", 30.0, "Effect interval", minimum=.001, step=.1, units="seconds"), _parameter("transition", "float", 2.0, "Crossfade duration", minimum=0, step=.1, units="seconds"), _parameter("cycles", "integer", None, "Completed playlist cycles", minimum=1, step=1), _parameter("shuffle", "boolean", False, "Shuffle playlist"), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
 }
@@ -103,6 +103,14 @@ for _name, _space_body in SPACE_BODIES.items():
     EFFECT_SCHEMAS[_name] = _schema(_name, _space_body.label, BY_NAME[_name].description,
         _parameter("speed", "float", _space_body.speed, "Animation speed", minimum=.001, step=.01),
         _parameter("seed", "integer", 1, "Deterministic seed", step=1))
+
+
+def _is_finite(value: int | float) -> bool:
+    # JSON integers can exceed the float range used by renderer arithmetic.
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
 
 
 def validate_effect_parameters(effect: str, values: Mapping[str, Any] | None = None) -> dict[str, object]:
@@ -126,9 +134,9 @@ def validate_effect_parameters(effect: str, values: Mapping[str, Any] | None = N
             raise ValueError(f"parameter {name!r} must be boolean")
         if parameter.type == "integer" and (not isinstance(value, int) or isinstance(value, bool)):
             raise ValueError(f"parameter {name!r} must be integer")
-        if parameter.type == "float" and (not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value)):
+        if parameter.type == "float" and (not isinstance(value, (int, float)) or isinstance(value, bool) or not _is_finite(value)):
             raise ValueError(f"parameter {name!r} must be numeric")
-        if parameter.type == "integer" and not math.isfinite(value):
+        if parameter.type == "integer" and not _is_finite(value):
             raise ValueError(f"parameter {name!r} must be finite")
         if parameter.type == "colour":
             if not isinstance(value, str) or re.fullmatch(r"#?[0-9A-Fa-f]{6}", value) is None:
@@ -144,7 +152,7 @@ def validate_effect_parameters(effect: str, values: Mapping[str, Any] | None = N
                     try: value = [float(part) for part in value.split(",")]
                     except ValueError: raise ValueError(f"parameter {name!r} must be a named or numeric 3-vector")
             if isinstance(value, list):
-                if len(value) != 3 or any(isinstance(part, bool) or not isinstance(part, (int, float)) or not math.isfinite(part) for part in value) or not any(value):
+                if len(value) != 3 or any(isinstance(part, bool) or not isinstance(part, (int, float)) or not _is_finite(part) for part in value) or not any(value):
                     raise ValueError(f"parameter {name!r} must be a non-zero finite 3-vector")
             elif not isinstance(value, str):
                 raise ValueError(f"parameter {name!r} must be a named or numeric 3-vector")
