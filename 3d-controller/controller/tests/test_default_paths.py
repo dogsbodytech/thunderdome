@@ -30,6 +30,8 @@ class DefaultPathRegressionTests(unittest.TestCase):
         source = Path("/source")
         self.assertEqual(mutable_runtime_paths(source_root=source, environ={}, home=Path("/home/user")), (source / "config/controllers.json", source / "config/effect-defaults.json", source / "geometry/generated/led_positions_3d.json"))
         self.assertEqual(mutable_runtime_paths(source_root=source, environ={"THUNDERDOME_CONFIG_DIR": "/override/config", "THUNDERDOME_DATA_DIR": "/override/data"}, home=Path("/home/user")), (Path("/override/config/controllers.json"), Path("/override/config/effect-defaults.json"), Path("/override/data/led_positions_3d.json")))
+        self.assertEqual(mutable_runtime_paths(source_root=source, environ={"THUNDERDOME_CONFIG_DIR": "/override/config"}, home=Path("/home/user")), (Path("/override/config/controllers.json"), Path("/override/config/effect-defaults.json"), source / "geometry/generated/led_positions_3d.json"))
+        self.assertEqual(mutable_runtime_paths(source_root=source, environ={"THUNDERDOME_DATA_DIR": "/override/data"}, home=Path("/home/user")), (source / "config/controllers.json", source / "config/effect-defaults.json", Path("/override/data/led_positions_3d.json")))
         self.assertEqual(mutable_runtime_paths(source_root=None, environ={"XDG_CONFIG_HOME": "/xdg/config", "XDG_DATA_HOME": "/xdg/data"}, home=Path("/home/user")), (Path("/xdg/config/thunderdome/controllers.json"), Path("/xdg/config/thunderdome/effect-defaults.json"), Path("/xdg/data/thunderdome/led_positions_3d.json")))
         self.assertEqual(EFFECT_DEFAULTS_PATH.name, "effect-defaults.json")
     def test_builtin_effect_defaults_are_project_anchored_from_any_cwd(self):

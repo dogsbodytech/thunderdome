@@ -63,14 +63,8 @@ def mutable_runtime_paths(
     user_home = Path.home() if home is None else home
     config_override = environment.get("THUNDERDOME_CONFIG_DIR")
     data_override = environment.get("THUNDERDOME_DATA_DIR")
-    if source_root is not None and not config_override and not data_override:
-        return (
-            source_root / "config" / "controllers.json",
-            source_root / "config" / "effect-defaults.json",
-            source_root / "geometry" / "generated" / "led_positions_3d.json",
-        )
-    config_dir = Path(config_override) if config_override else Path(environment.get("XDG_CONFIG_HOME", user_home / ".config")) / "thunderdome"
-    data_dir = Path(data_override) if data_override else Path(environment.get("XDG_DATA_HOME", user_home / ".local" / "share")) / "thunderdome"
+    config_dir = Path(config_override) if config_override else (source_root / "config" if source_root is not None else Path(environment.get("XDG_CONFIG_HOME", user_home / ".config")) / "thunderdome")
+    data_dir = Path(data_override) if data_override else (source_root / "geometry" / "generated" if source_root is not None else Path(environment.get("XDG_DATA_HOME", user_home / ".local" / "share")) / "thunderdome")
     return config_dir / "controllers.json", config_dir / "effect-defaults.json", data_dir / "led_positions_3d.json"
 
 

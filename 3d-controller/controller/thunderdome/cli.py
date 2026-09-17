@@ -226,7 +226,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     control_serve.add_argument("--controllers")
     control_serve.add_argument("--allow-live-control", action="store_true")
     control_serve.add_argument("--default-output", choices=("simulator", "ddp", "both"), default="simulator")
-    control_serve.add_argument("--effect-defaults", default=None, metavar="FILE", help="operator effect-defaults JSON (default: config/effect-defaults.json)")
+    control_serve.add_argument("--effect-defaults", default=None, metavar="FILE", help="operator effect-defaults JSON (configured default path)")
     control_serve.add_argument("--geometry", default=None)
     control_serve.add_argument("--routes", default=None)
     control_serve.add_argument("--positions", default=None)
