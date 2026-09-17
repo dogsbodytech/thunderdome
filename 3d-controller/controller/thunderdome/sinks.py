@@ -85,8 +85,12 @@ class SimulatorFrameSink(FrameSink):
         try:
             self._loop.run_until_complete(self._connect())
         except Exception as exc:
-            self.close()
-            raise OSError(f"unable to connect to simulator at {self.url}: {exc}") from exc
+            error = OSError(f"unable to connect to simulator at {self.url}: {exc}")
+            try:
+                self.close()
+            except Exception as cleanup_exc:
+                error.add_note(f"simulator cleanup failed: {cleanup_exc}")
+            raise error from exc
 
     async def _send(self, message: bytes) -> None:
         assert self._socket is not None

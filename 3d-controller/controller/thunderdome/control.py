@@ -42,8 +42,9 @@ class ControlSettings:
 
 class FrameRuntime:
     """One cancellable worker thread; all selected sinks live inside that worker."""
-    def __init__(self, settings: ControlSettings, producer_factory: Callable[[DisplayDefinition], tuple[Callable[[int, float], RGBFrame], int]] | None = None) -> None:
+    def __init__(self, settings: ControlSettings, producer_factory: Callable[[DisplayDefinition], tuple[Callable[[int, float], RGBFrame], int]] | None = None, *, stop_timeout: float = 2.0) -> None:
         self.settings = settings
+        self._stop_timeout = stop_timeout
         self.producer_factory = producer_factory or make_effect_producer
         self._lock = threading.RLock()
         self._cancel: threading.Event | None = None
@@ -51,7 +52,7 @@ class FrameRuntime:
         self.frames = 0
         self.active_since: float | None = None
         self.error: str | None = None
-        self.on_baseline_complete: Callable[[str], bool] | None = None
+        self.on_terminated: Callable[[DisplayDefinition, str | None, bool], None] | None = None
 
     def _sink(self, output: OutputMode) -> FrameSink:
         if output == OutputMode.NULL:
@@ -73,9 +74,17 @@ class FrameRuntime:
             self.error = None
             self.active_since = time.monotonic()
             self._thread = threading.Thread(target=self._run, args=(display, cancel), name="thunderdome-control-runtime", daemon=True)
-            self._thread.start()
+            try:
+                self._thread.start()
+            except Exception:
+                self._thread = None
+                self._cancel = None
+                self.active_since = None
+                raise
 
     def _run(self, display: DisplayDefinition, cancel: threading.Event) -> None:
+        error = "runtime worker terminated unexpectedly"
+        interrupted = False
         try:
             produced = self.producer_factory(display)
             producer, fps = produced[:2]
@@ -91,18 +100,23 @@ class FrameRuntime:
                     with self._lock:
                         self.frames += 1
                 stats = run_frame_loop(producer, send, fps=fps, duration=duration, cancel_event=cancel)
-                if not stats.interrupted and self.on_baseline_complete is not None:
-                    self.on_baseline_complete(display.request_id)
-        except (OSError, ValueError) as exc:
-            with self._lock:
-                self.error = str(exc)
+                interrupted = stats.interrupted
+            error = None
+        except Exception as exc:
+            error = str(exc)
         finally:
             with self._lock:
+                self.error = error
                 if self._cancel is cancel:
                     self._cancel = None
                     self.active_since = None
                 if self._thread is threading.current_thread():
                     self._thread = None
+            # The sink context is closed and ownership relinquished before a
+            # callback may restore a baseline. Coordinator callbacks never wait
+            # on its command lock, because stop() may be joining this worker.
+            if self.on_terminated is not None:
+                self.on_terminated(display, error, interrupted or cancel.is_set())
 
     def stop(self) -> None:
         with self._lock:
@@ -110,9 +124,9 @@ class FrameRuntime:
         if cancel is not None:
             cancel.set()
         if thread is not None and thread is not threading.current_thread():
-            thread.join(timeout=2)
+            thread.join(timeout=self._stop_timeout)
             if thread.is_alive():
-                raise OSError("control runtime worker did not stop within 2 seconds")
+                raise OSError(f"control runtime worker did not stop within {self._stop_timeout:g} seconds")
         with self._lock:
             if self._thread is thread:
                 self._thread = None
@@ -178,10 +192,12 @@ class ControlAPI:
         if runtime is None:
             self.runtime.producer_factory = lambda display: make_effect_producer(display, self.defaults)
         self.coordinator = RuntimeCoordinator(self.runtime, default_output=settings.default_output)
-        self.runtime.on_baseline_complete = self.coordinator.complete_baseline
+
         self._timer_lock = threading.RLock()
         self._override_timer: threading.Timer | None = None
-        self._override_timer_request_id: str | None = None
+        self._override_timer_generation: str | None = None
+        self._shutdown_lock = threading.Lock()
+        self._closing = False
         self._shutdown = False
 
     def register_routes(self, app: web.Application) -> None:
@@ -259,44 +275,59 @@ class ControlAPI:
             return web.json_response({"accepted": False, "error": str(exc)}, status=400)
 
     def shutdown(self) -> None:
-        if self._shutdown:
-            return
-        self._shutdown = True
-        with self._timer_lock:
-            if self._override_timer is not None:
-                self._override_timer.cancel()
-            self._override_timer = None
-            self._override_timer_request_id = None
-        self.runtime.shutdown()
+        with self._shutdown_lock:
+            if self._shutdown:
+                return
+            with self._timer_lock:
+                # Closing is permanent, but completion is recorded only after
+                # runtime cleanup succeeds so a failed shutdown can be retried.
+                self._closing = True
+                if self._override_timer is not None:
+                    self._override_timer.cancel()
+                self._override_timer = None
+                self._override_timer_generation = None
+            result = self.coordinator.execute(RuntimeCommand(
+                CommandSource.SYSTEM, CommandAction.STOP_ALL, uuid.uuid4().hex,
+                None, {}, None,
+            ))
+            if not result.accepted:
+                raise OSError(result.reason)
+            self.runtime.shutdown()
+            self._shutdown = True
 
     def _sync_override_timer(self, status: object) -> None:
         """Own exactly one timer for the currently effective timed override."""
         override = status.get("override") if isinstance(status, dict) else None
-        request_id = override.get("request_id") if isinstance(override, dict) else None
+        generation = override.get("generation") if isinstance(override, dict) else None
         remaining = status.get("remaining_override_seconds") if isinstance(status, dict) else None
         with self._timer_lock:
-            if request_id == self._override_timer_request_id:
+            if self._closing:
+                return
+            if generation == self._override_timer_generation:
                 return
             if self._override_timer is not None:
                 self._override_timer.cancel()
             self._override_timer = None
-            self._override_timer_request_id = None
-            if request_id is None or remaining is None:
+            self._override_timer_generation = None
+            if generation is None or remaining is None:
                 return
-            timer = threading.Timer(float(remaining), self._expire_override_timer, args=(request_id,))
+            timer = threading.Timer(float(remaining), lambda: self._expire_override_timer(generation, timer))
             timer.daemon = True
             self._override_timer = timer
-            self._override_timer_request_id = request_id
+            self._override_timer_generation = generation
             timer.start()
 
-    def _expire_override_timer(self, request_id: str) -> None:
-        try:
-            status = self.coordinator.status()
-            override = status.get("override")
-            if isinstance(override, dict) and override.get("request_id") == request_id:
-                self.coordinator.expire_overrides()
-        finally:
-            with self._timer_lock:
-                if self._override_timer_request_id == request_id:
+    def _expire_override_timer(self, generation: str, timer: threading.Timer) -> None:
+        with self._timer_lock:
+            # A cancelled Timer may already have dispatched its callback. Do not
+            # even query status unless it still owns this slot: status can expire.
+            if self._override_timer is not timer or self._override_timer_generation != generation:
+                return
+            try:
+                # Check and expire atomically; status() itself can expire a
+                # newer override accepted before its timer has been synced.
+                self.coordinator.expire_overrides(generation)
+            finally:
+                if self._override_timer is timer:
                     self._override_timer = None
-                    self._override_timer_request_id = None
+                    self._override_timer_generation = None
