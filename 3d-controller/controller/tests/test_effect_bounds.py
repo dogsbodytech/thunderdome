@@ -2,11 +2,25 @@
 import unittest
 
 from thunderdome.effects.Common import SpatialContext
-from thunderdome.effects.Procedural import ParticleSystem, create_renderer, particle_templates, render_fireflies
+from thunderdome.effects.Procedural import SPACE_BODIES, ParticleSystem, create_renderer, particle_templates, render_fireflies
 from thunderdome.schemas import EFFECT_SCHEMAS, validate_effect_parameters
 
 
 class EffectBoundsTests(unittest.TestCase):
+    def test_renderer_domain_parameters_reject_pathological_finite_values(self):
+        expected = {
+            "Fire": {"speed": 100.0, "scale": 100.0},
+            "Aurora": {"speed": 100.0, "scale": 100.0},
+        }
+        expected.update({name: {"speed": 100.0} for name in SPACE_BODIES})
+        for effect, parameters in expected.items():
+            for name, maximum in parameters.items():
+                with self.subTest(effect=effect, name=name):
+                    self.assertEqual(EFFECT_SCHEMAS[effect].parameters[name].maximum, maximum)
+                    self.assertEqual(validate_effect_parameters(effect, {name: maximum})[name], maximum)
+                    with self.assertRaises(ValueError):
+                        validate_effect_parameters(effect, {name: 1e308})
+
     def test_large_seed_does_not_overflow_noise_arithmetic(self):
         import math
         from thunderdome.effects.procedural_math import _noise

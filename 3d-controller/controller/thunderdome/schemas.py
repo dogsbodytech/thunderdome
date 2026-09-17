@@ -9,6 +9,9 @@ from typing import Any, Mapping
 from .effects.Procedural import MAX_FIREFLIES, MAX_TWINKLE_SPAWN_RATE, SPACE_BODIES
 from .effects.Registry import BY_NAME, DEFAULT_PLAYLIST, LEGACY_NAMES
 
+MAX_PROCEDURAL_SPEED = 100.0
+MAX_PROCEDURAL_SCALE = 100.0
+
 
 @dataclass(frozen=True)
 class ParameterSchema:
@@ -82,14 +85,14 @@ EFFECT_SCHEMAS: dict[str, EffectSchema] = {
         _parameter("speed_mps", "float", 0.5, "Band speed", minimum=0.001, step=0.1, units="m/s"), _parameter("height_mm", "float", 200.0, "Band height", minimum=0.001, step=1, units="mm"),
         _parameter("direction", "choice", "up", "Band direction", choices=("up", "down", "bounce")), _parameter("color", "colour", "FFFFFF", "Band colour"), _parameter("background", "colour", "000000", "Background colour")),
     "Fire": _schema("Fire", "Fire", BY_NAME["Fire"].description,
-        _parameter("speed", "float", 1.0, "Animation speed", minimum=0.001, step=0.05), _parameter("flame_height_m", "float", 2.5, "Flame height", minimum=0.001, step=0.1, units="m"),
-        _parameter("turbulence", "float", .65, "Turbulence", minimum=0, maximum=1, step=.01), _parameter("cooling", "float", .35, "Cooling", minimum=0, maximum=1, step=.01), _parameter("scale", "float", 1.0, "Field scale", minimum=.001, step=.05), _parameter("palette", "choice", "fire", "Palette", choices=("fire",)), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
+        _parameter("speed", "float", 1.0, "Animation speed", minimum=0.001, maximum=MAX_PROCEDURAL_SPEED, step=0.05), _parameter("flame_height_m", "float", 2.5, "Flame height", minimum=0.001, step=0.1, units="m"),
+        _parameter("turbulence", "float", .65, "Turbulence", minimum=0, maximum=1, step=.01), _parameter("cooling", "float", .35, "Cooling", minimum=0, maximum=1, step=.01), _parameter("scale", "float", 1.0, "Field scale", minimum=.001, maximum=MAX_PROCEDURAL_SCALE, step=.05), _parameter("palette", "choice", "fire", "Palette", choices=("fire",)), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
     "RotatingPlane": _schema("RotatingPlane", "Rotating plane", BY_NAME["RotatingPlane"].description,
         _parameter("axis", "vector", "vertical", "vertical, horizontal, tilted, or X,Y,Z axis"), _parameter("rotation_seconds", "float", 10.0, "Full rotation duration", minimum=.001, step=.1, units="seconds"), _parameter("thickness_mm", "float", 220.0, "Plane thickness", minimum=.001, step=1, units="mm"), _parameter("trail_degrees", "float", 20.0, "Trail length", minimum=0, maximum=180, step=1, units="degrees"), _parameter("direction", "choice", "clockwise", "Rotation direction", choices=("clockwise", "counterclockwise")), _parameter("color", "colour", "FFFFFF", "Plane colour"), _parameter("background", "colour", "000000", "Background colour"), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
     "Radar": _schema("Radar", "Radar", BY_NAME["Radar"].description,
         _parameter("rotation_seconds", "float", 8.0, "Full rotation duration", minimum=.001, step=.1, units="seconds"), _parameter("beam_width_degrees", "float", 12.0, "Beam width", minimum=.001, maximum=360, step=1, units="degrees"), _parameter("trail_degrees", "float", 35.0, "Trail length", minimum=0, maximum=360, step=1, units="degrees"), _parameter("range_m", "float", 9999.0, "Beam range", minimum=.001, step=.1, units="m"), _parameter("vertical_falloff", "float", 0.0, "Vertical falloff", minimum=0, maximum=1, step=.01), _parameter("color", "colour", "00FF80", "Beam colour"), _parameter("background", "colour", "000000", "Background colour"), _parameter("direction", "choice", "clockwise", "Rotation direction", choices=("clockwise", "counterclockwise")), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
     "Aurora": _schema("Aurora", "Aurora", BY_NAME["Aurora"].description,
-        _parameter("speed", "float", .25, "Animation speed", minimum=.001, step=.01), _parameter("scale", "float", 1.2, "Pattern scale", minimum=.001, step=.05), _parameter("band_width", "float", .45, "Band width", minimum=.001, maximum=1, step=.01), _parameter("intensity", "float", 1.0, "Intensity", minimum=0, maximum=1, step=.01), _parameter("palette", "choice", "mixed", "Palette", choices=("mixed",)), _parameter("direction", "vector", "1,0,0", "Direction vector"), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
+        _parameter("speed", "float", .25, "Animation speed", minimum=.001, maximum=MAX_PROCEDURAL_SPEED, step=.01), _parameter("scale", "float", 1.2, "Pattern scale", minimum=.001, maximum=MAX_PROCEDURAL_SCALE, step=.05), _parameter("band_width", "float", .45, "Band width", minimum=.001, maximum=1, step=.01), _parameter("intensity", "float", 1.0, "Intensity", minimum=0, maximum=1, step=.01), _parameter("palette", "choice", "mixed", "Palette", choices=("mixed",)), _parameter("direction", "vector", "1,0,0", "Direction vector"), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
     "Fireflies": _schema("Fireflies", "Fireflies", BY_NAME["Fireflies"].description,
         _parameter("count", "integer", 25, "Particle count", minimum=1, maximum=MAX_FIREFLIES, step=1), _parameter("speed", "float", .35, "Animation speed", minimum=.001, step=.01), _parameter("glow_radius_mm", "float", 300.0, "Glow radius", minimum=.001, step=1, units="mm"), _parameter("lifetime_seconds", "float", 8.0, "Particle lifetime", minimum=.001, step=.1, units="seconds"), _parameter("color", "colour", "FFFFB0", "Base colour"), _parameter("color_variation", "float", .25, "Colour variation", minimum=0, maximum=1, step=.01), _parameter("seed", "integer", 1, "Deterministic seed", step=1)),
     "Twinkle": _schema("Twinkle", "Twinkle", BY_NAME["Twinkle"].description,
@@ -101,7 +104,7 @@ EFFECT_SCHEMAS: dict[str, EffectSchema] = {
 # Solar-system bodies: one colour-wash renderer each, tunable only by speed/seed.
 for _name, _space_body in SPACE_BODIES.items():
     EFFECT_SCHEMAS[_name] = _schema(_name, _space_body.label, BY_NAME[_name].description,
-        _parameter("speed", "float", _space_body.speed, "Animation speed", minimum=.001, step=.01),
+        _parameter("speed", "float", _space_body.speed, "Animation speed", minimum=.001, maximum=MAX_PROCEDURAL_SPEED, step=.01),
         _parameter("seed", "integer", 1, "Deterministic seed", step=1))
 
 

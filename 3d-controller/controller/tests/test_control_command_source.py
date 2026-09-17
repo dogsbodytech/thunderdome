@@ -47,6 +47,18 @@ class CommandSourceTests(AioHTTPTestCase):
         self.assertEqual(response.status, 200)
         self.assertEqual(body["status"]["baseline"]["source"], "browser")
 
+    async def test_runtime_status_hides_internal_generation_and_exposes_error_state(self):
+        response = await self.client.post("/api/runtime/baseline", json={"effect": "Fire"})
+        body = await response.json()
+        self.assertNotIn("generation", body["status"]["baseline"])
+        self.assertNotIn("generation", body["status"]["effective"])
+
+        self.api.coordinator.runtime_terminated(self.api.runtime.started[-1], "renderer failed", False)
+        response = await self.client.get("/api/runtime/status")
+        status = await response.json()
+        self.assertEqual(status["service_state"], "error")
+        self.assertNotIn("generation", status["baseline"])
+
     async def test_declared_source_is_rejected(self):
         response = await self.client.post(
             "/api/runtime/override",

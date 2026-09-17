@@ -30,6 +30,7 @@ from .transport.ddp import DirectDDPSession, parse_hex_color, send_frame
 from .transport.multi_ddp import MultiControllerDDPSession, SendResult
 from .wled.client import WLEDApiError, WLEDClient
 from .wled.multi import WLEDOperationResult, run_wled_operation
+from .schemas import MAX_PROCEDURAL_SCALE, MAX_PROCEDURAL_SPEED
 
 
 class FrameDeliveryError(RuntimeError):
@@ -342,9 +343,9 @@ def _validate_range(option: str, value: float, *, minimum: float | None = None, 
 
 def _validate_procedural_options(args: argparse.Namespace) -> None:
     if args.command == "Fire":
-        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
+        _validate_range("speed", args.speed, minimum=0, maximum=MAX_PROCEDURAL_SPEED, inclusive_minimum=False)
         _validate_range("flame-height-m", args.flame_height_m, minimum=0, inclusive_minimum=False)
-        _validate_range("scale", args.scale, minimum=0, inclusive_minimum=False)
+        _validate_range("scale", args.scale, minimum=0, maximum=MAX_PROCEDURAL_SCALE, inclusive_minimum=False)
         _validate_range("turbulence", args.turbulence, minimum=0, maximum=1)
         _validate_range("cooling", args.cooling, minimum=0, maximum=1)
     elif args.command == "RotatingPlane":
@@ -359,8 +360,8 @@ def _validate_procedural_options(args: argparse.Namespace) -> None:
         _validate_range("range-m", args.range_m, minimum=0, inclusive_minimum=False)
         _validate_range("vertical-falloff", args.vertical_falloff, minimum=0, maximum=1)
     elif args.command == "Aurora":
-        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
-        _validate_range("scale", args.scale, minimum=0, inclusive_minimum=False)
+        _validate_range("speed", args.speed, minimum=0, maximum=MAX_PROCEDURAL_SPEED, inclusive_minimum=False)
+        _validate_range("scale", args.scale, minimum=0, maximum=MAX_PROCEDURAL_SCALE, inclusive_minimum=False)
         _validate_range("band-width", args.band_width, minimum=0, maximum=1, inclusive_minimum=False)
         _validate_range("intensity", args.intensity, minimum=0, maximum=1, inclusive_minimum=False)
     elif args.command == "Fireflies":
@@ -377,7 +378,7 @@ def _validate_procedural_options(args: argparse.Namespace) -> None:
         _validate_range("minimum-brightness", args.minimum_brightness, minimum=0, maximum=1)
         _validate_range("maximum-brightness", args.maximum_brightness, minimum=0, maximum=1)
     elif args.command in SPACE_BODIES:
-        _validate_range("speed", args.speed, minimum=0, inclusive_minimum=False)
+        _validate_range("speed", args.speed, minimum=0, maximum=MAX_PROCEDURAL_SPEED, inclusive_minimum=False)
 
 
 def _run_procedural_effect(args: argparse.Namespace) -> int:
