@@ -53,4 +53,22 @@ Run the simulator path first. It proves Python, package installation, geometry, 
 >
 > The Python controller, geometry, routes, positions, effect renderer, simulator, and browser live stream work. No physical WLED/DDP output was required.
 
+The normal journey is:
+
+```text
+Install
+  |
+Validate geometry, routes, positions
+  |
+Moving local simulator
+  |
+✅ SOFTWARE CONTROLLER PROVEN
+  |
+⚠️ Physical readiness: power, network, WLED
+  |
+First physical light and mapping
+  |
+Normal operation
+```
+
 Only after that checkpoint should you open [Physical dome startup](runbooks/physical-dome-startup.md).
