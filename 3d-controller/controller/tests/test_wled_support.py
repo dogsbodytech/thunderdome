@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from thunderdome.wled.client import WLEDClient
-from thunderdome.wled.favorites import FavoritesStore
+
 
 
 class Response:
@@ -50,14 +50,7 @@ class WLEDSupportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             WLEDClient("wled.local").set_preset(0)
 
-    def test_favorites_store_deduplicates_effects(self):
-        from tempfile import TemporaryDirectory
-        with TemporaryDirectory() as directory:
-            store = FavoritesStore(Path(directory) / "favorites.json")
-            store.add_effect(1, ["Solid", "Rainbow"])
-            _, created = store.add_effect(1, ["Solid", "Rainbow"], notes="safe")
-            self.assertFalse(created)
-            self.assertEqual(store.list_effects(), [{"id": 1, "name": "Rainbow", "notes": "safe"}])
+
 
 
 if __name__ == "__main__": unittest.main()

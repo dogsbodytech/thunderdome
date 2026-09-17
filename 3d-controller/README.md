@@ -25,9 +25,8 @@ Python owns spatial rendering and converts effects into the one logical 5,000-pi
 - Offline Stage A simulator: `simulator/static/` and `docs/simulator.md`
 - xLights layout export: [`docs/xlights.md`](docs/xlights.md)
 - Tests: `controller/tests/`
-- Historical experiments: `archive/`
 
-All five structured routes are authoritative. Their generated XYZ positions are nominal mathematical coordinates through exact hub centres, with no hub correction or symmetry inference. The original manual capture is retained at `archive/repository-notes/reference_string_route.md`. The first tail LED is the next 30 mm nominal position after the route endpoint, so it is offset below H061 by the residual pitch distance. Future calibration may adjust pitch, first offset, and tail geometry.
+All five structured routes are authoritative. Their generated XYZ positions are nominal mathematical coordinates through exact hub centres, with no hub correction or symmetry inference. The first tail LED is the next 30 mm nominal position after the route endpoint, so it is offset below H061 by the residual pitch distance. Future calibration may adjust pitch, first offset, and tail geometry.
 
 ## Clone and install
 
