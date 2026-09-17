@@ -1,44 +1,57 @@
-# Control service (Stage C1)
+# Control service
 
-`thunderdome control serve` is the local operator service. It hosts the existing simulator viewer, its live-frame WebSockets, and a single control-runtime API on one local aiohttp server.
+`thunderdome control serve` hosts the local simulator viewer, live frame WebSockets, and REST runtime API on one aiohttp server. It uses one coordinator and one cancellable rendering worker.
+
+## Safe and live-enabled starts
+
+Safe simulator-only service:
 
 ```bash
-# Safe simulator-only operator service
-thunderdome control serve --host 127.0.0.1 --port 8080 --open-browser
-
-# Deliberate physical-output capability; controller addresses stay server-owned.
-thunderdome control serve --host 127.0.0.1 --port 8080 \
-  --controllers config/controllers.json --allow-live-control --open-browser
+thunderdome control serve \
+  --host 127.0.0.1 \
+  --port 8080 \
+  --open-browser
 ```
 
-`thunderdome simulator serve` remains the simulator-only compatibility command. It never exposes control APIs or physical DDP output.
+Deliberate physical capability:
+
+```bash
+thunderdome control serve \
+  --host 127.0.0.1 \
+  --port 8080 \
+  --controllers config/controllers.json \
+  --allow-live-control \
+  --open-browser
+```
+
+The second command enables the ability to select physical output but does not itself start a physical effect. Keep the bind host local. Do not bind a live-enabled unauthenticated service to `0.0.0.0` on an untrusted network.
+
+`thunderdome simulator serve` remains the simulator-only compatibility command. It has no control API and no physical output capability.
 
 ## Runtime model
 
-Browser/API commands and future MQTT integration use the same command model and coordinator. Stage C1 does **not** connect to MQTT. Contributors must follow the [control architecture](control-architecture.md), [runtime command contract](runtime-command-contract.md), and [MQTT integration specification](mqtt-integration-spec.md).
-
-- A **baseline** is the normal effect or auto display and replaces the prior baseline.
-- An **override** temporarily pre-empts it. Higher priority wins; equal priority newer overrides replace; lower priority requests are rejected and never queued.
-- On override expiry or cancellation, the baseline restarts from the beginning rather than attempting effect-local pause/resume.
+- A **baseline** is the normal display and replaces the previous baseline.
+- A temporary **override** pre-empts the baseline, with priority and expiry.
+- Equal-priority newer overrides replace; lower-priority overrides are rejected, never queued.
+- Expiry or cancellation restarts the preserved baseline from time zero.
 - Stop clears baseline and override.
 
-One cancellable worker thread owns one renderer and its selected sink set. Cancellation wakes the frame loop promptly, closes sinks, and prevents concurrent renderers/DDP sessions. Rendering never runs on the aiohttp event loop.
+Rendering and sink work never run in an HTTP callback. Cancellation closes the selected simulator/DDP sinks and prevents concurrent workers.
 
-## Safety
+## Safety and brightness
 
-The default bind host is `127.0.0.1`; simulator output is the default and DDP never falls back from it. Live DDP capability exists only when both `--controllers FILE` and `--allow-live-control` are supplied at service startup. Browser requests cannot submit controller addresses, and controller addresses are not returned by APIs.
+Default bind and output are local simulator. `ddp` and `both` are available only when both `--controllers FILE` and `--allow-live-control` were supplied at startup. Browser requests cannot provide controller addresses; addresses remain server-owned.
 
-Do not bind a live-enabled service to `0.0.0.0` on an untrusted network. Live controls affect the physical dome. Before a DDP sink opens, the service sets each enabled controller's global WLED brightness to `255`. That brightness API call can affect WLED's on/off state, so power remains operator-controlled and must be prepared before live output; realtime mode and current-limit settings are not changed.
+Before a live DDP sink opens, the service sets enabled WLED master brightness to `255`. This can affect WLED power/on state. It does not change WLED current-limit settings. Normal operating brightness is `255` and valid values are `0..255`.
 
-Brightness defaults to **255** in schemas and control requests.
+The service does not connect to MQTT. MQTT remains a future adapter contract; see [control architecture](control-architecture.md), [runtime command contract](runtime-command-contract.md), and [MQTT specification](mqtt-integration-spec.md).
 
-## APIs
+## API surface
 
-Full endpoint reference with request/response bodies and examples: [api-rest.md](api-rest.md).
+Full request/response details are in [REST API](api-rest.md). Main endpoints:
 
 - `GET /api/control/capabilities`
-- `GET /api/effects`
-- `GET /api/effects/{name}`
+- `GET /api/effects` and `GET /api/effects/{name}`
 - `GET /api/runtime/status`
 - `POST /api/runtime/baseline`
 - `POST /api/runtime/override`
@@ -46,6 +59,4 @@ Full endpoint reference with request/response bodies and examples: [api-rest.md]
 - `POST /api/runtime/restart-baseline`
 - `POST /api/runtime/stop`
 
-Baseline/override bodies contain `effect`, `parameters`, optional `output`, `priority`, `duration_seconds`, and optional `request_id`. API validation is server-side and returns structured JSON errors. `ddp` and `both` are rejected unless live capability was explicitly enabled.
-
-Stage C1 exposes schemas and runtime status for the next browser-controls stage; it intentionally does not implement dynamic effect forms, an MQTT listener, recording/replay, or a playlist editor.
+There is no authentication. Use this service on the local host or a controlled network only.

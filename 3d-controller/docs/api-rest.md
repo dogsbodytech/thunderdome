@@ -159,7 +159,7 @@ Set the normal display, replacing any existing baseline. If an override is activ
 ```bash
 curl -s -X POST http://127.0.0.1:8080/api/runtime/baseline \
   -H 'Content-Type: application/json' \
-  -d '{"effect": "Auto", "parameters": {"effects": ["Aurora", "Fireflies"], "interval": 30, "brightness": 32}}'
+  -d '{"effect": "Auto", "parameters": {"effects": ["Aurora", "Fireflies"], "interval": 30, "brightness": 255}}'
 ```
 
 ### `POST /api/runtime/override`
@@ -169,7 +169,7 @@ Temporarily pre-empt the baseline. Rejected with 409 (`"lower priority override 
 ```bash
 curl -s -X POST http://127.0.0.1:8080/api/runtime/override \
   -H 'Content-Type: application/json' \
-  -d '{"effect": "ExpandingRings", "parameters": {"origin": "apex", "brightness": 64}, "priority": 10, "duration_seconds": 15}'
+  -d '{"effect": "ExpandingRings", "parameters": {"origin": "apex", "brightness": 255}, "priority": 10, "duration_seconds": 15}'
 ```
 
 ### `POST /api/runtime/cancel-override`
@@ -219,12 +219,12 @@ curl -s http://127.0.0.1:8080/api/control/capabilities
 # 2. Set a calm baseline in the simulator
 curl -s -X POST http://127.0.0.1:8080/api/runtime/baseline \
   -H 'Content-Type: application/json' \
-  -d '{"effect": "Aurora", "parameters": {"brightness": 32}}'
+  -d '{"effect": "Aurora", "parameters": {"brightness": 255}}'
 
 # 3. Flash a 10-second red alert over it
 curl -s -X POST http://127.0.0.1:8080/api/runtime/override \
   -H 'Content-Type: application/json' \
-  -d '{"effect": "HeightWave", "parameters": {"color": "FF0000", "direction": "bounce", "brightness": 64}, "priority": 10, "duration_seconds": 10}'
+  -d '{"effect": "HeightWave", "parameters": {"color": "FF0000", "direction": "bounce", "brightness": 255}, "priority": 10, "duration_seconds": 10}'
 
 # 4. Watch it hand back to the baseline
 curl -s http://127.0.0.1:8080/api/runtime/status

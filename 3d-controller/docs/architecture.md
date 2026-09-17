@@ -1,39 +1,62 @@
 # Architecture
 
-## External control contracts
+## Active data flow
 
-The local REST/browser control path and future MQTT adapters share one coordinator. See [control-architecture.md](control-architecture.md), [runtime-command-contract.md](runtime-command-contract.md), [api-rest.md](api-rest.md), and [mqtt-integration-spec.md](mqtt-integration-spec.md) for contributor-facing contracts.
+```text
+tracked geometry
+      + structured routes
+              |
+              v
+      generated XYZ positions
+              |
+              v
+       Python effect renderer
+              |
+      one logical 5,000-pixel RGB frame
+              |
+       split by fixed ranges
+       /       |        |        |       \\
+      v        v        v        v        v
+   WLED 1   WLED 2   WLED 3   WLED 4   WLED 5
+      |        |        |        |        |
+  string 1 string 2 string 3 string 4 string 5
+```
 
-The authoritative flow is **geometry -> structured routes -> generated XYZ -> effects -> RGB frame -> DDP -> WLED**. `geometry/` holds authoritative structural facts and `geometry/routes/string_routes.json` holds the authoritative physical routes. The active `thunderdome positions generate` command deterministically derives `geometry/generated/led_positions_3d.json`, and `thunderdome positions validate` validates it. Generated positions are derived artefacts that may be ignored by Git, so users can regenerate them locally. They are nominal mathematical positions through the modelled geometry, not a replacement for future physical calibration.
+The authoritative sequence is **geometry → structured routes → generated XYZ positions → effects → RGB frame → direct DDP fan-out → WLED**.
 
-Effects render a logical 5,000-pixel linear `RGBFrame`, which DDP sends in physical order after fan-out to the five controllers. WLED HTTP support is secondary controller management/fallback functionality. WLED 2D ledmaps, old SVG coordinate experiments, and related archives are not the active mapping authority.
+- `geometry/thunderdome_geometry.json` holds structural coordinates.
+- `geometry/routes/string_routes.json` holds ordered hub routes and global allocation.
+- `geometry/generated/led_positions_3d.json` is derived and regenerated locally.
+- Python renders all 5,000 RGB pixels in physical route order.
+- Five direct DDP destinations receive local 1,000-pixel slices.
+
+WLED HTTP is secondary controller management and fallback/native-effect support. WLED's 2D ledmap and old coordinate experiments are not active mapping authorities.
 
 ## Simulator and frame delivery
 
-`thunderdome simulator serve` is the local aiohttp server for inspecting the same authoritative data and previewing live frames. It loads a compatible geometry/routes/positions set through Python validators, serves the offline browser viewer from `simulator/static/`, and exposes static JSON APIs plus Stage B producer/viewer WebSockets. Its built-in paths are `geometry/thunderdome_geometry.json`, `geometry/routes/string_routes.json`, and `geometry/generated/led_positions_3d.json`; `--geometry`, `--routes`, and `--positions` select an explicit compatible set. Built-in defaults are project-root-safe and explicit relative paths are current-working-directory relative.
+`thunderdome simulator serve` validates compatible geometry, routes, and positions, serves the offline browser, and accepts local live frames. It sends no WLED HTTP requests and no UDP/DDP packets. Effects select a sink:
 
-Before binding, it validates exactly 5,000 ordered LED records, finite XYZ coordinates, H061, controller/string allocation, and tail metadata. The server itself sends no WLED HTTP requests or UDP/DDP packets. The frontend is plain offline HTML/CSS/JavaScript with local Three.js r160 / 0.160.0 and OrbitControls vendor files. It renders hubs, spars, H061, tails, all LED points, optional canvas-texture hub-ID labels, and Stage B live frames using true XYZ coordinates with equal X/Y/Z scale. See [simulator.md](simulator.md).
+- `simulator` — local binary WebSocket preview;
+- `ddp` — direct physical DDP;
+- `both` — the same logical frame to both;
+- `null` — render and discard.
 
-## Animation scheduling
+The simulator has static geometry APIs plus `/ws/producer` and `/ws/viewer` for live frames. It uses bundled Three.js r160 assets; no Node.js, npm, CDN, or remote browser asset is required at runtime.
 
-`thunderdome.animation.run_frame_loop` is the generic scheduling layer between a frame producer and the selected frame sink. It uses a monotonic clock and can repeatedly send a static frame, invoke a callback with the frame number and elapsed time, or consume a frame generator. It implements held static DDP frames and the implemented spatial effects derived from generated positional data.
+## Runtime scheduling
 
-A clock-hand sweep renders a different 5,000-pixel `RGBFrame` for each iteration from the current angle and generated XYZ positions, then passes those frames through `run_frame_loop` to its selected simulator, DDP, composite, or null sink. The loop, timing, session reuse, interruption handling, and transport behavior are shared across effects.
+`run_frame_loop` uses a monotonic scheduler for one-shot, held, finite-duration, and finite-loop output. One DDP session reuses its UDP socket(s) for the session. Ctrl+C cancels the loop and closes sinks.
 
-WLED JSON/HTTP remains a separate persistent-state path. The reusable multi-controller helper explicitly addresses every enabled controller for power, brightness, colour, native effects, palettes, presets, live state, and `prepare-ddp`; controller 1 is never a JSON or DDP master. Live DDP effect output sets enabled controllers' WLED master brightness to `255` before opening the DDP session. That brightness API call can affect WLED's on/off state, so power remains operator-controlled and must be prepared before live output; realtime mode and current-limit settings are not changed.
+Spatial effects use generated XYZ records. `clock-hand` uses H061's XY coordinate; `expanding-rings` uses true XYZ Euclidean distance; `height-wave` uses selected Z bounds; procedural effects use the same index-aligned context. Tails are included by default and removed only with `--exclude-tail`.
 
-The clock axis is the authoritative XY coordinate of apex hub H061 loaded from `geometry/thunderdome_geometry.json`, not a position-distribution estimate. All five complete 1,000-LED strings, including generated tail records, are rendered by default; `--exclude-tail` is the explicit opt-out. Tail records share the apex XY and naturally satisfy the radial origin test at all angles.
+## Brightness and WLED state
 
-The other implemented effects share the same immutable, index-aligned XYZ context. `expanding-rings` selects a spherical shell from true XYZ Euclidean distance and wraps its elapsed-time radius at the maximum selected distance. Its origin parser resolves H061 `apex`, dome-only `centre` and `base`, or explicit metre coordinates outside the renderer. `height-wave` derives its selected Z range after tail filtering and moves one full-thickness band up, down, or with a clean triangular-wave bounce. Both produce the same exact 15,000-byte logical RGB frame and use `--loops` for complete physical movement cycles. See [effects.md](effects.md).
+Normal operation uses brightness **255**, the maximum valid 8-bit value. Valid values are `0..255`; `256` is invalid. Before live effect DDP opens, the controller sets enabled WLED master brightness to `255`. This HTTP state call can affect WLED on/off state; it does not set current limits. Physical power/current readiness remains an operator check.
 
-## Effect registry and auto mode
+## Control service
 
-`controller/thunderdome/effects/Registry.py` is the small catalogue used by the CLI and `effect auto`. It names production-ready effects, provides per-effect defaults for auto playback, and defines curated presets (`calm`, `energetic`). The registry keeps standalone commands and auto playlists aligned without duplicating effect names in documentation or tests.
+`thunderdome control serve` hosts the simulator and local REST/runtime coordinator. It has one worker and one sink set, with browser baseline and temporary override arbitration. The safe default is local simulator output. Physical capability exists only when both `--controllers FILE` and `--allow-live-control` are supplied at startup. See [control-service.md](control-service.md), [api-rest.md](api-rest.md), and [runtime-command-contract.md](runtime-command-contract.md).
 
-`controller/thunderdome/effects/Procedural.py` contains deterministic no-dependency renderers for `fire`, `rotating-plane`, `radar`, `aurora`, and `fireflies`. These renderers use generated XYZ positions, not global LED index order, and each returns the same `RGBFrame` shape as the existing effects. `rotating-plane` uses Rodrigues' formula to rotate a perpendicular plane normal around the configured 3D axis (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and precomputes the current normal plus a bounded set of previous trail normals once per frame. Each LED then only does signed-distance/intensity/blending work against those samples. `--trail-degrees` is limited to `0..180`: zero disables the trail, 180 covers all unique absolute-distance plane orientations, and values above 180 are rejected rather than clamped. The trail uses the main plane plus at most 12 previous-orientation samples for Raspberry Pi performance. The firefly renderer uses a reusable deterministic particle template system with seeded position, velocity, lifecycle phase, brightness phase, and true 3D glow falloff.
+## Effect registry and Auto
 
-`effect auto` loads the spatial context and controller mapping once, opens one multi-controller DDP session, and selects frames from the registry playlist over time. During crossfade it blends full-brightness source frames linearly and applies the requested global brightness only once after blending. Incoming effect-local time starts at the beginning of its transition and continues across the interval boundary, so animations do not rewind when the incoming effect becomes primary. Dry-run uses the same scheduler and packet splitting path as live output, but with simulated sends and without HTTP or UDP. Auto is continuous by default until Ctrl+C unless `--cycles` or `--duration` is supplied.
-
-## Stage B frame delivery
-
-Effects produce one 5,000-pixel `RGBFrame` and pass it to a destination-independent sink. `SimulatorFrameSink` sends a versioned binary RGB8 frame to `/ws/producer`; `DDPFrameSink` retains the existing multi-controller fanout; `CompositeFrameSink` delivers the same logical frame to both; and `NullFrameSink` discards validated frames. The aiohttp simulator retains the newest frame and exposes bounded per-viewer queues at `/ws/viewer`, preventing unbounded preview latency.
+The registry aligns standalone effect names, schemas, saved defaults, and Auto playlists. `effect auto` loads spatial context once, reuses one sink/session, and crossfades full-brightness source frames before applying the requested global brightness once. It runs continuously unless `--cycles` or `--duration` is supplied.
