@@ -15,12 +15,20 @@ class MultiControllerDDPSession:
  def __enter__(self): return self
  def __exit__(self,*_): self.close()
  def close(self):
+  failures=[]
+  for s in tuple(self.sockets.values()):
+   try: s.close()
+   except Exception as e: failures.append(e)
+  executor=self._executor
   try:
-   for s in self.sockets.values(): s.close()
+   if executor is not None: executor.shutdown(wait=True)
+  except Exception as e: failures.append(e)
   finally:
-   self.sockets.clear()
-   if self._executor is not None:
-    self._executor.shutdown(wait=True); self._executor=None
+   self.sockets.clear(); self._executor=None
+  if failures:
+   first=failures[0]
+   for cleanup_error in failures[1:]: first.add_note(f"additional DDP cleanup failure: {cleanup_error}")
+   raise first
  def split_frame(self,frame:RGBFrame):
   if frame.led_count!=LOGICAL_LED_COUNT: raise ValueError('fan-out requires exactly 5,000 LEDs')
   return {c.controller_number:RGBFrame(CONTROLLER_LED_COUNT,bytearray(frame.data[c.global_start*3:(c.global_end+1)*3])) for c in self.config.controllers}

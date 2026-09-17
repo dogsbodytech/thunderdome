@@ -217,7 +217,7 @@ def build_simulator_payload(geometry_path: str | Path, routes_path: str | Path, 
 class SimulatorHTTPServer:
     """Compatibility wrapper that hosts the aiohttp simulator in its own loop thread."""
 
-    def __init__(self, server_address: tuple[str, int], payload: dict[str, Any], static_dir: Path, control_api: Any | None = None):
+    def __init__(self, server_address: tuple[str, int], payload: dict[str, Any], static_dir: Path, control_api: Any | None = None, *, shutdown_timeout: float = 5.0):
         self.payload = payload
         self.static_dir = static_dir.resolve()
         self._host, self._requested_port = server_address
@@ -226,6 +226,8 @@ class SimulatorHTTPServer:
         self._ready = threading.Event()
         self._stopped = threading.Event()
         self._startup_error: BaseException | None = None
+        self._shutdown_error: BaseException | None = None
+        self._shutdown_timeout = shutdown_timeout
         self._closed = False
         self._producer: web.WebSocketResponse | None = None
         self._viewers: dict[web.WebSocketResponse, asyncio.Queue[bytes]] = {}
@@ -264,9 +266,19 @@ class SimulatorHTTPServer:
             self._ready.set()
             self._loop.run_forever()
         finally:
-            self._loop.run_until_complete(self._cleanup())
-            self._stopped.set()
-            self._loop.close()
+            cleanup_error: BaseException | None = None
+            try:
+                self._loop.run_until_complete(self._cleanup())
+            except BaseException as exc:
+                cleanup_error = exc
+                self._shutdown_error = exc
+            finally:
+                self._stopped.set()
+                try:
+                    self._loop.close()
+                except BaseException as close_error:
+                    if cleanup_error is None:
+                        self._shutdown_error = close_error
 
     async def _start(self) -> None:
         self._runner = web.AppRunner(self._app)
@@ -417,20 +429,33 @@ class SimulatorHTTPServer:
     def shutdown(self) -> None:
         if self._closed:
             return
-        self._closed = True
-        if self._loop.is_running():
-            self._loop.call_soon_threadsafe(self._loop.stop)
-        self._thread.join(timeout=5)
+        if self._thread.is_alive():
+            if self._loop.is_running():
+                self._loop.call_soon_threadsafe(self._loop.stop)
+            self._thread.join(timeout=self._shutdown_timeout)
+            if self._thread.is_alive():
+                raise TimeoutError(f"simulator server thread did not stop within {self._shutdown_timeout:g} seconds")
+        first_error = self._shutdown_error
+        self._shutdown_error = None
         if self.control_api is not None:
-            self.control_api.shutdown()
+            try:
+                self.control_api.shutdown()
+            except BaseException as control_error:
+                if first_error is None:
+                    first_error = control_error
+                else:
+                    first_error.add_note(f"control API cleanup failed: {control_error}")
+        if first_error is not None:
+            raise first_error
+        self._closed = True
 
     def server_close(self) -> None:
         self.shutdown()
 
 
-def create_http_server(host: str, port: int, geometry_path: str | Path, routes_path: str | Path, positions_path: str | Path, control_api: Any | None = None) -> SimulatorHTTPServer:
+def create_http_server(host: str, port: int, geometry_path: str | Path, routes_path: str | Path, positions_path: str | Path, control_api: Any | None = None, *, shutdown_timeout: float = 5.0) -> SimulatorHTTPServer:
     payload = build_simulator_payload(geometry_path, routes_path, positions_path)
-    return SimulatorHTTPServer((host, port), payload, simulator_static_dir(), control_api)
+    return SimulatorHTTPServer((host, port), payload, simulator_static_dir(), control_api, shutdown_timeout=shutdown_timeout)
 
 
 def _local_urls(host: str, port: int) -> list[str]:

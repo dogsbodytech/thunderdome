@@ -73,6 +73,20 @@ class RuntimeCoordinatorTests(unittest.TestCase):
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.STOP_ALL, effect=None, output=None)).accepted)
         self.assertIsNone(self.coordinator.status()["baseline"])
 
+    def test_baseline_update_under_override_does_not_restart_override_and_restores_new_baseline(self):
+        self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE, effect="Fire")).accepted)
+        self.assertTrue(self.coordinator.execute(self.command(CommandAction.APPLY_OVERRIDE, effect="Aurora", duration=5)).accepted)
+        starts, stops = len(self.runtime.started), self.runtime.stopped
+
+        self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE, effect="Radar")).accepted)
+        self.assertEqual((len(self.runtime.started), self.runtime.stopped), (starts, stops))
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "Aurora")
+        self.assertEqual(self.coordinator.status()["baseline"]["effect"], "Radar")
+
+        self.clock[0] = 16.0
+        self.assertTrue(self.coordinator.expire_overrides())
+        self.assertEqual(self.coordinator.status()["effective"]["effect"], "Radar")
+
     def test_legacy_effect_command_is_canonicalized_before_starting_runtime(self):
         result = self.coordinator.execute(self.command(CommandAction.SET_BASELINE, effect="height-wave"))
 

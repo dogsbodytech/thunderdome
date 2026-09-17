@@ -42,9 +42,10 @@ class ControlSettings:
 
 class FrameRuntime:
     """One cancellable worker thread; all selected sinks live inside that worker."""
-    def __init__(self, settings: ControlSettings, producer_factory: Callable[[DisplayDefinition], tuple[Callable[[int, float], RGBFrame], int]] | None = None, *, stop_timeout: float = 2.0) -> None:
+    def __init__(self, settings: ControlSettings, producer_factory: Callable[[DisplayDefinition], tuple[Callable[[int, float], RGBFrame], int]] | None = None, *, stop_timeout: float = 2.0, monotonic: Callable[[], float] | None = None) -> None:
         self.settings = settings
         self._stop_timeout = stop_timeout
+        self._monotonic = monotonic or time.monotonic
         self.producer_factory = producer_factory or make_effect_producer
         self._lock = threading.RLock()
         self._cancel: threading.Event | None = None
@@ -72,7 +73,7 @@ class FrameRuntime:
             self._cancel = cancel
             self.frames = 0
             self.error = None
-            self.active_since = time.monotonic()
+            self.active_since = self._monotonic()
             self._thread = threading.Thread(target=self._run, args=(display, cancel), name="thunderdome-control-runtime", daemon=True)
             try:
                 self._thread.start()
@@ -90,8 +91,11 @@ class FrameRuntime:
             producer, fps = produced[:2]
             duration = produced[2] if len(produced) == 3 else None
             if display.expires_at is not None:
-                requested_duration = display.expires_at - display.created_at
-                duration = requested_duration if duration is None else min(duration, requested_duration)
+                remaining = display.expires_at - self._monotonic()
+                if remaining <= 0:
+                    error = None
+                    return
+                duration = remaining if duration is None else min(duration, remaining)
             with self._sink(display.output) as sink:
                 def send(frame: RGBFrame) -> None:
                     result = sink.send_frame(frame)
@@ -99,7 +103,13 @@ class FrameRuntime:
                         raise OSError(f"{result.name}: {result.error or 'delivery failed'}")
                     with self._lock:
                         self.frames += 1
-                stats = run_frame_loop(producer, send, fps=fps, duration=duration, cancel_event=cancel)
+                if display.expires_at is not None:
+                    remaining = display.expires_at - self._monotonic()
+                    if remaining <= 0:
+                        error = None
+                        return
+                    duration = remaining if duration is None else min(duration, remaining)
+                stats = run_frame_loop(producer, send, fps=fps, duration=duration, clock=self._monotonic, cancel_event=cancel)
                 interrupted = stats.interrupted
             error = None
         except Exception as exc:
@@ -269,7 +279,8 @@ class ControlAPI:
             command = RuntimeCommand(source, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
             result = self.coordinator.execute(command)
             if result.accepted:
-                self._sync_override_timer(result.status)
+                internal_status = self.coordinator.internal_status() if hasattr(self.coordinator, "internal_status") else result.status
+                self._sync_override_timer(internal_status)
             return web.json_response({"accepted": result.accepted, "reason": result.reason, "status": result.status}, status=200 if result.accepted else 409)
         except (TypeError, ValueError) as exc:
             return web.json_response({"accepted": False, "error": str(exc)}, status=400)
@@ -300,6 +311,10 @@ class ControlAPI:
         override = status.get("override") if isinstance(status, dict) else None
         generation = override.get("generation") if isinstance(override, dict) else None
         remaining = status.get("remaining_override_seconds") if isinstance(status, dict) else None
+        if generation is None and hasattr(self.coordinator, "internal_status"):
+            internal = self.coordinator.internal_status()
+            internal_override = internal.get("override")
+            generation = internal_override.get("generation") if isinstance(internal_override, dict) else None
         with self._timer_lock:
             if self._closing:
                 return

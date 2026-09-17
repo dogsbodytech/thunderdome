@@ -191,6 +191,33 @@ class WorkerTests(unittest.TestCase):
         self.assertIsNone(runtime.active_since)
         runtime.stop()
 
+    def test_expiring_runtime_uses_lifetime_remaining_at_activation(self):
+        from thunderdome.control import ControlSettings, FrameRuntime
+        from thunderdome.sinks import NullFrameSink
+
+        def activation_duration(now):
+            runtime = FrameRuntime(ControlSettings("http://unused.invalid"), lambda d: (lambda n, t: None, 30), monotonic=lambda: now)
+            runtime._sink = lambda mode: NullFrameSink()
+            display = DisplayDefinition("Fire", {}, OutputMode.NULL, CommandSource.BROWSER, "timed", 100.0, expires_at=110.0)
+            seen = []
+
+            def loop(*args, **kwargs):
+                seen.append(kwargs["duration"])
+                return SimpleNamespace(interrupted=False)
+
+            with patch("thunderdome.control.time.monotonic", return_value=now), patch(
+                "thunderdome.control.run_frame_loop", side_effect=loop
+            ):
+                runtime._run(display, threading.Event())
+            return seen, runtime.error
+
+        self.assertEqual(activation_duration(100.0), ([10.0], None))
+        self.assertEqual(activation_duration(105.0), ([5.0], None))
+        almost_expired, error = activation_duration(109.9)
+        self.assertAlmostEqual(almost_expired[0], 0.1)
+        self.assertIsNone(error)
+        self.assertEqual(activation_duration(111.0), ([], None))
+
     def test_stuck_worker_remains_owned_and_blocks_second_start(self):
         entered, release = threading.Event(), threading.Event()
         calls = []

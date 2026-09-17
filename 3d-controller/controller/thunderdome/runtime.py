@@ -70,8 +70,11 @@ class DisplayDefinition:
     expires_at: float | None = None
     generation: str = field(default_factory=lambda: uuid.uuid4().hex)
 
-    def as_dict(self) -> dict[str, object]:
-        return {"effect": self.effect, "parameters": dict(self.parameters), "output": self.output.value, "source": self.source.value, "request_id": self.request_id, "created_at": self.created_at, "priority": self.priority, "expires_at": self.expires_at, "generation": self.generation}
+    def as_dict(self, *, include_generation: bool = False) -> dict[str, object]:
+        payload = {"effect": self.effect, "parameters": dict(self.parameters), "output": self.output.value, "source": self.source.value, "request_id": self.request_id, "created_at": self.created_at, "priority": self.priority, "expires_at": self.expires_at}
+        if include_generation:
+            payload["generation"] = self.generation
+        return payload
 
 
 @dataclass(frozen=True)
@@ -230,8 +233,11 @@ class RuntimeCoordinator:
                 self._validate_source_policy(command)
                 if command.action == CommandAction.SET_BASELINE:
                     candidate = self._definition(command)
-                    self._replace_effective(self._override or candidate)
-                    self._baseline = candidate
+                    if self._override is not None:
+                        self._baseline = candidate
+                    else:
+                        self._replace_effective(candidate)
+                        self._baseline = candidate
                 elif command.action == CommandAction.APPLY_OVERRIDE:
                     inherited = self._baseline.output if self._baseline else None
                     candidate = self._definition(command, inherited_output=inherited)
@@ -274,6 +280,13 @@ class RuntimeCoordinator:
             return self._expire_locked()
 
     def status(self) -> dict[str, object]:
+        return self._status(include_generation=False)
+
+    def internal_status(self) -> dict[str, object]:
+        """Return status with activation identity for internal timer ownership."""
+        return self._status(include_generation=True)
+
+    def _status(self, *, include_generation: bool) -> dict[str, object]:
         with self._guard():
             self._drain_notifications()
             try:
@@ -285,4 +298,5 @@ class RuntimeCoordinator:
             remaining = None
             if self._override and self._override.expires_at is not None:
                 remaining = max(0.0, self._override.expires_at - self._monotonic())
-            return {"service_state": self._state, "baseline": self._baseline.as_dict() if self._baseline else None, "override": self._override.as_dict() if self._override else None, "effective": effective.as_dict() if effective else None, "remaining_override_seconds": remaining, "latest_error": self._latest_error}
+            as_dict = lambda display: display.as_dict(include_generation=include_generation) if display else None
+            return {"service_state": self._state, "baseline": as_dict(self._baseline), "override": as_dict(self._override), "effective": as_dict(effective), "remaining_override_seconds": remaining, "latest_error": self._latest_error}

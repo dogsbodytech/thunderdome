@@ -179,9 +179,12 @@ class CompositeFrameSink(FrameSink):
             for sink in self.sinks:
                 sink.open()
                 opened.append(sink)
-        except Exception:
+        except Exception as primary:
             for sink in reversed(opened):
-                sink.close()
+                try:
+                    sink.close()
+                except Exception as cleanup_error:
+                    primary.add_note(f"{sink.name} cleanup failed: {cleanup_error}")
             raise
 
     def send_frame(self, frame: RGBFrame, *, timestamp: float | None = None, sequence: int | None = None) -> SinkResult:
