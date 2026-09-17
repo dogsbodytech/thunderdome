@@ -1,4 +1,6 @@
-# Repository inventory before 3D/DDP refactor
+# Historical repository inventory before 3D/DDP refactor
+
+> Historical snapshot retained for refactor provenance; it does not describe the current controller workspace.
 
 **Recorded before moves or renames.** This workspace is not a Git repository in the
 current environment, so `git mv` and commits cannot be used here; file moves will

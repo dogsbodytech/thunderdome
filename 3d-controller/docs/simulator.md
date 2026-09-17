@@ -1,6 +1,6 @@
 # Thunderdome simulator
 
-Stage A is a local, fully offline static geometry and LED-layout viewer. It does **not** stream live effect frames, does not change the default DDP output path, and does not contact WLED controllers.
+`thunderdome simulator serve` provides a local, fully offline geometry and LED-layout viewer. Its Stage A view is static when no producer is connected; the implemented Stage B path accepts local live effect frames over WebSockets. It does not contact WLED controllers or change the selected effect output path.
 
 ## Scope
 
@@ -26,7 +26,7 @@ Not included in Stage A:
 - changes to DDP defaults;
 - MQTT or asynchronous effect overrides.
 
-Existing effects still use their current output behavior. `simulator serve` sends no DDP packets and makes no WLED HTTP requests.
+`simulator serve` sends no DDP packets and makes no WLED HTTP requests. Effects select their own output sink; Stage B receives frames only when an effect targets the simulator.
 
 ## Offline assets
 

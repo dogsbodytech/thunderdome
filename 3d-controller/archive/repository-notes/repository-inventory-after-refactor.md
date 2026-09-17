@@ -1,4 +1,6 @@
-# Repository inventory after 3D/DDP refactor
+# Historical repository inventory after 3D/DDP refactor
+
+> Historical snapshot retained for refactor provenance; it does not describe the current controller workspace.
 
 ## Final active structure
 

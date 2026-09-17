@@ -103,11 +103,10 @@ After completing runtime and spatial preparation, manually power controllers and
 
 ```bash
 thunderdome controllers power on --controllers config/controllers.json
-thunderdome controllers brightness 255 --controllers config/controllers.json
 thunderdome effect clock-hand --controllers config/controllers.json --geometry geometry/thunderdome_geometry.json --positions geometry/generated/led_positions_3d.json --brightness 32 --color FFFFFF --background 000000 --width-mm 300 --rotation-seconds 3 --fps 30 --hold
 ```
 
-Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness. The earlier `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear. The hand centre is H061's authoritative XY coordinate; zero degrees is world `+X` and clockwise is viewed from above. All 5,000 generated XYZ records, including tails, participate by default. Tails share H061 XY and normally light the centre continuously; use `--exclude-tail` when that is not desired.
+For live DDP output, the controller sets every enabled WLED controller's master brightness to `255` before opening the DDP session. It does not alter controller power, realtime mode, or current-limit settings; power remains an explicit operator-controlled state. The earlier `--prepare-ddp` effect option was removed because setting WLED off before realtime streaming caused animations to disappear. The hand centre is H061's authoritative XY coordinate; zero degrees is world `+X` and clockwise is viewed from above. All 5,000 generated XYZ records, including tails, participate by default. Tails share H061 XY and normally light the centre continuously; use `--exclude-tail` when that is not desired.
 
 `expanding-rings` and `height-wave` use the same generated 5,000-record XYZ context and direct multi-controller DDP output. `expanding-rings` is a true XYZ spherical shell with `--origin apex|centre|base|X,Y,Z`, `--speed-mps`, and full `--thickness-mm`. `height-wave` uses actual selected Z bounds with `--direction up|down|bounce`, `--speed-mps`, and full `--height-mm`. Tails participate by default; use `--exclude-tail` to remove them. Spatial `--loops`, `--duration`, and `--hold` are mutually exclusive; a bounce loop is a complete out-and-back. See [effects.md](effects.md) for origin definitions and all options.
 
@@ -129,7 +128,7 @@ thunderdome effect height-wave \
   --brightness 24 --hold
 ```
 
-Run `thunderdome controllers power on --controllers config/controllers.json` and `thunderdome controllers brightness 255 --controllers config/controllers.json` when manual readiness is needed. Effects no longer prepare WLED automatically; `--dry-run` exercises rendering/scheduling without HTTP or UDP traffic. Start at low brightness; Ctrl+C cleanly ends a held or continuous stream.
+Run `thunderdome controllers power on --controllers config/controllers.json` when manual readiness is needed. Live DDP output prepares enabled WLED controllers by setting master brightness to `255`; `--dry-run` exercises rendering/scheduling without HTTP or UDP traffic. Start at low Python brightness; Ctrl+C cleanly ends a held or continuous stream.
 
 ## Stage B safe preview
 

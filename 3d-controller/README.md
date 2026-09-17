@@ -141,7 +141,7 @@ thunderdome effect auto \
   --brightness 24
 ```
 
-Effect commands do not modify persistent WLED state before streaming. Controllers must already be powered on with suitable WLED master brightness. The earlier `--prepare-ddp` option was removed because setting WLED off before realtime streaming caused animations to disappear. `rotating-plane` uses true 3D axis rotation (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and precomputes its plane/trail samples once per frame; LEDs then only do signed-distance work against the bounded samples. `--trail-degrees` accepts `0..180`, where zero disables the trail and values above 180 are rejected. Auto crossfades preserve incoming effect time across interval boundaries. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
+For live DDP output, the controller prepares every enabled WLED controller by setting its master brightness to `255` before opening the DDP session. It does not alter controller power, realtime mode, or current-limit settings. The earlier `--prepare-ddp` effect option was removed because setting WLED off before realtime streaming caused animations to disappear. `rotating-plane` uses true 3D axis rotation (`vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or explicit `X,Y,Z`) and precomputes its plane/trail samples once per frame; LEDs then only do signed-distance work against the bounded samples. `--trail-degrees` accepts `0..180`, where zero disables the trail and values above 180 are rejected. Auto crossfades preserve incoming effect time across interval boundaries. See `docs/effects.md` for all options, playlist syntax, origin definitions, height-wave directions, tails, and Ctrl+C behavior.
 
 ## Realtime live mode and DDP streaming
 
@@ -214,11 +214,10 @@ See `docs/architecture.md` and `docs/ddp.md` for supporting detail.
 
 ## Persistent WLED control and spatial effects
 
-WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. Effect commands do not invoke those persistent-state operations automatically; power on controllers and set suitable WLED master brightness manually before streaming.
+WLED JSON commands address each enabled controller explicitly; controller 1 is not a master for JSON or application DDP output. Use `controller power|brightness|color|effect|palette|preset|live|prepare-ddp` for one host, and the matching `controllers` commands for every enabled host. Live DDP effect output sets enabled controllers' WLED master brightness to `255` when its output session opens; power remains an explicit operator-controlled state.
 
 ```bash
 thunderdome controllers power on --controllers config/controllers.json
-thunderdome controllers brightness 255 --controllers config/controllers.json
 thunderdome effect clock-hand --controllers config/controllers.json \
   --positions geometry/generated/led_positions_3d.json --brightness 32 \
   --color FFFFFF --background 000000 --width-mm 300 \
