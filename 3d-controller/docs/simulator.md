@@ -55,7 +55,7 @@ Defaults:
 - `--host 127.0.0.1`
 - `--port 8080`
 - project-root-safe `geometry/thunderdome_geometry.json`
-- project-root-safe `geometry/reference_string_route.md`
+- project-root-safe `geometry/routes/string_routes.json`
 - project-root-safe `geometry/generated/led_positions_3d.json`
 - browser is not opened automatically
 
@@ -70,7 +70,7 @@ Geometry:
   /resolved/path/to/thunderdome_geometry.json
 
 Routes:
-  /resolved/path/to/reference_string_route.md
+  /resolved/path/to/string_routes.json
 
 Positions:
   /resolved/path/to/led_positions_3d.json
@@ -86,12 +86,12 @@ thunderdome simulator serve \
   --host 127.0.0.1 \
   --port 18080 \
   --geometry geometry/thunderdome_geometry.json \
-  --routes geometry/reference_string_route.md \
+  --routes geometry/routes/string_routes.json \
   --positions geometry/generated/led_positions_3d.json \
   --open-browser
 ```
 
-`--routes FILE` defines string traversal and spar association. Geometry, routes, and positions must describe the same dome. The built-in route document is `geometry/reference_string_route.md`; an explicit generated route document such as `geometry/routes/string_routes.json` is also supported. Use `--no-open-browser` to force no browser launch. `--open-browser` uses Python's standard `webbrowser` module; failure to open a browser does not invalidate the server.
+`--routes FILE` defines string traversal and spar association. Geometry, routes, and positions must describe the same dome. The built-in route document is `geometry/routes/string_routes.json`; its ordered hubs are authoritative while spar facts are derived from geometry. Use `--no-open-browser` to force no browser launch. `--open-browser` uses Python's standard `webbrowser` module; failure to open a browser does not invalidate the server.
 
 ## Binding and security
 
@@ -151,7 +151,7 @@ Controller IP addresses are not exposed because Stage A does not require live co
 The simulator loads a compatible geometry/routes/positions set through Python. Built-in defaults are:
 
 - `geometry/thunderdome_geometry.json`
-- `geometry/reference_string_route.md`
+- `geometry/routes/string_routes.json`
 - `geometry/generated/led_positions_3d.json`
 
 Before serving, it validates:

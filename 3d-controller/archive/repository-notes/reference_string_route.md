@@ -1,6 +1,6 @@
 # Thunderdome LED String Routes
 
-This file defines the authoritative physical hub routes for all five LED strings.
+This is the historical manual capture record for the five physical LED strings. The active machine-readable authority is `geometry/routes/string_routes.json`; active controller code does not parse this Markdown file.
 
 The LED strings run along dome spars and physically pass through the centre of every hub on the route.
 

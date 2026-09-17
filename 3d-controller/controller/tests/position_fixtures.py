@@ -13,7 +13,7 @@ from thunderdome.routes import load_routes
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 GEOMETRY_PATH = PROJECT_ROOT / "geometry" / "thunderdome_geometry.json"
-ROUTES_PATH = PROJECT_ROOT / "geometry" / "reference_string_route.md"
+ROUTES_PATH = PROJECT_ROOT / "geometry" / "routes" / "string_routes.json"
 
 
 @contextmanager

@@ -10,7 +10,7 @@ from typing import Sequence
 
 from .animation.loop import FrameLoopStats, run_frame_loop
 from .auto_scheduler import AutoScheduler
-from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, PROJECT_ROOT, REFERENCE_ROUTE_PATH
+from .config import CONTROLLER_LED_COUNT, DDP_CHUNK_LEDS, DDP_PORT, GEOMETRY_PATH, LED_POSITIONS_PATH, LOGICAL_LED_COUNT, PROJECT_ROOT, ROUTES_PATH
 from .control import ControlAPI, ControlSettings
 from .effect_defaults import EffectDefaults
 from .runtime import OutputMode
@@ -24,7 +24,7 @@ from .effects.Registry import BY_NAME, DEFAULT_PLAYLIST, LEGACY_NAMES, PRESETS
 from .frame import RGBFrame
 from .geometry import load_geometry
 from .led_positions import generate_positions, load_led_positions, write_positions
-from .routes import generate_route_document, load_routes, write_route_document
+from .routes import load_routes
 from .simulator import SimulatorDataError, create_http_server, resolve_user_path, serve_simulator
 from .sinks import CompositeFrameSink, DDPFrameSink, FrameSink, NullFrameSink, SimulatorFrameSink
 from .transport.ddp import DirectDDPSession, parse_hex_color, send_frame
@@ -177,19 +177,18 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     validate = geometry_sub.add_parser("validate")
     validate.add_argument("--path", default=str(GEOMETRY_PATH))
 
-    route = groups.add_parser("route", help="Generate and validate authoritative manual routes")
+    route = groups.add_parser("route", help="Validate and summarize authoritative structured routes")
     route_sub = route.add_subparsers(dest="command", required=True)
-    for name in ("generate", "validate", "summary"):
+    for name in ("validate", "summary"):
         item = route_sub.add_parser(name)
-        item.add_argument("--route-path", default=str(GEOMETRY_PATH.parent / "reference_string_route.md"))
+        item.add_argument("--route-path", default=str(ROUTES_PATH))
         item.add_argument("--geometry-path", default=str(GEOMETRY_PATH))
-        item.add_argument("--output", default=str(GEOMETRY_PATH.parent / "routes/string_routes.json"))
 
     positions = groups.add_parser("positions", help="Generate and validate nominal XYZ positions")
     positions_sub = positions.add_subparsers(dest="command", required=True)
     for name in ("generate", "validate", "summary"):
         item = positions_sub.add_parser(name)
-        item.add_argument("--route-path", default=str(GEOMETRY_PATH.parent / "reference_string_route.md"))
+        item.add_argument("--route-path", default=str(ROUTES_PATH))
         item.add_argument("--geometry-path", default=str(GEOMETRY_PATH))
         item.add_argument("--path", default=str(LED_POSITIONS_PATH))
 
@@ -799,10 +798,7 @@ def _main(args: argparse.Namespace) -> int:
     if args.area == "route":
         geometry = load_geometry(args.geometry_path)
         routes = load_routes(args.route_path, geometry)
-        if args.command == "generate":
-            write_route_document(args.output, generate_route_document(routes, args.route_path, args.geometry_path))
-            print(f"Generated {args.output}")
-        elif args.command == "summary":
+        if args.command == "summary":
             for route in routes:
                 print(
                     f"controller {route.controller_number}; string {route.string_id}; "
@@ -853,7 +849,7 @@ def _main(args: argparse.Namespace) -> int:
 
     if args.area == "simulator":
         geometry_path = resolve_user_path(args.geometry, GEOMETRY_PATH)
-        routes_path = resolve_user_path(args.routes, REFERENCE_ROUTE_PATH)
+        routes_path = resolve_user_path(args.routes, ROUTES_PATH)
         positions_path = resolve_user_path(args.positions, LED_POSITIONS_PATH)
         if not geometry_path.is_file():
             raise SimulatorDataError(f"geometry file not found: {geometry_path}")
@@ -865,7 +861,7 @@ def _main(args: argparse.Namespace) -> int:
 
     if args.area == "control":
         geometry_path = resolve_user_path(args.geometry, GEOMETRY_PATH)
-        routes_path = resolve_user_path(args.routes, REFERENCE_ROUTE_PATH)
+        routes_path = resolve_user_path(args.routes, ROUTES_PATH)
         positions_path = resolve_user_path(args.positions, LED_POSITIONS_PATH)
         if not geometry_path.is_file() or not routes_path.is_file() or not positions_path.is_file():
             raise SimulatorDataError("control service requires valid geometry, routes, and positions files")

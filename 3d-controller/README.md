@@ -19,14 +19,14 @@ Python owns spatial rendering and converts effects into the one logical 5,000-pi
 
 - Geometry: `geometry/thunderdome_geometry.json`
 - Editable Blender source: `assets/blender/thunderdome_3v_5_8_scaled.blend`
-- Confirmed reference route: `geometry/reference_string_route.md`
+- Canonical structured routes: `geometry/routes/string_routes.json`
 - Generated positions: `geometry/generated/led_positions_3d.json` (derived and intentionally ignored)
 - Active Python package: `controller/thunderdome/`
 - Offline Stage A simulator: `simulator/static/` and `docs/simulator.md`
 - Tests: `controller/tests/`
 - Historical experiments: `archive/`
 
-All five manually captured routes are authoritative. Their generated XYZ positions are nominal mathematical coordinates through exact hub centres, with no hub correction or symmetry inference. The first tail LED is the next 30 mm nominal position after the route endpoint, so it is offset below H061 by the residual pitch distance. Future calibration may adjust pitch, first offset, and tail geometry.
+All five structured routes are authoritative. Their generated XYZ positions are nominal mathematical coordinates through exact hub centres, with no hub correction or symmetry inference. The original manual capture is retained at `archive/repository-notes/reference_string_route.md`. The first tail LED is the next 30 mm nominal position after the route endpoint, so it is offset below H061 by the residual pitch distance. Future calibration may adjust pitch, first offset, and tail geometry.
 
 ## Clone and install
 

@@ -42,7 +42,7 @@ To inspect a matched custom data set, provide all three compatible paths. Defaul
 ```bash
 thunderdome simulator serve \
   --geometry geometry/thunderdome_geometry.json \
-  --routes geometry/reference_string_route.md \
+  --routes geometry/routes/string_routes.json \
   --positions geometry/generated/led_positions_3d.json \
   --open-browser
 ```

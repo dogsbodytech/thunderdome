@@ -9,7 +9,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome.cli import parse_args
-from thunderdome.config import CONTROLLERS_PATH, GEOMETRY_PATH, LED_POSITIONS_PATH
+from thunderdome.config import CONTROLLERS_PATH, GEOMETRY_PATH, LED_POSITIONS_PATH, ROUTES_PATH
+from thunderdome.simulator import resolve_user_path
 
 
 class DefaultPathRegressionTests(unittest.TestCase):
@@ -49,6 +50,12 @@ class DefaultPathRegressionTests(unittest.TestCase):
     def test_positions_generation_uses_the_canonical_default_and_keeps_overrides(self):
         self.assertEqual(Path(parse_args(["positions", "generate"]).path), LED_POSITIONS_PATH)
         self.assertEqual(Path(parse_args(["positions", "generate", "--path", "local/positions.json"]).path), Path("local/positions.json"))
+
+    def test_route_consumers_default_to_structured_route_authority(self):
+        self.assertEqual(Path(parse_args(["route", "validate"]).route_path), ROUTES_PATH)
+        self.assertEqual(Path(parse_args(["positions", "generate"]).route_path), ROUTES_PATH)
+        for command in (["simulator", "serve"], ["control", "serve"]):
+            self.assertEqual(resolve_user_path(parse_args(command).routes, ROUTES_PATH), ROUTES_PATH)
 
 
 if __name__ == "__main__":

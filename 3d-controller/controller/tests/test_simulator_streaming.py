@@ -11,7 +11,7 @@ from aiohttp import ClientSession, WSServerHandshakeError, WSMsgType
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from thunderdome.frame import RGBFrame
-from thunderdome.config import GEOMETRY_PATH, LED_POSITIONS_PATH, REFERENCE_ROUTE_PATH
+from thunderdome.config import GEOMETRY_PATH, LED_POSITIONS_PATH, ROUTES_PATH
 from thunderdome.simulator import create_http_server
 from thunderdome.streaming import FrameProtocolError, decode_frame, encode_frame
 from thunderdome.sinks import CompositeFrameSink, FrameSink, NullFrameSink, SinkResult
@@ -53,7 +53,7 @@ class SimulatorLiveStreamingTests(unittest.IsolatedAsyncioTestCase):
         cls.addClassCleanup(cls._positions.__exit__, None, None, None)
 
     async def asyncSetUp(self):
-        self.server = create_http_server("127.0.0.1", 0, GEOMETRY_PATH, REFERENCE_ROUTE_PATH, self.positions_path)
+        self.server = create_http_server("127.0.0.1", 0, GEOMETRY_PATH, ROUTES_PATH, self.positions_path)
         self.port = self.server.server_address[1]
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
