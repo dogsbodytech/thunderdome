@@ -25,7 +25,7 @@ Python geometry + routes + XYZ positions
 When this command is used:
 
 ```bash
-thunderdome effect fire --output ddp --controllers config/controllers.json --brightness 255
+thunderdome effect Fire --output ddp --controllers config/controllers.json --brightness 255
 ```
 
 Python renders `Fire`. WLED is not running its native Fire effect; it receives pixel values. The explicit `--output ddp` is a physical-output boundary.

@@ -40,7 +40,6 @@ First light must use the same fixed mapping that was validated during physical s
 **Run**
 
 ```bash
-cd 3d-controller
 source .venv/bin/activate
 thunderdome controllers validate --controllers config/controllers.json
 ```
@@ -134,7 +133,7 @@ This proves Python positions, effect rendering, five-way slicing, and physical D
 **Run**
 
 ```bash
-thunderdome effect height-wave \
+thunderdome effect HeightWave \
   --output ddp \
   --controllers config/controllers.json \
   --direction bounce \

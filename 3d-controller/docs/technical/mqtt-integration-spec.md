@@ -40,7 +40,7 @@ Validate the JSON envelope against `schemas/mqtt-override-v1.schema.json` before
 The envelope rejects unknown top-level fields. `parameters` intentionally remains an object in the transport schema: the adapter must validate it with the existing server effect schema after decoding. It must reject:
 
 - unknown effects and effects outside the deployment allow-list;
-- `auto` (v1 MQTT override effects must be non-auto);
+- `Auto` (v1 MQTT override effects must be non-auto);
 - unknown effect parameters;
 - runtime-classified fields such as `brightness`, `fps`, and `exclude_tail`;
 - non-finite, malformed, or out-of-range values;

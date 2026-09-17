@@ -28,7 +28,6 @@ The package requires Python 3.11+ and should not share dependencies with system 
 **Run**
 
 ```bash
-cd 3d-controller
 python3 --version
 python3 -m venv .venv
 source .venv/bin/activate
@@ -167,7 +166,7 @@ A moving browser view proves the renderer and local WebSocket frame path, not ph
 In terminal 2, with the virtual environment activated:
 
 ```bash
-thunderdome effect height-wave \
+thunderdome effect HeightWave \
   --output simulator \
   --direction bounce \
   --duration 10 \

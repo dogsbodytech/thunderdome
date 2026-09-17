@@ -24,17 +24,19 @@ Normal operational brightness is `255`. Valid 8-bit values are `0..255`; `256` i
 
 | Effect | Spatial basis | Cycle/duration controls | Safe simulator example |
 | --- | --- | --- | --- |
-| `clock-hand` | Forward XY half-ray from H061 XY | `--rotations`, `--duration`, `--hold` | `thunderdome effect clock-hand --output simulator --brightness 255 --rotations 1` |
-| `expanding-rings` | True XYZ spherical shell | `--loops`, `--duration`, `--hold` | `thunderdome effect expanding-rings --output simulator --origin apex --brightness 255 --loops 1` |
-| `height-wave` | Horizontal band over selected Z bounds | `--loops`, `--duration`, `--hold` | `thunderdome effect height-wave --output simulator --direction bounce --brightness 255 --duration 10` |
-| `fire` | XYZ height/radius/turbulence | `--duration`, `--hold` | `thunderdome effect fire --output simulator --brightness 255 --duration 10` |
-| `rotating-plane` | Signed distance to a 3D plane | `--loops`, `--duration`, `--hold` | `thunderdome effect rotating-plane --output simulator --axis tilted --brightness 255 --loops 1` |
-| `radar` | Angular sweep around dome centre | `--loops`, `--duration`, `--hold` | `thunderdome effect radar --output simulator --brightness 255 --duration 10` |
-| `aurora` | Layered XYZ waves | `--duration`, `--hold` | `thunderdome effect aurora --output simulator --brightness 255 --duration 10` |
-| `fireflies` | Moving 3D particles and glow | `--duration`, `--hold` | `thunderdome effect fireflies --output simulator --brightness 255 --duration 10` |
-| `twinkle` | Stateful per-LED sparkles | `--duration`, `--hold` | `thunderdome effect twinkle --output simulator --brightness 255 --duration 10` |
+| `ClockHand` | Forward XY half-ray from H061 XY | `--rotations`, `--duration`, `--hold` | `thunderdome effect ClockHand --output simulator --brightness 255 --rotations 1` |
+| `ExpandingRings` | True XYZ spherical shell | `--loops`, `--duration`, `--hold` | `thunderdome effect ExpandingRings --output simulator --origin apex --brightness 255 --loops 1` |
+| `HeightWave` | Horizontal band over selected Z bounds | `--loops`, `--duration`, `--hold` | `thunderdome effect HeightWave --output simulator --direction bounce --brightness 255 --duration 10` |
+| `Fire` | XYZ height/radius/turbulence | `--duration`, `--hold` | `thunderdome effect Fire --output simulator --brightness 255 --duration 10` |
+| `RotatingPlane` | Signed distance to a 3D plane | `--loops`, `--duration`, `--hold` | `thunderdome effect RotatingPlane --output simulator --axis tilted --brightness 255 --loops 1` |
+| `Radar` | Angular sweep around dome centre | `--loops`, `--duration`, `--hold` | `thunderdome effect Radar --output simulator --brightness 255 --duration 10` |
+| `Aurora` | Layered XYZ waves | `--duration`, `--hold` | `thunderdome effect Aurora --output simulator --brightness 255 --duration 10` |
+| `Fireflies` | Moving 3D particles and glow | `--duration`, `--hold` | `thunderdome effect Fireflies --output simulator --brightness 255 --duration 10` |
+| `Twinkle` | Stateful per-LED sparkles | `--duration`, `--hold` | `thunderdome effect Twinkle --output simulator --brightness 255 --duration 10` |
 | solar-system bodies | Fixed palette over XYZ positions | `--duration`, `--hold` | `thunderdome effect Mars --output simulator --brightness 255 --duration 10` |
-| `auto` | Registry playlist and crossfade | `--cycles`, `--duration` or Ctrl+C | `thunderdome effect auto --output simulator --preset calm --brightness 255 --duration 30` |
+| `Auto` | Registry playlist and crossfade | `--cycles`, `--duration` or Ctrl+C | `thunderdome effect Auto --output simulator --preset calm --brightness 255 --duration 30` |
+
+Canonical names are the preferred interface. For backward compatibility, the CLI also accepts these legacy aliases: `clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, `twinkle`, and `auto`. Alias support is retained by the CLI; this documentation uses canonical names for new commands.
 
 `--fps` is 1–60 and defaults to 30 for effects. `--output null` is useful for a no-network renderer smoke test. `--dry-run` is an alias for null for effects; Auto dry runs require a finite `--cycles` or `--duration`.
 
@@ -42,11 +44,11 @@ Normal operational brightness is `255`. Valid 8-bit values are `0..255`; `256` i
 
 ### Clock hand
 
-`clock-hand` is centred on the authoritative XY coordinate of H061. Zero degrees points along world `+X`; clockwise is viewed from above. `--width-mm` is the full visible width. Tails are included by default; `--exclude-tail` omits them.
+`ClockHand` is centred on the authoritative XY coordinate of H061. Zero degrees points along world `+X`; clockwise is viewed from above. `--width-mm` is the full visible width. Tails are included by default; `--exclude-tail` omits them.
 
 ### Expanding rings
 
-`expanding-rings` is a spherical XYZ shell, not a flat XY ring. `--origin` accepts:
+`ExpandingRings` is a spherical XYZ shell, not a flat XY ring. `--origin` accepts:
 
 - `apex` — H061 XYZ;
 - `centre` — H061 X/Y and the midpoint between H061 Z and the dome-only minimum Z;
@@ -57,16 +59,16 @@ Normal operational brightness is `255`. Valid 8-bit values are `0..255`; `256` i
 
 ### Height wave
 
-`height-wave` moves a full `--height-mm` horizontal band across the selected actual Z range. `up` and `down` wrap at the bound; `bounce` reverses and one loop is out-and-back. Tails are included unless `--exclude-tail` is used.
+`HeightWave` moves a full `--height-mm` horizontal band across the selected actual Z range. `up` and `down` wrap at the bound; `bounce` reverses and one loop is out-and-back. Tails are included unless `--exclude-tail` is used.
 
 ### Procedural effects
 
-- `fire` uses height, radius, deterministic turbulence, cooling, scale, palette, and seed.
-- `rotating-plane` rotates a plane around `vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or finite non-zero `X,Y,Z`. `--trail-degrees` accepts `0..180`; zero disables the trail and values above 180 are rejected.
-- `radar` sweeps an angular beam with configurable width, trail, range, and vertical falloff.
-- `aurora` uses layered deterministic waves and `--direction X,Y,Z`.
-- `fireflies` uses deterministic seeded moving 3D particles and true distance falloff.
-- `twinkle` uses stateful per-LED fade-in/hold/fade-out sparkles.
+- `Fire` uses height, radius, deterministic turbulence, cooling, scale, palette, and seed.
+- `RotatingPlane` rotates a plane around `vertical=(0,0,1)`, `horizontal=(1,0,0)`, `tilted=normalize(1,1,1)`, or finite non-zero `X,Y,Z`. `--trail-degrees` accepts `0..180`; zero disables the trail and values above 180 are rejected.
+- `Radar` sweeps an angular beam with configurable width, trail, range, and vertical falloff.
+- `Aurora` uses layered deterministic waves and `--direction X,Y,Z`.
+- `Fireflies` uses deterministic seeded moving 3D particles and true distance falloff.
+- `Twinkle` uses stateful per-LED fade-in/hold/fade-out sparkles.
 
 ### Solar-system effects
 
@@ -77,7 +79,7 @@ Normal operational brightness is `255`. Valid 8-bit values are `0..255`; `256` i
 The default playlist is:
 
 ```text
-clock-hand, expanding-rings, height-wave, fire, rotating-plane, radar, aurora, fireflies
+ClockHand, ExpandingRings, HeightWave, Fire, RotatingPlane, Radar, Aurora, Fireflies
 ```
 
 Presets are `calm`, `energetic`, and `solar-system`. Use `--playlist` or `--effects` with a comma-separated list. Empty, duplicate, unknown, or non-auto-capable entries are rejected. `--shuffle --seed N` shuffles once deterministically.
@@ -89,7 +91,7 @@ Presets are `calm`, `energetic`, and `solar-system`. Use `--playlist` or `--effe
 After [physical startup](../runbooks/02-physical-dome-startup.md) and [first light](../runbooks/03-first-light-and-ddp.md), a deliberate physical preview is:
 
 ```bash
-thunderdome effect height-wave \
+thunderdome effect HeightWave \
   --output ddp \
   --controllers config/controllers.json \
   --direction bounce \

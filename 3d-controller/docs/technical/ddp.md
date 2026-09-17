@@ -23,7 +23,7 @@ Controller 1 is not a DDP master or relay for the Python path. The default packe
 Safe local preview uses the effect sink, not direct `ddp`:
 
 ```bash
-thunderdome effect fire \
+thunderdome effect Fire \
   --output simulator \
   --duration 10 \
   --brightness 255
@@ -68,4 +68,4 @@ The multi-controller command attempts every enabled device and returns non-zero 
 
 ## Spatial effects
 
-`clock-hand`, `expanding-rings`, `height-wave`, `fire`, `rotating-plane`, `radar`, `aurora`, `fireflies`, `twinkle`, and the solar-system effects are Python-rendered. They produce the same logical 5,000-pixel shape and use the selected sink. Physical examples must specify `--output ddp`; renderer options are in [effects](effects.md).
+`ClockHand`, `ExpandingRings`, `HeightWave`, `Fire`, `RotatingPlane`, `Radar`, `Aurora`, `Fireflies`, `Twinkle`, and the solar-system effects are Python-rendered. They produce the same logical 5,000-pixel shape and use the selected sink. Physical examples must specify `--output ddp`; renderer options are in [effects](effects.md).

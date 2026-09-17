@@ -28,7 +28,6 @@ The installed command depends on this project's environment and generated positi
 **Run**
 
 ```bash
-cd 3d-controller
 source .venv/bin/activate
 test -f geometry/generated/led_positions_3d.json
 ```
@@ -85,7 +84,7 @@ Every output destination should be visible in the command line.
 Local preview:
 
 ```bash
-thunderdome effect auto \
+thunderdome effect Auto \
   --output simulator \
   --preset calm \
   --brightness 255
@@ -94,7 +93,7 @@ thunderdome effect auto \
 Physical dome:
 
 ```bash
-thunderdome effect auto \
+thunderdome effect Auto \
   --output ddp \
   --controllers config/controllers.json \
   --preset calm \
@@ -104,7 +103,7 @@ thunderdome effect auto \
 Mirror preview and physical output:
 
 ```bash
-thunderdome effect auto \
+thunderdome effect Auto \
   --output both \
   --controllers config/controllers.json \
   --preset calm \

@@ -58,7 +58,7 @@ The live binary frame protocol uses a versioned `TDFR` header and exactly 15,000
 With the server running in one terminal:
 
 ```bash
-thunderdome effect fire \
+thunderdome effect Fire \
   --output simulator \
   --duration 10 \
   --brightness 255 \

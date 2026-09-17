@@ -53,7 +53,6 @@ The exports record a WLED `live` configuration with realtime enabled and a 25-se
 Create the local runtime file from the tracked template:
 
 ```bash
-cd 3d-controller
 cp config/controllers.example.json config/controllers.json
 ```
 

@@ -87,7 +87,7 @@ Every effect shares three `runtime`-classified parameters: `brightness` (0–255
 
 ## Effect defaults
 
-Operator-saved parameter defaults, persisted server-side in `config/effect-defaults.json` and merged over built-in defaults. `auto` and runtime parameters (`brightness`, `fps`, `exclude_tail`) cannot be saved as defaults.
+Operator-saved parameter defaults, persisted server-side in `config/effect-defaults.json` and merged over built-in defaults. `Auto` and runtime parameters (`brightness`, `fps`, `exclude_tail`) cannot be saved as defaults.
 
 | Method and path | Behaviour |
 | --- | --- |
@@ -191,9 +191,9 @@ Server-side, strict, applied to `parameters` and to saved defaults:
 - Unknown parameter names and unknown effects are rejected.
 - `integer`/`float` values must be finite numbers; booleans are not accepted as numbers.
 - `colour` values must match `#RRGGBB` or `RRGGBB`.
-- `vector` values (`rotating-plane --axis`, `aurora --direction`) accept the names `vertical`, `horizontal`, `tilted`, a `"X,Y,Z"` string, or a three-number array; zero vectors are rejected.
+- `vector` values (`RotatingPlane --axis`, `Aurora --direction`) accept the names `vertical`, `horizontal`, `tilted`, a `"X,Y,Z"` string, or a three-number array; zero vectors are rejected.
 - `choice` values must be one of the schema's `choices`.
-- `auto.effects` must be a non-empty list of known effect names without duplicates, and `transition` must be less than `interval`.
+- `Auto.effects` must be a non-empty list of known effect names without duplicates, and `transition` must be less than `interval`.
 - Minimum/maximum bounds from the schema are enforced.
 - Procedural animation `speed` and spatial `scale` values are bounded at `100.0` to keep renderer math in a useful finite operating range; the bound is not a duration or rate guarantee.
 

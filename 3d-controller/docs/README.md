@@ -6,6 +6,8 @@ The 3D controller is the software that renders spatial effects for 5,000 LEDs. I
 
 Unless a runbook's entry step says otherwise, shell commands assume you are in the `3d-controller/` directory of your cloned Thunderdome repository and have activated `.venv` where required.
 
+> **If you remember nothing or do not know the current system state: start with [00 — Cold Start](runbooks/00-cold-start.md). Do not skip ahead.**
+
 ## Choose a path
 
 ```text

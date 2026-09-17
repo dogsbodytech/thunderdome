@@ -47,7 +47,7 @@ The simulator has static geometry APIs plus `/ws/producer` and `/ws/viewer` for 
 
 `run_frame_loop` uses a monotonic scheduler for one-shot, held, finite-duration, and finite-loop output. One DDP session reuses its UDP socket(s) for the session. Ctrl+C cancels the loop and closes sinks.
 
-Spatial effects use generated XYZ records. `clock-hand` uses H061's XY coordinate; `expanding-rings` uses true XYZ Euclidean distance; `height-wave` uses selected Z bounds; procedural effects use the same index-aligned context. Tails are included by default and removed only with `--exclude-tail`.
+Spatial effects use generated XYZ records. `ClockHand` uses H061's XY coordinate; `ExpandingRings` uses true XYZ Euclidean distance; `HeightWave` uses selected Z bounds; procedural effects use the same index-aligned context. Tails are included by default and removed only with `--exclude-tail`.
 
 ## Brightness and WLED state
 
@@ -59,4 +59,4 @@ Normal operation uses brightness **255**, the maximum valid 8-bit value. Valid v
 
 ## Effect registry and Auto
 
-The registry aligns standalone effect names, schemas, saved defaults, and Auto playlists. `effect auto` loads spatial context once, reuses one sink/session, and crossfades full-brightness source frames before applying the requested global brightness once. It runs continuously unless `--cycles` or `--duration` is supplied.
+The registry aligns standalone effect names, schemas, saved defaults, and Auto playlists. `effect Auto` loads spatial context once, reuses one sink/session, and crossfades full-brightness source frames before applying the requested global brightness once. It runs continuously unless `--cycles` or `--duration` is supplied.

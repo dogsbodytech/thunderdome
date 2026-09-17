@@ -38,7 +38,6 @@ The physical CLI must know all five direct destinations and their fixed frame ra
 **Run**
 
 ```bash
-cd 3d-controller
 source .venv/bin/activate
 cp config/controllers.example.json config/controllers.json
 ```
