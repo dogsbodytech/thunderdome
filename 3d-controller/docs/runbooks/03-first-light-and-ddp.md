@@ -1,4 +1,15 @@
-# First light and DDP
+# 03 — First light and DDP
+**Position:** Step 03 of 05
+**Previous:** [02 — Physical dome startup](02-physical-dome-startup.md)
+**Use this when:** Five WLED devices are prepared and you need to prove physical output and mapping.
+**Prerequisite:** [02 — Physical dome startup](02-physical-dome-startup.md) ended at ✅ FIVE CONTROLLERS READY; power/current settings are checked.
+**Ends when:** ✅ PHYSICAL MAPPING PROVEN
+**Next:** [04 — Normal operation](04-normal-operation.md)
+
+
+## Main sequence
+
+`00 Cold Start` → `01 Software + Simulator` → `02 Physical Dome Startup` → `03 First Light + DDP` → `04 Normal Operation` → `05 Shutdown`
 
 ## Purpose
 
@@ -6,7 +17,7 @@ Commission the physical path in layers: local configuration, five reachable WLED
 
 > ⚠️ **REAL OUTPUT**
 >
-> This document sends HTTP requests and DDP frames to the physical installation. Do not use it until [physical dome startup](physical-dome-startup.md) has passed and power/current settings have been checked.
+> This document sends HTTP requests and DDP frames to the physical installation. Do not use it until [physical dome startup](02-physical-dome-startup.md) has passed and power/current settings have been checked.
 
 ## DDP model
 
@@ -29,7 +40,7 @@ First light must use the same fixed mapping that was validated during physical s
 **Run**
 
 ```bash
-cd /workspace/3d-controller
+cd 3d-controller
 source .venv/bin/activate
 thunderdome controllers validate --controllers config/controllers.json
 ```
@@ -156,6 +167,13 @@ The effect reports completion/interruption and frame statistics. The five contro
 
 **If it fails**
 
-Use [shutdown](shutdown.md). Do not improvise a physical power-off procedure; see [scope gaps](../reference/source-of-truth.md#facts-not-currently-captured).
+Use [shutdown](05-shutdown.md). Do not improvise a physical power-off procedure; see [scope gaps](../reference/source-of-truth.md#facts-not-currently-captured).
 
-Next: [normal operation](normal-operation.md).
+Next: [normal operation](04-normal-operation.md).
+
+
+> ✅ **PHYSICAL MAPPING PROVEN**
+>
+> Each responding WLED device matches the expected controller/string row and the whole-dome physical effect has completed or been stopped cleanly.
+
+**Next:** [04 — Normal operation](04-normal-operation.md)

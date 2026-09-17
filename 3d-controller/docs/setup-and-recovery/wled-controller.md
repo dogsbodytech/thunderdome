@@ -1,4 +1,4 @@
-# WLED controller commissioning
+# WLED Controller — setup, reset, and replacement recovery
 
 ## Purpose
 
@@ -27,6 +27,10 @@ The public export files are:
 
 The export filenames and firmware filename are repository evidence. They are not live proof of what is installed today.
 
+## Rejoin the main sequence
+
+After the replacement device matches the required settings and the local controller file validates, continue with [02 — Physical dome startup](../runbooks/02-physical-dome-startup.md), then [03 — First light and DDP](../runbooks/03-first-light-and-ddp.md), [04 — Normal operation](../runbooks/04-normal-operation.md), and [05 — Shutdown](../runbooks/05-shutdown.md).
+
 ## Settings the Python/DDP path depends on
 
 Before first light, compare the replacement device with its corresponding known-good export and the current physical wiring. The relevant expectations are:
@@ -49,7 +53,7 @@ The exports record a WLED `live` configuration with realtime enabled and a 25-se
 Create the local runtime file from the tracked template:
 
 ```bash
-cd /workspace/3d-controller
+cd 3d-controller
 cp config/controllers.example.json config/controllers.json
 ```
 
@@ -83,7 +87,7 @@ The repository proves the expected files and settings above, but it does not pro
 3. Check LED count, output pin, colour order, realtime/DDP enablement, and power/current configuration.
 4. Run `controllers validate` locally.
 5. Run `controllers state --controllers config/controllers.json` to read all configured devices.
-6. Run the layered [first-light and DDP](../runbooks/first-light-and-ddp.md) procedure.
+6. Run the layered [first-light and DDP](../runbooks/03-first-light-and-ddp.md) procedure.
 
 Do not change `string_id`, route JSON, or geometry to accommodate a wiring or controller identity mistake.
 

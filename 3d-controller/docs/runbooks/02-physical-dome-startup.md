@@ -1,8 +1,19 @@
-# Physical dome startup
+# 02 — Physical dome startup
+**Position:** Step 02 of 05
+**Previous:** [01 — Software and simulator](01-software-and-simulator.md)
+**Use this when:** The software milestone has passed and you are preparing the real dome.
+**Prerequisite:** [01 — Software and simulator](01-software-and-simulator.md) ended at ✅ SOFTWARE CONTROLLER PROVEN.
+**Ends when:** ✅ FIVE CONTROLLERS READY
+**Next:** [03 — First light and DDP](03-first-light-and-ddp.md)
+
+
+## Main sequence
+
+`00 Cold Start` → `01 Software + Simulator` → `02 Physical Dome Startup` → `03 First Light + DDP` → `04 Normal Operation` → `05 Shutdown`
 
 ## Purpose
 
-Use this only after [software and simulator](software-and-simulator.md) reaches **SOFTWARE CONTROLLER PROVEN**. It prepares the five real WLED destinations and hands first-light testing to [first light and DDP](first-light-and-ddp.md).
+Use this only after [software and simulator](01-software-and-simulator.md) reaches **SOFTWARE CONTROLLER PROVEN**. It prepares the five real WLED destinations and hands first-light testing to [first light and DDP](03-first-light-and-ddp.md).
 
 > ⚠️ **PHYSICAL HARDWARE FROM THIS POINT**
 >
@@ -10,7 +21,7 @@ Use this only after [software and simulator](software-and-simulator.md) reaches 
 
 ## Target and inputs
 
-- Checkout: `/workspace/3d-controller`
+- Checkout: the cloned `3d-controller` directory
 - Runtime config: `config/controllers.json` (local and Git-ignored)
 - WLED addresses: [controller network reference](../reference/controller-network.md)
 - DDP: UDP/`4048`
@@ -27,7 +38,7 @@ The physical CLI must know all five direct destinations and their fixed frame ra
 **Run**
 
 ```bash
-cd /workspace/3d-controller
+cd 3d-controller
 source .venv/bin/activate
 cp config/controllers.example.json config/controllers.json
 ```
@@ -48,7 +59,7 @@ The file contains five enabled controllers, five 1,000-LED local ranges, and no 
 
 **If it fails**
 
-Do not run physical output with placeholders. See [controllers.json](../commissioning/wled-controller.md#controllersjson) and [invalid controller config](../troubleshooting.md).
+Do not run physical output with placeholders. See [controllers.json](../setup-and-recovery/wled-controller.md#controllersjson) and [invalid controller config](../troubleshooting.md).
 
 ## Step 2 — validate allocation without contacting WLED
 
@@ -114,7 +125,7 @@ Repeat for controllers 2–5 if needed. These are real HTTP reads.
 
 **Expected**
 
-The response identifies a WLED device and returns JSON state. Do not require a particular current state after a rebuild; compare relevant settings with [WLED commissioning](../commissioning/wled-controller.md).
+The response identifies a WLED device and returns JSON state. Do not require a particular current state after a rebuild; compare relevant settings with [WLED Controller recovery](../setup-and-recovery/wled-controller.md).
 
 **If it fails**
 
@@ -128,11 +139,11 @@ Brightness `255` is the normal operating value, but software cannot prove wiring
 
 **Run**
 
-Review [physical installation](../reference/physical-installation.md) and [WLED commissioning](../commissioning/wled-controller.md). Confirm the recorded power/current configuration on each WLED device before continuing.
+Review [physical installation](../reference/physical-installation.md) and [WLED Controller recovery](../setup-and-recovery/wled-controller.md). Confirm the recorded power/current configuration on each WLED device before continuing.
 
 **Expected**
 
-The operator can identify the PSU, string, data start, LED count, WLED output settings, and current/power configuration for each device. If a controller was reset, use [WLED commissioning](../commissioning/wled-controller.md) first.
+The operator can identify the PSU, string, data start, LED count, WLED output settings, and current/power configuration for each device. If a controller was reset, use [WLED Controller recovery](../setup-and-recovery/wled-controller.md) first.
 
 **If it fails**
 
@@ -140,4 +151,11 @@ Stop. Physical power switching and any unrecorded electrical procedure are **NOT
 
 ## Step 6 — hand off to first light
 
-Use [first light and DDP](first-light-and-ddp.md). Its first physical command is deliberately one controller and finite-duration. Every spatial physical effect there explicitly uses `--output ddp`.
+Use [first light and DDP](03-first-light-and-ddp.md). Its first physical command is deliberately one controller and finite-duration. Every spatial physical effect there explicitly uses `--output ddp`.
+
+
+> ✅ **FIVE CONTROLLERS READY**
+>
+> The local configuration is valid, the five recorded WLED addresses are reachable, and the recorded power/current settings have been checked.
+
+**Next:** [03 — First light and DDP](03-first-light-and-ddp.md)

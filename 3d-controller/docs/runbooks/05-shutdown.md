@@ -1,4 +1,15 @@
-# Shutdown
+# 05 — Shutdown
+**Position:** Step 05 of 05
+**Previous:** [04 — Normal operation](04-normal-operation.md)
+**Use this when:** An effect, simulator, or control service is running and the session must end.
+**Prerequisite:** A controller process or local service is active.
+**Ends when:** All selected software has stopped cleanly.
+**Next:** [04 — Normal operation](04-normal-operation.md) for the next known-good session
+
+
+## Main sequence
+
+`00 Cold Start` → `01 Software + Simulator` → `02 Physical Dome Startup` → `03 First Light + DDP` → `04 Normal Operation` → `05 Shutdown`
 
 ## Purpose
 
@@ -64,4 +75,4 @@ A one-shot or repeated DDP command does not provide a permanent WLED effect. WLE
 
 The Python controller does not document an electrical power-off sequence here. Physical PSU isolation, mains safety, and event-site shutdown are **NOT CURRENTLY CAPTURED** in this component. Use the wider project's physical documentation and the site's competent-person procedure; do not infer a safe electrical action from a software stop.
 
-Related: [physical installation](../reference/physical-installation.md) and [WLED commissioning](../commissioning/wled-controller.md).
+Related: [physical installation](../reference/physical-installation.md) and [WLED Controller recovery](../setup-and-recovery/wled-controller.md).

@@ -1,8 +1,19 @@
-# Normal operation
+# 04 — Normal operation
+**Position:** Step 04 of 05
+**Previous:** [03 — First light and DDP](03-first-light-and-ddp.md)
+**Use this when:** The simulator and physical mapping are already known-good for routine event use.
+**Prerequisite:** The required setup gates have passed; use 00–03 first if state is unknown.
+**Ends when:** A normal session is running or has been stopped cleanly.
+**Next:** [05 — Shutdown](05-shutdown.md)
+
+
+## Main sequence
+
+`00 Cold Start` → `01 Software + Simulator` → `02 Physical Dome Startup` → `03 First Light + DDP` → `04 Normal Operation` → `05 Shutdown`
 
 ## Purpose
 
-Use this short routine once the simulator and physical commissioning have already passed. Do not repeat first-light checks at every event unless something changed.
+Use this short routine once the simulator and physical setup have already passed. Do not repeat first-light checks at every event unless something changed.
 
 > ⚠️ **PHYSICAL OUTPUT IS EXPLICIT**
 >
@@ -17,7 +28,7 @@ The installed command depends on this project's environment and generated positi
 **Run**
 
 ```bash
-cd /workspace/3d-controller
+cd 3d-controller
 source .venv/bin/activate
 test -f geometry/generated/led_positions_3d.json
 ```
@@ -129,7 +140,7 @@ The service reports `default_output` as `simulator`. Live output is available on
 
 **If it fails**
 
-Use [REST/control troubleshooting](../troubleshooting.md) and [REST API reference](../api-rest.md).
+Use [REST/control troubleshooting](../troubleshooting.md) and [REST API reference](../technical/api-rest.md).
 
 ## Step 5 — normal stop
 
@@ -139,7 +150,7 @@ The application owns its frame loop and closes its sinks on interruption.
 
 **Run**
 
-Press `Ctrl+C` in the effect or service terminal. Then follow [shutdown](shutdown.md).
+Press `Ctrl+C` in the effect or service terminal. Then follow [shutdown](05-shutdown.md).
 
 **Expected**
 
@@ -147,4 +158,4 @@ Held effects stop cleanly and report frames/elapsed time; the service returns to
 
 **If it fails**
 
-Use [shutdown](shutdown.md). Physical electrical power-off is outside this component unless the wider installation procedure is available.
+Use [shutdown](05-shutdown.md). Physical electrical power-off is outside this component unless the wider installation procedure is available.

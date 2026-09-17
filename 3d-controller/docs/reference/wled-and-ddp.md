@@ -65,7 +65,7 @@ Controller 1 is not a master for the Python/DDP path. The public Lighting export
 
 `ddp clear`, `solid`, `pixel`, and `range` send one frame and exit unless a loop mode is selected. `--hold`, `--duration`, and `--loops` are mutually exclusive; `--fps` is 1–60 and defaults to 20 for static loops. WLED may restore its prior state/effect after its realtime timeout when a one-shot frame ends.
 
-Use [first light and DDP](../runbooks/first-light-and-ddp.md) for physical tests. Use [effects](../effects.md) for renderer-specific options.
+Use [first light and DDP](../runbooks/03-first-light-and-ddp.md) for physical tests. Use [effects](../technical/effects.md) for renderer-specific options.
 
 ## Dry-run and output modes
 

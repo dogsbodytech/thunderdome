@@ -1,4 +1,15 @@
-# Software and simulator
+# 01 — Software and simulator
+**Position:** Step 01 of 05
+**Previous:** [00 — Cold start](00-cold-start.md)
+**Use this when:** A new, rebuilt, or unknown software checkout.
+**Prerequisite:** A local checkout and Python 3.11+; no physical hardware is required.
+**Ends when:** ✅ SOFTWARE CONTROLLER PROVEN
+**Next:** [02 — Physical dome startup](02-physical-dome-startup.md)
+
+
+## Main sequence
+
+`00 Cold Start` → `01 Software + Simulator` → `02 Physical Dome Startup` → `03 First Light + DDP` → `04 Normal Operation` → `05 Shutdown`
 
 ## Purpose
 
@@ -17,7 +28,7 @@ The package requires Python 3.11+ and should not share dependencies with system 
 **Run**
 
 ```bash
-cd /workspace/3d-controller
+cd 3d-controller
 python3 --version
 python3 -m venv .venv
 source .venv/bin/activate
@@ -29,7 +40,7 @@ The version is Python 3.11 or later and the shell prompt is using `.venv`.
 
 **If it fails**
 
-Install Python 3.11+ and the venv package for the distribution. See [rebuild controller host](../commissioning/rebuild-controller-host.md).
+Install Python 3.11+ and the venv package for the distribution. See [rebuild controller host](../setup-and-recovery/controller-host.md).
 
 ## Step 2 — install the editable package
 
@@ -191,10 +202,10 @@ The effect reports an interruption or completion and the server exits. No WLED r
 
 **If it fails**
 
-See [shutdown](shutdown.md).
+See [shutdown](05-shutdown.md).
 
 > ✅ **SOFTWARE CONTROLLER PROVEN**
 >
 > Python, installation, geometry, routes, positions, effects, simulator service, browser rendering, and live local frame streaming work. Physical power, WLED, physical networking, DDP-to-hardware, and string identity remain unproven.
 
-Next: [physical dome startup](physical-dome-startup.md).
+Next: [physical dome startup](02-physical-dome-startup.md).

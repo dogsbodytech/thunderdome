@@ -44,5 +44,5 @@ Repeat for the other four hosts. `ping` is not proof that WLED HTTP or DDP is co
 ## Links
 
 - [Physical installation](physical-installation.md)
-- [WLED commissioning](../commissioning/wled-controller.md)
-- [First light and DDP](../runbooks/first-light-and-ddp.md)
+- [WLED Controller recovery](../setup-and-recovery/wled-controller.md)
+- [First light and DDP](../runbooks/03-first-light-and-ddp.md)

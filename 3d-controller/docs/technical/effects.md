@@ -86,7 +86,7 @@ Presets are `calm`, `energetic`, and `solar-system`. Use `--playlist` or `--effe
 
 ## Physical example
 
-After [physical startup](runbooks/physical-dome-startup.md) and [first light](runbooks/first-light-and-ddp.md), a deliberate physical preview is:
+After [physical startup](../runbooks/02-physical-dome-startup.md) and [first light](../runbooks/03-first-light-and-ddp.md), a deliberate physical preview is:
 
 ```bash
 thunderdome effect height-wave \
@@ -97,4 +97,4 @@ thunderdome effect height-wave \
   --duration 20
 ```
 
-Stop a held/continuous physical effect with `Ctrl+C`; see [shutdown](runbooks/shutdown.md).
+Stop a held/continuous physical effect with `Ctrl+C`; see [shutdown](../runbooks/05-shutdown.md).

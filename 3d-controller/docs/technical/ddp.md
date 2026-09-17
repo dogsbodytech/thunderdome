@@ -41,7 +41,7 @@ thunderdome ddp solid \
   --fps 10
 ```
 
-Direct `ddp` commands always target WLED; they have no simulator output mode. Use them only in [first light and DDP](runbooks/first-light-and-ddp.md).
+Direct `ddp` commands always target WLED; they have no simulator output mode. Use them only in [first light and DDP](../runbooks/03-first-light-and-ddp.md).
 
 ## Live mode and WLED state
 

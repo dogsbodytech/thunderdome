@@ -6,15 +6,15 @@ The safe place to start is the local simulator. You can prove the software witho
 
 ## Start here
 
-**I have forgotten how this works:** [Start here](docs/START-HERE.md)
+**I have forgotten how this works:** [Open the documentation front door](docs/README.md)
 
 That page leads to:
 
-1. [Cold start](docs/runbooks/cold-start.md) — the complete “remember nothing” path.
-2. [Software and simulator](docs/runbooks/software-and-simulator.md) — install and see a moving browser effect without hardware.
-3. [Physical dome startup](docs/runbooks/physical-dome-startup.md) — the explicit boundary where WLED and physical DDP begin.
-4. [First light and DDP](docs/runbooks/first-light-and-ddp.md) — layered commissioning and string identification.
-5. [Normal operation](docs/runbooks/normal-operation.md) and [shutdown](docs/runbooks/shutdown.md) — routine event use.
+1. [Runbook sequence](docs/runbooks/README.md) — `00 → 01 → 02 → 03 → 04 → 05` when state is unknown.
+2. [Software and simulator](docs/runbooks/01-software-and-simulator.md) — install and see a moving browser effect without hardware.
+3. [Physical dome startup](docs/runbooks/02-physical-dome-startup.md) — the explicit boundary where WLED and physical DDP begin.
+4. [First light and DDP](docs/runbooks/03-first-light-and-ddp.md) — layered commissioning and string identification.
+5. [Normal operation](docs/runbooks/04-normal-operation.md) and [shutdown](docs/runbooks/05-shutdown.md) — routine event use.
 
 Do not start with physical output. The simulator is the software milestone.
 
@@ -56,7 +56,7 @@ The current Python path addresses all five WLED devices directly. Controller 1 i
 | Local simulator assets | `simulator/static/` |
 | Tests | `controller/tests/` |
 
-Generated positions are derived data. A fresh checkout may not contain them; [the simulator runbook](docs/runbooks/software-and-simulator.md) generates and validates them.
+Generated positions are derived data. A fresh checkout may not contain them; [the simulator runbook](docs/runbooks/01-software-and-simulator.md) generates and validates them.
 
 ## Physical controller map
 
@@ -72,18 +72,13 @@ The runtime uses zero-based internal `string_id` values, while people use contro
 
 The DDP destination is UDP port `4048`. See [controller network reference](docs/reference/controller-network.md) and [physical installation reference](docs/reference/physical-installation.md).
 
-## Technical reference
+## Documentation indexes
 
-- [Architecture](docs/architecture.md)
-- [WLED and DDP](docs/reference/wled-and-ddp.md)
-- [Source of truth](docs/reference/source-of-truth.md)
-- [Geometry](docs/geometry.md)
-- [Routes](docs/route-capture.md)
-- [Effects](docs/effects.md)
-- [Simulator technical reference](docs/simulator.md)
-- [Control service](docs/control-service.md) and [REST API](docs/api-rest.md)
-- [MQTT contract](docs/mqtt-integration-spec.md) — future adapter; not currently connected
-- [xLights export](docs/xlights.md)
+- [Documentation front door](docs/README.md)
+- [Operator runbooks](docs/runbooks/README.md)
+- [Setup and recovery](docs/setup-and-recovery/README.md)
+- [Factual references](docs/reference/README.md)
+- [Technical documentation](docs/technical/README.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
 ## External physical references

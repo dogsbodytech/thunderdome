@@ -1,4 +1,4 @@
-# Rebuild the controller host
+# Controller Host — setup, rebuild, and recovery
 
 ## Purpose
 
@@ -7,6 +7,10 @@ Recover the Python controller computer only. This does not deploy the wider Thun
 ## Scope and prerequisites
 
 You need a Linux machine, access to the public repository, and the local controller checkout. Physical operation still requires the separately documented WLED/network path.
+
+## Rejoin the main sequence
+
+After this recovery reaches the local software proof, continue with [01 — Software and simulator](../runbooks/01-software-and-simulator.md), then [02 — Physical dome startup](../runbooks/02-physical-dome-startup.md), [03 — First light and DDP](../runbooks/03-first-light-and-ddp.md), [04 — Normal operation](../runbooks/04-normal-operation.md), and [05 — Shutdown](../runbooks/05-shutdown.md).
 
 ## Step 1 — retrieve the repository
 
@@ -77,7 +81,7 @@ thunderdome controllers validate --controllers config/controllers.json
 
 **If it fails**
 
-Do not send hardware output. Fix the local file and repeat [WLED commissioning](wled-controller.md#controllersjson).
+Do not send hardware output. Fix the local file and repeat [WLED Controller recovery](wled-controller.md#controllersjson).
 
 ## Step 4 — regenerate derived positions
 
@@ -110,7 +114,7 @@ A rebuild is not complete until the software milestone passes without hardware.
 
 **Run**
 
-Follow [software and simulator](../runbooks/software-and-simulator.md) through the moving `--output simulator` effect and stop it cleanly.
+Follow [software and simulator](../runbooks/01-software-and-simulator.md) through the moving `--output simulator` effect and stop it cleanly.
 
 **Expected**
 
@@ -122,4 +126,4 @@ Stop at the failed software gate. Use [troubleshooting](../troubleshooting.md); 
 
 ## Step 6 — proceed only when hardware is required
 
-Use [physical dome startup](../runbooks/physical-dome-startup.md), followed by [first light and DDP](../runbooks/first-light-and-ddp.md). The rebuild procedure itself sends no WLED/DDP traffic.
+Use [physical dome startup](../runbooks/02-physical-dome-startup.md), followed by [first light and DDP](../runbooks/03-first-light-and-ddp.md). The rebuild procedure itself sends no WLED/DDP traffic.
