@@ -235,13 +235,15 @@ class ControlAPI:
     async def command(self, request: web.Request) -> web.Response:
         try:
             payload = await request.json()
+            if "source" in payload:
+                raise ValueError("source is server-owned for HTTP runtime commands")
             action = {"/api/runtime/baseline": CommandAction.SET_BASELINE, "/api/runtime/override": CommandAction.APPLY_OVERRIDE, "/api/runtime/cancel-override": CommandAction.CANCEL_OVERRIDE, "/api/runtime/restart-baseline": CommandAction.RESTART_BASELINE, "/api/runtime/stop": CommandAction.STOP_ALL}[request.path]
             output = payload.get("output")
             parsed_output = OutputMode(output) if output is not None else None
             if parsed_output in {OutputMode.DDP, OutputMode.BOTH} and not self.settings.live_available:
                 raise ValueError("live DDP output is not enabled")
             duration = payload.get("duration_seconds")
-            source = CommandSource(str(payload.get("source") or CommandSource.BROWSER))
+            source = CommandSource.BROWSER
             command = RuntimeCommand(source, action, str(payload.get("request_id") or uuid.uuid4()), payload.get("effect"), payload.get("parameters", {}), parsed_output, int(payload.get("priority", 0)), None if duration is None else float(duration))
             result = self.coordinator.execute(command)
             if result.accepted and action == CommandAction.APPLY_OVERRIDE and command.duration_seconds is not None:

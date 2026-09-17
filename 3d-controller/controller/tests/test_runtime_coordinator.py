@@ -29,6 +29,42 @@ class RuntimeCoordinatorTests(unittest.TestCase):
     def command(self, action, *, effect="Fire", priority=0, duration=None, output=OutputMode.SIMULATOR):
         return RuntimeCommand(CommandSource.BROWSER, action, "request", effect, {"brightness": 255}, output, priority, duration)
 
+    def mqtt_command(self, action, *, effect="Fire", priority=0, duration=None, output=None):
+        return RuntimeCommand(CommandSource.MQTT, action, "mqtt-request", effect, {"brightness": 255}, output, priority, duration)
+
+    def test_mqtt_cannot_set_baseline_or_stop_all(self):
+        for action in (CommandAction.SET_BASELINE, CommandAction.STOP_ALL):
+            with self.subTest(action=action):
+                result = self.coordinator.execute(self.mqtt_command(action, effect=None if action == CommandAction.STOP_ALL else "Fire"))
+                self.assertFalse(result.accepted)
+                self.assertIn("MQTT", result.reason)
+
+    def test_mqtt_override_requires_duration_and_omitted_output(self):
+        self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
+        missing_duration = self.coordinator.execute(self.mqtt_command(CommandAction.APPLY_OVERRIDE, duration=None))
+        explicit_output = self.coordinator.execute(self.mqtt_command(CommandAction.APPLY_OVERRIDE, duration=5, output=OutputMode.DDP))
+        self.assertFalse(missing_duration.accepted)
+        self.assertIn("duration", missing_duration.reason)
+        self.assertFalse(explicit_output.accepted)
+        self.assertIn("output", explicit_output.reason)
+
+    def test_mqtt_override_requires_baseline_and_inherits_its_output(self):
+        self.coordinator.default_output = OutputMode.SIMULATOR
+        no_baseline = self.coordinator.execute(self.mqtt_command(CommandAction.APPLY_OVERRIDE, duration=5))
+        self.assertFalse(no_baseline.accepted)
+        self.assertIn("baseline", no_baseline.reason)
+        self.coordinator.execute(self.command(CommandAction.SET_BASELINE, output=OutputMode.BOTH))
+        accepted = self.coordinator.execute(self.mqtt_command(CommandAction.APPLY_OVERRIDE, duration=5))
+        self.assertTrue(accepted.accepted)
+        self.assertEqual(accepted.status["override"]["output"], "both")
+
+    def test_mqtt_cancellation_remains_supported(self):
+        self.coordinator.execute(self.command(CommandAction.SET_BASELINE))
+        self.coordinator.execute(self.mqtt_command(CommandAction.APPLY_OVERRIDE, duration=5))
+        result = self.coordinator.execute(self.mqtt_command(CommandAction.CANCEL_OVERRIDE, effect=None))
+        self.assertTrue(result.accepted)
+        self.assertEqual(result.status["effective"]["source"], "browser")
+
     def test_baseline_replacement_and_stop_all(self):
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE)).accepted)
         self.assertTrue(self.coordinator.execute(self.command(CommandAction.SET_BASELINE, effect="Aurora")).accepted)

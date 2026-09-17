@@ -47,14 +47,15 @@ class CommandSourceTests(AioHTTPTestCase):
         self.assertEqual(response.status, 200)
         self.assertEqual(body["status"]["baseline"]["source"], "browser")
 
-    async def test_declared_source_is_reported_in_status(self):
+    async def test_declared_source_is_rejected(self):
         response = await self.client.post(
             "/api/runtime/override",
             json={"effect": "Fire", "source": "mqtt", "output": "null", "duration_seconds": 5},
         )
         body = await response.json()
-        self.assertEqual(response.status, 200)
-        self.assertEqual(body["status"]["override"]["source"], "mqtt")
+        self.assertEqual(response.status, 400)
+        self.assertFalse(body["accepted"])
+        self.assertIn("source", body["error"])
 
     async def test_unknown_source_is_rejected(self):
         response = await self.client.post("/api/runtime/baseline", json={"effect": "Fire", "source": "wizard"})

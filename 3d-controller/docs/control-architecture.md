@@ -19,6 +19,7 @@ Simulator / DDP / both
 ## Ownership and authority
 
 - The browser operator (including browser-started Auto mode) owns the **baseline**.
+- The HTTP control service assigns every runtime command `CommandSource.BROWSER` and rejects a caller-supplied `source` field.
 - An MQTT adapter creates **temporary overrides only**. It must never issue `SET_BASELINE`.
 - `RuntimeCoordinator` is the single arbitration authority. An adapter must not maintain a second queue, priority scheme, renderer, or worker.
 - MQTT commands retain `CommandSource.MQTT`; adapters must not relabel them as browser or CLI commands.
